@@ -1,8 +1,0 @@
-FROM ubuntu:12.04
-
-INCLUDE lib/builddeps_apt
-INCLUDE lib/gcc_install
-INCLUDE lib/cmake_install
-INCLUDE lib/python_install
-
-WORKDIR /

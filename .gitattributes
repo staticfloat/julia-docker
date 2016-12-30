@@ -1,0 +1,2 @@
+# Encrypt any files called "secret.env"
+secret.env filter=git-crypt diff=git-crypt

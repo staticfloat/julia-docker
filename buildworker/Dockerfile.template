@@ -1,0 +1,15 @@
+RUN mkdir -p /buildworker
+WORKDIR /buildworker
+
+ARG L32
+ARG buildbot_server
+ARG buildbot_port
+ARG buildbot_password
+ARG buildworker_name
+
+RUN $L32 pip install buildbot-worker
+RUN $L32 buildbot-worker create-worker --keepalive=100 --umask 022 worker $buildbot_server:$buildbot_port $buildworker_name $buildbot_password
+RUN echo "Elliot Saba <staticfloat@gmail.com>" > worker/info/admin
+RUN echo "Julia $buildworker_name buildworker" > worker/info/host
+
+CMD ["buildbot-worker", "start", "worker"]

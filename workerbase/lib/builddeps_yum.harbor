@@ -6,7 +6,7 @@ RUN $L32 yum update -y && $L32 yum install -y htop tmux vim git curl net-tools w
 RUN $L32 yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel
 
 # Dependencies we need to build gcc
-RUN $L32 yum install -y wget
+RUN $L32 yum install -y wget bzip2
 
 # Dependencies we need to build python
 RUN $L32 yum install -y zlib-devel bzip2-devel

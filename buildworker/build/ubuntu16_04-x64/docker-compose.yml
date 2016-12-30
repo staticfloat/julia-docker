@@ -1,0 +1,12 @@
+version: '2'
+services:
+  ubuntu16_04-x64:
+    restart: unless-stopped
+    build:
+      context: worker
+      args:
+        - buildbot_server
+        - buildbot_port
+        - buildbot_password
+        - buildworker_name=buildworker_ubuntu16_04-x64
+        - L32= # Put `linux32` here if we're 32-bit
