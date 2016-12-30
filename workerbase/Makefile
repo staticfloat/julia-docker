@@ -18,7 +18,7 @@ $(1): build-$(1)
 build-$(1): build/$(1)/Dockerfile
 	@# Construct tag name based off of the Harborfile name, taking `-` and
 	@# transforming that into `:` so that we can make 32-bit and 64-bit tags
-	docker build --squash --pull -t $(shell echo "buildworker_$(1)" | tr "-" ":") "build/$(1)"
+	docker build --squash --pull -t $(shell echo "julia_workerbase_$(1)" | tr "-" ":") "build/$(1)"
 
 # This is how we build the actual Dockerfile
 build/$(1)/Dockerfile: $(1).harbor Makefile

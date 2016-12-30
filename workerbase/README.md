@@ -1,7 +1,7 @@
 buildworker docker images
 =========================
 
-To build Julia buildworker base docker images, first install [harbor](https://github.com/leethomas/harbor) with `gem install harbordock`, then run `make` in this directory.  The result will be docker images named things like `buildworker_centos5:64` and `buildworker_xenial:32`.
+To build Julia worker base docker images, first install [harbor](https://github.com/leethomas/harbor) with `gem install harbordock`, then run `make` in this directory.  The result will be docker images named things like `julia_workerbase_centos5:64` and `julia_workerbase_xenial:32`.  These images are what are deployed onto in order to create buildworkers, as these images contain things like very recent versions of `gcc`, `python`, `cmake`, etc...
 
 To generate all the `Dockerfile`s without actually building the docker images, run `make all-Dockerfiles`.
 
