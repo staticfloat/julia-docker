@@ -1,0 +1,22 @@
+## Install cmake into /usr/local
+ENV cmake_version 3.6.2
+ENV cmake_url https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
+
+RUN mkdir -p /src
+WORKDIR /src
+
+# Unfortunately, we have to pass `-k` to `curl` because cmake.org has weird SSL
+# certificates, and old versions of `curl` can't deal with it.  :(
+RUN curl -q -# -L -k "${cmake_url}" -o cmake-${cmake_version}.tar.gz
+RUN tar zxf cmake-${cmake_version}.tar.gz
+
+
+# Build the cmake sources!
+WORKDIR /src/cmake-${cmake_version}
+RUN $L32 ./configure --prefix=/usr
+RUN $L32 make -j6
+RUN $L32 make install
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf cmake-${cmake_version}*

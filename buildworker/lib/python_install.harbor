@@ -1,0 +1,28 @@
+## Install python
+ENV python_version 2.7.13
+ENV python_url https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz
+ENV pip_url https://bootstrap.pypa.io/get-pip.py
+
+RUN mkdir -p /src
+WORKDIR /src
+
+# Download/extract both Python and pip
+RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tgz
+RUN curl -q -# -L "${pip_url}" -o get-pip.py
+RUN tar zxf Python-${python_version}.tgz
+
+
+# Build the python sources!
+WORKDIR /src/Python-${python_version}
+RUN $L32 ./configure --prefix=/usr
+RUN $L32 make -j6
+RUN $L32 make install
+
+# Install pip, get requests with security (for SNI), and install virtualenv
+RUN python /src/get-pip.py
+RUN pip install virtualenv
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf Python-${python_version}*
+RUN rm -f get-pip.py

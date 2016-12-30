@@ -1,0 +1,12 @@
+FROM ivochkin/ubuntu-i386:xenial
+
+# This enables putting `linux32` before commands like `./configure` and `make`
+ENV L32 "linux32"
+
+INCLUDE lib/builddeps_apt
+INCLUDE lib/gcc_install
+INCLUDE lib/cmake_install
+INCLUDE lib/python_install
+
+WORKDIR /
+ENTRYPOINT ["linux32"]

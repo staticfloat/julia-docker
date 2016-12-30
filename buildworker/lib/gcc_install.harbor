@@ -1,0 +1,34 @@
+## Install GCC
+ENV binutils_version 2.27
+ENV binutils_url https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
+ENV gcc_version 6.3.0
+ENV gcc_url https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.gz
+
+RUN mkdir -p /src
+WORKDIR /src
+
+# Download/extract both binutils and gcc
+RUN curl -q -# -L "${binutils_url}" -o binutils-${binutils_version}.tar.gz
+RUN curl -q -# -L "${gcc_url}" -o gcc-${gcc_version}.tar.gz
+RUN tar zxf binutils-${binutils_version}.tar.gz
+RUN tar zxf gcc-${gcc_version}.tar.gz
+
+# Build binutils!
+WORKDIR /src/binutils-${binutils_version}
+RUN $L32 ./configure --prefix=/usr
+RUN $L32 make -j6
+RUN $L32 make install
+
+# Build gcc!
+WORKDIR /src/gcc-${gcc_version}
+RUN $L32 contrib/download_prerequisites
+RUN mkdir -p /src/gcc-${gcc_version}_build
+WORKDIR /src/gcc-${gcc_version}_build
+RUN $L32 /src/gcc-${gcc_version}/configure --prefix=/usr --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
+RUN $L32 make -j6
+RUN $L32 make install
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf gcc-${gcc_version}*
+RUN rm -rf binutils-${binutils_version}*

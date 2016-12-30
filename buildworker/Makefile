@@ -1,0 +1,39 @@
+# Begin by listing all the Harborfiles in this directory
+HFS=$(basename $(wildcard *.harbor))
+define add_dep
+$(1): $(2)
+endef
+# Build "all" target that attempts to build every Dockerfile in the room
+$(foreach f,$(HFS),$(eval $(call add_dep,all,build-$(f))))
+# Search Harborfiles for INCLUDE statements and add them to the make dependency
+# tree, so that changing a dependency will rebuild the Dockerfile
+$(foreach f,$(HFS),$(eval $(call add_dep,build/$(f)/Dockerfile,$(shell cat $(f).harbor | grep INCLUDE | awk '{print $$2 ".harbor";}'))))
+
+define build_dockerfile
+# Running just `make ubuntu16.04-32` is enough to get us to build that image,
+# and is also the same as running `make build-ubuntu16.04-32`.
+$(1): build-$(1)
+build-$(1): build/$(1)/Dockerfile
+	@# Construct tag name based off of the Harborfile name, taking `-` and
+	@# transforming that into `:` so that we can make 32-bit and 64-bit tags
+	docker build --squash --pull -t $(shell echo "buildworker_$(1)" | tr "-" ":") "build/$(1)"
+
+# This is how we build the actual Dockerfile
+build/$(1)/Dockerfile: $(1).harbor Makefile
+	@if [ ! -f "$(1).harbor" ]; then \
+		echo "Target \"$(1)\" is invalid, recheck your spelling good sir."; \
+		exit 1; \
+	fi
+	@mkdir -p "build/$(1)"
+	@rm -f "build/$(1)/Dockerfile"
+	harbor $(1).harbor -o "build/$(1)/Dockerfile"
+endef
+
+$(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
+
+
+clean:
+	rm -rf build
+
+print-%:
+	@echo '$*=$($*)'
