@@ -1,2 +1,4 @@
-# Encrypt any files called "secret.env"
 secret.env filter=git-crypt diff=git-crypt
+buildbot_secret.py filter=git-crypt diff=git-crypt
+julia.gpg filter=git-crypt diff=git-crypt
+awssecret filter=git-crypt diff=git-crypt

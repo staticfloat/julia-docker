@@ -1,15 +1,18 @@
 RUN mkdir -p /buildworker
 WORKDIR /buildworker
 
+# These arguments are passed in from `docker-compose`
 ARG L32
 ARG buildbot_server
 ARG buildbot_port
 ARG buildbot_password
 ARG buildworker_name
 
+# First, install the buildbot-worker package (no need for virtualenv because
+# we're within a Docker container!), then configure it with our arguments
 RUN $L32 pip install buildbot-worker
 RUN $L32 buildbot-worker create-worker --keepalive=100 --umask 022 worker $buildbot_server:$buildbot_port $buildworker_name $buildbot_password
 RUN echo "Elliot Saba <staticfloat@gmail.com>" > worker/info/admin
 RUN echo "Julia $buildworker_name buildworker" > worker/info/host
 
-CMD ["buildbot-worker", "start", "worker"]
+CMD (sleep 1; tail -f worker/twistd.log &) && buildbot-worker start worker
