@@ -3,22 +3,32 @@ HFS=$(basename $(wildcard *.harbor))
 define add_dep
 $(1): $(2)
 endef
-# Build "all" target that attempts to build every Dockerfile in the room
-$(foreach f,$(HFS),$(eval $(call add_dep,all,build-$(f))))
-# Build "all-Dockerfiles" target that assembles all Dockerfiles
-$(foreach f,$(HFS),$(eval $(call add_dep,all-Dockerfiles,build/$(f)/Dockerfile)))
+# Build "build" target that attempts to build every Dockerfile in the room
+$(foreach f,$(HFS),$(eval $(call add_dep,build,build-$(f))))
+# Build "dockerfiles" target that assembles all Dockerfiles
+$(foreach f,$(HFS),$(eval $(call add_dep,dockerfiles,build/$(f)/Dockerfile)))
+# Build "push" target that pushes up the result of "build"
+$(foreach f,$(HFS),$(eval $(call add_dep,push,push-$(f))))
 # Search Harborfiles for INCLUDE statements and add them to the make dependency
-# tree, so that changing a dependency will rebuild the Dockerfile
+# tree, so that changing a dependency will rebuild the Dockerfile.  This is not
+# recursive, because that's just too much make-fu for me today.
 $(foreach f,$(HFS),$(eval $(call add_dep,build/$(f)/Dockerfile,$(shell cat $(f).harbor | grep INCLUDE | awk '{print $$2 ".harbor";}'))))
+
+# Helper function that takes in a Harborfile name, transforms `-` into `:`, so
+# that we can have name:arch taggings
+define tag_name
+	$(shell echo "staticfloat/julia_workerbase_$(1)" | tr "-" ":")
+endef
 
 define build_dockerfile
 # Running just `make ubuntu16.04-32` is enough to get us to build that image,
 # and is also the same as running `make build-ubuntu16.04-32`.
 $(1): build-$(1)
 build-$(1): build/$(1)/Dockerfile
-	@# Construct tag name based off of the Harborfile name, taking `-` and
-	@# transforming that into `:` so that we can make 32-bit and 64-bit tags
-	docker build --squash --pull -t $(shell echo "staticfloat/julia_workerbase_$(1)" | tr "-" ":") "build/$(1)"
+	docker build --squash --pull -t $(call tag_name,$(1)) "build/$(1)"
+
+push-$(1):
+	docker push $(call tag_name,$(1))
 
 # This is how we build the actual Dockerfile
 build/$(1)/Dockerfile: $(1).harbor Makefile
