@@ -2,7 +2,9 @@ FROM centos:7
 
 INCLUDE lib/builddeps_yum
 INCLUDE lib/gcc_install
+INCLUDE lib/git_install
 INCLUDE lib/cmake_install
 INCLUDE lib/python_install
 
 WORKDIR /
+CMD ["/bin/bash"]

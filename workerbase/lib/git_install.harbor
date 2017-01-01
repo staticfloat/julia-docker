@@ -1,0 +1,17 @@
+## Install git
+ENV git_version 2.11.0
+ENV git_url https://github.com/git/git/archive/v${git_version}.tar.gz
+
+RUN mkdir -p /src
+WORKDIR /src
+
+# Download, extract, and build git
+RUN curl -q -# -L "${git_url}" -o git-${git_version}.tgz
+RUN tar zxf git-${git_version}.tgz
+WORKDIR /src/git-${git_version}
+RUN $L32 make prefix=/usr/local all -j4
+RUN $L32 make prefix=/usr/local install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf git-${git_version}*

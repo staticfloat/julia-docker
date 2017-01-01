@@ -1,9 +1,12 @@
 ## Download and install needed build dependencies for x86_64 apt-based systems
 # Start with tools that I love and always need by my side
-RUN $L32 apt update && $L32 apt install -y htop tmux vim git curl
+RUN $L32 apt update && $L32 apt install -y htop tmux vim curl
 
 # Move on to bare necessities for Julia
 RUN $L32 apt install -y build-essential g++ gcc gfortran m4 make libssl-dev
+
+# Dependencies we need to build git
+RUN $L32 apt install -y libcurl4-openssl-dev libexpat1-dev gettext
 
 # Dependencies we need to build gcc
 RUN $L32 apt install -y wget

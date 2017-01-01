@@ -11,11 +11,10 @@ RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tgz
 RUN curl -q -# -L "${pip_url}" -o get-pip.py
 RUN tar zxf Python-${python_version}.tgz
 
-
 # Build the python sources!
 WORKDIR /src/Python-${python_version}
-RUN $L32 ./configure --prefix=/usr
-RUN $L32 make -j6
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
 RUN $L32 make install
 
 # Install pip, get requests with security (for SNI), and install virtualenv

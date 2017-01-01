@@ -5,10 +5,13 @@ FROM centos:7
 
 ## Download and install needed build dependencies for x86_64 yum-based systems
 # Start with tools that I love and always need by my side
-RUN $L32 yum update -y && $L32 yum install -y htop tmux vim git curl net-tools which
+RUN $L32 yum update -y && $L32 yum install -y htop tmux vim curl net-tools which
 
 # Move on to bare necessities for Julia
 RUN $L32 yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel
+
+# Dependencies we need to build git
+RUN $L32 yum install -y curl-devel expat-devel gettext-devel perl-devel
 
 # Dependencies we need to build gcc
 RUN $L32 yum install -y wget bzip2
@@ -32,8 +35,8 @@ RUN tar zxf gcc-${gcc_version}.tar.gz
 
 # Build binutils!
 WORKDIR /src/binutils-${binutils_version}
-RUN $L32 ./configure --prefix=/usr
-RUN $L32 make -j6
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
 RUN $L32 make install
 
 # Build gcc!
@@ -41,14 +44,35 @@ WORKDIR /src/gcc-${gcc_version}
 RUN $L32 contrib/download_prerequisites
 RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
-RUN $L32 /src/gcc-${gcc_version}/configure --prefix=/usr --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
-RUN $L32 make -j6
+RUN $L32 /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
+RUN $L32 make -j4
 RUN $L32 make install
+
+# Setup environment variables so that GCC takes precedence
+ENV PATH "/usr/local/bin:$PATH"
+ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
 
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf gcc-${gcc_version}*
 RUN rm -rf binutils-${binutils_version}*
+## Install git
+ENV git_version 2.11.0
+ENV git_url https://github.com/git/git/archive/v${git_version}.tar.gz
+
+RUN mkdir -p /src
+WORKDIR /src
+
+# Download, extract, and build git
+RUN curl -q -# -L "${git_url}" -o git-${git_version}.tgz
+RUN tar zxf git-${git_version}.tgz
+WORKDIR /src/git-${git_version}
+RUN $L32 make prefix=/usr/local all -j4
+RUN $L32 make prefix=/usr/local install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf git-${git_version}*
 ## Install cmake into /usr/local
 ENV cmake_version 3.6.2
 ENV cmake_url https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
@@ -64,8 +88,8 @@ RUN tar zxf cmake-${cmake_version}.tar.gz
 
 # Build the cmake sources!
 WORKDIR /src/cmake-${cmake_version}
-RUN $L32 ./configure --prefix=/usr
-RUN $L32 make -j6
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
 RUN $L32 make install
 
 # Now cleanup /src
@@ -84,11 +108,10 @@ RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tgz
 RUN curl -q -# -L "${pip_url}" -o get-pip.py
 RUN tar zxf Python-${python_version}.tgz
 
-
 # Build the python sources!
 WORKDIR /src/Python-${python_version}
-RUN $L32 ./configure --prefix=/usr
-RUN $L32 make -j6
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
 RUN $L32 make install
 
 # Install pip, get requests with security (for SNI), and install virtualenv
@@ -101,3 +124,4 @@ RUN rm -rf Python-${python_version}*
 RUN rm -f get-pip.py
 
 WORKDIR /
+CMD ["/bin/bash"]
