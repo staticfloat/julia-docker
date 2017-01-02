@@ -11,7 +11,7 @@ ENV L32 "linux32"
 RUN $L32 apt update && $L32 apt install -y htop tmux vim curl
 
 # Move on to bare necessities for Julia
-RUN $L32 apt install -y build-essential g++ gcc gfortran m4 make libssl-dev
+RUN $L32 apt install -y build-essential g++ gcc gfortran m4 make libssl-dev patch
 
 # Dependencies we need to build git
 RUN $L32 apt install -y libcurl4-openssl-dev libexpat1-dev gettext

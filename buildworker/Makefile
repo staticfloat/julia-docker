@@ -6,7 +6,7 @@ endef
 $(foreach f,$(HFS),$(eval $(call add_dep,all,../workerbase/$(f).harbor)))
 
 # Here's where we take our two "template" files
-all: docker-compose.template.yml Dockerfile.template entrypoint.sh
+all: Makefile docker-compose.template.yml Dockerfile.template entrypoint.sh
 	@for f in $(HFS); do \
 		echo "$$f"; \
 		IMAGE_NAME="$$(echo staticfloat/julia_workerbase_$$f | tr '-' ':')"; \

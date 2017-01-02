@@ -8,7 +8,7 @@ FROM centos:5
 RUN $L32 yum update -y && $L32 yum install -y htop tmux vim curl net-tools which
 
 # Move on to bare necessities for Julia
-RUN $L32 yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel
+RUN $L32 yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
 
 # Dependencies we need to build git
 RUN $L32 yum install -y curl-devel expat-devel gettext-devel perl-devel
