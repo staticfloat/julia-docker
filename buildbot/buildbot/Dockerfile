@@ -11,7 +11,9 @@ RUN pip install --upgrade pip
 RUN pip install buildbot[tls] buildbot-www buildbot-waterfall-view \
                 buildbot-console-view urllib3[secure] requests ipython
 
-# Clone/configure buildbot
+# Clone/configure buildbot (the ADD command is to rebuild the rest of the image
+# from here on out without caching in case the remote repo has changed)
+ADD https://api.github.com/repos/staticfloat/julia-buildbot/git/refs/heads/${buildbot_branch} /buildbot_version.json
 RUN git clone -b ${buildbot_branch} https://github.com/staticfloat/julia-buildbot.git .
 RUN buildbot create-master master
 
@@ -23,5 +25,7 @@ COPY awssecret /root/.awssecret
 RUN mkdir -p /root/.gnupg
 RUN gpg --import /root/julia.gpg
 
-ENTRYPOINT []
-CMD (while true; do sleep 1; tail -f master/twistd.log 2>/dev/null; done &) && buildbot start --nodaemon master
+# Install entrypoint and run it!
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/bin/sh"]
+CMD ["/entrypoint.sh"]

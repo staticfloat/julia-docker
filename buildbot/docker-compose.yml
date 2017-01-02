@@ -23,6 +23,8 @@ services:
     container_name: buildbot
     expose:
       - 8010
+    ports:
+      - 9989:9989/tcp
   frontend:
     restart: unless-stopped
     depends_on:
