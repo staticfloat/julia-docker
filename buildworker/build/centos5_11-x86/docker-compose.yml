@@ -18,5 +18,5 @@ services:
         - buildbot_password
         # These two arguments are per-worker deals, and are substituted in by
         # our make-shift make templating chops
-        - buildworker_name=buildworker_centos5_11-x86
+        - buildworker_name=centos5_11-x86
         - L32=linux32

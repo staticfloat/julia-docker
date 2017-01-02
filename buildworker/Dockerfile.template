@@ -15,4 +15,6 @@ RUN $L32 buildbot-worker create-worker --keepalive=100 --umask 022 worker $build
 RUN echo "Elliot Saba <staticfloat@gmail.com>" > worker/info/admin
 RUN echo "Julia $buildworker_name buildworker" > worker/info/host
 
-CMD (sleep 1; tail -f worker/twistd.log &) && buildbot-worker start worker
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/bin/sh"]
+CMD ["/entrypoint.sh"]

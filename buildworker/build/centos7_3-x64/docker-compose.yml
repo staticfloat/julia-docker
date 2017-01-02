@@ -18,5 +18,5 @@ services:
         - buildbot_password
         # These two arguments are per-worker deals, and are substituted in by
         # our make-shift make templating chops
-        - buildworker_name=buildworker_centos7_3-x64
+        - buildworker_name=centos7_3-x64
         - L32=       

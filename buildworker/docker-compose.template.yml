@@ -18,5 +18,5 @@ services:
         - buildbot_password
         # These two arguments are per-worker deals, and are substituted in by
         # our make-shift make templating chops
-        - buildworker_name=buildworker_{service_name}
+        - buildworker_name={service_name}
         - L32={linux32}

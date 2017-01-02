@@ -6,7 +6,7 @@ endef
 $(foreach f,$(HFS),$(eval $(call add_dep,all,../workerbase/$(f).harbor)))
 
 # Here's where we take our two "template" files
-all: docker-compose.template.yml Dockerfile.template
+all: docker-compose.template.yml Dockerfile.template entrypoint.sh
 	@for f in $(HFS); do \
 		echo "$$f"; \
 		IMAGE_NAME="$$(echo staticfloat/julia_workerbase_$$f | tr '-' ':')"; \
@@ -23,6 +23,7 @@ all: docker-compose.template.yml Dockerfile.template
 		echo "# Do not edit directly; edit the template files" >> "build/$$f/worker/Dockerfile"; \
 		echo "FROM $$IMAGE_NAME" >> "build/$$f/worker/Dockerfile"; \
 		cat Dockerfile.template >> "build/$$f/worker/Dockerfile"; \
+		cp ./entrypoint.sh "build/$$f/worker/entrypoint.sh"; \
 	done
 
 clean:
