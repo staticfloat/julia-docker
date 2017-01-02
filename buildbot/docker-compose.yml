@@ -1,0 +1,46 @@
+version: '2'
+
+services:
+  certbot:
+    restart: unless-stopped
+    image: staticfloat/docker-letsencrypt-cron
+    container_name: certbot
+    expose:
+      - 80
+    volumes:
+      - buildbot_certbot_letsencrypt:/etc/letsencrypt
+    restart: unless-stopped
+    environment:
+      - DOMAINS=${FQDN}
+      - EMAIL=staticfloat@gmail.com
+      - SEPARATE=true
+  buildbot:
+    restart: unless-stopped
+    build:
+      context: buildbot
+      args:
+      - buildbot_branch=${BUILDBOT_BRANCH}
+    container_name: buildbot
+    expose:
+      - 8010
+  frontend:
+    restart: unless-stopped
+    depends_on:
+      - certbot
+      - buildbot
+    build:
+      context: frontend
+      args:
+        - fqdn=${FQDN}
+        - ssl_certificate_path=/etc/letsencrypt/${FQDN}/fullchain.pem
+        - ssl_certificate_key_path=/etc/letsencrypt/${FQDN}/key.pem
+    container_name: frontend
+    volumes:
+      - buildbot_certbot_letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+
+volumes:
+  buildbot_certbot_letsencrypt:
+    external: true
