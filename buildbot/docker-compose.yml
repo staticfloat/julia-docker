@@ -34,8 +34,6 @@ services:
       context: frontend
       args:
         - fqdn=${FQDN}
-        - ssl_certificate_path=/etc/letsencrypt/live/${FQDN}/fullchain.pem
-        - ssl_certificate_key_path=/etc/letsencrypt/live/${FQDN}/privkey.pem
     container_name: frontend
     volumes:
       - buildbot_certbot_letsencrypt:/etc/letsencrypt:ro

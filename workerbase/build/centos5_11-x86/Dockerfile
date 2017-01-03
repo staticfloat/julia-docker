@@ -21,6 +21,9 @@ RUN $L32 yum install -y wget bzip2
 
 # Dependencies we need to build python
 RUN $L32 yum install -y zlib-devel bzip2-devel
+
+# Dependencies we need to build tar
+RUN $L32 yum install -y xz
 ## Install GCC
 ENV binutils_version 2.27
 ENV binutils_url https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
@@ -59,6 +62,35 @@ ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
 WORKDIR /src
 RUN rm -rf gcc-${gcc_version}*
 RUN rm -rf binutils-${binutils_version}*
+## Install tar
+ENV tar_version 1.29
+ENV tar_url https://ftp.gnu.org/gnu/tar/tar-${tar_version}.tar.gz
+
+RUN mkdir -p /src
+WORKDIR /src
+
+# Download/extract tar
+RUN curl -q -# -L "${tar_url}" -o tar-${tar_version}.tar.gz
+RUN tar zxf tar-${tar_version}.tar.gz
+
+# Build the tar sources!
+WORKDIR /src/tar-${tar_version}
+# FORCE_UNSAFE_CONFIGURE because we're running as root, and CPPFLAGS because of
+# this link: https://goo.gl/lKju1q
+RUN FORCE_UNSAFE_CONFIGURE=1 $L32 ./configure --prefix=/usr/local CPPFLAGS="-fgnu89-inline"
+RUN $L32 make -j4
+RUN $L32 make install
+
+# We need to pretend to be `gtar` as well
+RUN ln -s /usr/local/bin/tar /usr/local/bin/gtar
+
+# Now cleanup /src
+WORKDIR /src
+# Sigh, see https://github.com/docker/docker/issues/13451 for context
+RUN [[ -d tar-${tar_version}/confdir3 ]] && \
+    mv tar-${tar_version}/confdir3/confdir3 tar-${tar_version}/confdir4 && \
+    rm -rf tar-${tar_version}/confdir*
+RUN rm -rf tar-${tar_version}*
 ## Install git
 ENV git_version 2.11.0
 ENV git_url https://github.com/git/git/archive/v${git_version}.tar.gz

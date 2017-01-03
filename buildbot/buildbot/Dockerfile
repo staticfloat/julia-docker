@@ -24,6 +24,7 @@ COPY julia.gpg /root/
 COPY awssecret /root/.awssecret
 RUN mkdir -p /root/.gnupg
 RUN gpg --import /root/julia.gpg
+COPY authorized_keys /buildbot/master
 
 # Install entrypoint and run it!
 COPY entrypoint.sh /entrypoint.sh

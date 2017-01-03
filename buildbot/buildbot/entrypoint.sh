@@ -11,4 +11,4 @@ watch_the_log()
 watch_the_log /buildbot/master/twistd.log &
 
 # Start our buildbot!
-buildbot start --nodaemon master
+exec twistd -ny /buildbot/master/buildbot.tac
