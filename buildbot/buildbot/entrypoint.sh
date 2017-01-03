@@ -11,4 +11,5 @@ watch_the_log()
 watch_the_log /buildbot/master/twistd.log &
 
 # Start our buildbot!
-exec twistd -ny /buildbot/master/buildbot.tac
+cd /buildbot/master
+exec twistd -ny buildbot.tac
