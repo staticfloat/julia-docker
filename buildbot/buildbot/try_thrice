@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if ! "$@"; then
+    echo "Failed once, trying again..." 1>&2
+    if ! "$@"; then
+        echo "Failed twice, trying once more..." 1>&2
+        "$@"
+    fi
+fi
