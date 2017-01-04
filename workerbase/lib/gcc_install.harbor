@@ -1,8 +1,8 @@
 ## Install GCC
-ENV binutils_version 2.27
-ENV binutils_url https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
-ENV gcc_version 6.3.0
-ENV gcc_url https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.gz
+ARG binutils_version=2.27
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
+ARG gcc_version=6.3.0
+ARG gcc_url=https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.gz
 
 RUN mkdir -p /src
 WORKDIR /src

@@ -25,10 +25,10 @@ RUN $L32 yum install -y zlib-devel bzip2-devel
 # Dependencies we need to build tar
 RUN $L32 yum install -y xz
 ## Install GCC
-ENV binutils_version 2.27
-ENV binutils_url https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
-ENV gcc_version 6.3.0
-ENV gcc_url https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.gz
+ARG binutils_version=2.27
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
+ARG gcc_version=6.3.0
+ARG gcc_url=https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.gz
 
 RUN mkdir -p /src
 WORKDIR /src
@@ -63,8 +63,8 @@ WORKDIR /src
 RUN rm -rf gcc-${gcc_version}*
 RUN rm -rf binutils-${binutils_version}*
 ## Install tar
-ENV tar_version 1.29
-ENV tar_url https://ftp.gnu.org/gnu/tar/tar-${tar_version}.tar.gz
+ARG tar_version=1.29
+ARG tar_url=https://ftp.gnu.org/gnu/tar/tar-${tar_version}.tar.gz
 
 RUN mkdir -p /src
 WORKDIR /src
@@ -92,8 +92,8 @@ RUN [[ -d tar-${tar_version}/confdir3 ]] && \
     rm -rf tar-${tar_version}/confdir*
 RUN rm -rf tar-${tar_version}*
 ## Install git
-ENV git_version 2.11.0
-ENV git_url https://github.com/git/git/archive/v${git_version}.tar.gz
+ARG git_version=2.11.0
+ARG git_url=https://github.com/git/git/archive/v${git_version}.tar.gz
 
 RUN mkdir -p /src
 WORKDIR /src
@@ -109,8 +109,8 @@ RUN $L32 make prefix=/usr/local install
 WORKDIR /src
 RUN rm -rf git-${git_version}*
 ## Install cmake into /usr/local
-ENV cmake_version 3.6.2
-ENV cmake_url https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
+ARG cmake_version=3.6.2
+ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
 
 RUN mkdir -p /src
 WORKDIR /src
@@ -131,9 +131,9 @@ RUN $L32 make install
 WORKDIR /src
 RUN rm -rf cmake-${cmake_version}*
 ## Install python
-ENV python_version 2.7.13
-ENV python_url https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz
-ENV pip_url https://bootstrap.pypa.io/get-pip.py
+ARG python_version=2.7.13
+ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz
+ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 
 RUN mkdir -p /src
 WORKDIR /src

@@ -1,6 +1,6 @@
 ## Install git
-ENV git_version 2.11.0
-ENV git_url https://github.com/git/git/archive/v${git_version}.tar.gz
+ARG git_version=2.11.0
+ARG git_url=https://github.com/git/git/archive/v${git_version}.tar.gz
 
 RUN mkdir -p /src
 WORKDIR /src

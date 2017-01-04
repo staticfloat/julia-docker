@@ -1,7 +1,7 @@
 ## Install python
-ENV python_version 2.7.13
-ENV python_url https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz
-ENV pip_url https://bootstrap.pypa.io/get-pip.py
+ARG python_version=2.7.13
+ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz
+ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 
 RUN mkdir -p /src
 WORKDIR /src
