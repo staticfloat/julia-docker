@@ -11,4 +11,5 @@ watch_the_log()
 watch_the_log /buildworker/worker/twistd.log &
 
 # Start our buildworker!
-buildbot-worker start --nodaemon worker
+cd /buildworker/worker
+exec twistd -ny buildbot.tac

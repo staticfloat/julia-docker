@@ -5,6 +5,11 @@ endef
 # Build "all" target that depends on all the harbor files from `workerbase`
 $(foreach f,$(HFS),$(eval $(call add_dep,all,../workerbase/$(f).harbor)))
 
+pullall:
+	@for f in $(HFS); do \
+		docker pull "$$(echo staticfloat/julia_workerbase_$$f | tr '-' ':')"; \
+	done
+
 # Here's where we take our two "template" files
 all: Makefile docker-compose.template.yml Dockerfile.template entrypoint.sh
 	@for f in $(HFS); do \

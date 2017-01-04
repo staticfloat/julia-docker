@@ -25,6 +25,8 @@ COPY awssecret /root/.awssecret
 RUN mkdir -p /root/.gnupg
 RUN gpg --import /root/julia.gpg
 COPY authorized_keys /buildbot/master
+COPY ssh_host_rsa_key /etc/ssh/
+COPY ssh_host_rsa_key.pub /etc/ssh/
 
 # Install entrypoint and run it!
 COPY entrypoint.sh /entrypoint.sh

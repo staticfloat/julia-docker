@@ -2,3 +2,4 @@ secret.env filter=git-crypt diff=git-crypt
 buildbot_secret.py filter=git-crypt diff=git-crypt
 julia.gpg filter=git-crypt diff=git-crypt
 awssecret filter=git-crypt diff=git-crypt
+ssh_host_rsa_key filter=git-crypt diff=git-crypt
