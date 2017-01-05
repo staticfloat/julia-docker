@@ -23,7 +23,7 @@ RUN ln -s /usr/local/bin/tar /usr/local/bin/gtar
 # Now cleanup /src
 WORKDIR /src
 # Sigh, see https://github.com/docker/docker/issues/13451 for context
-RUN [[ -d tar-${tar_version}/confdir3 ]] && \
+RUN [ -d tar-${tar_version}/confdir3 ] && \
     mv tar-${tar_version}/confdir3/confdir3 tar-${tar_version}/confdir4 && \
     rm -rf tar-${tar_version}/confdir*
 RUN rm -rf tar-${tar_version}*
