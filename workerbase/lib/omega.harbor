@@ -1,0 +1,4 @@
+# These are our final words. Always.
+WORKDIR /
+ENTRYPOINT [${L32}]
+CMD ["/bin/bash"]

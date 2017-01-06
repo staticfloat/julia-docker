@@ -1,23 +1,26 @@
 ## Install python
 ARG python_version=2.7.13
-ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tgz
+ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz
 ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 
-RUN mkdir -p /src
+USER buildworker
 WORKDIR /src
 
 # Download/extract both Python and pip
-RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tgz
+RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tar.xz
 RUN curl -q -# -L "${pip_url}" -o get-pip.py
-RUN tar zxf Python-${python_version}.tgz
+RUN tar Jxf Python-${python_version}.tar.xz
 
 # Build the python sources!
 WORKDIR /src/Python-${python_version}
-RUN $L32 ./configure --prefix=/usr/local
-RUN $L32 make -j4
-RUN $L32 make install
+RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} make -j4
 
-# Install pip, get requests with security (for SNI), and install virtualenv
+# Install python
+USER root
+RUN ${L32} make install
+
+# Install pip and install virtualenv (all as root, of course)
 RUN python /src/get-pip.py
 RUN pip install virtualenv
 

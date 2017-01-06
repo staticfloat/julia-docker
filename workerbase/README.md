@@ -7,7 +7,7 @@ To generate all the `Dockerfile`s without actually building the docker images, r
 
 To generate a `Dockerfile` and then build the result, run something like `make centos5_11-x86`, or `make ubuntu16_04-x64`.
 
-To generate all `Dockerfile`s and then build all results, run `make buildall`.
+To generate all `Dockerfile`s and then build all results, run `make buildall`.  Note that this will automatically skip buildworkers that are on an incompatible architecture (e.g. an `x64` machine will only ever build `x86` and `x64` images, not `ppc64le` images)
 
 To push the resulting docker images to the Docker Hub, run `make pushall`, or `make push-centos5_11-x86` to push only a single image.  You must have logged into an authorized Docker Hub account on your local docker daemon for this to work, of course.
 

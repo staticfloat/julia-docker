@@ -1,15 +1,9 @@
 FROM toopher/centos-i386:centos5
 
 # This enables putting `linux32` before commands like `./configure` and `make`
-ENV L32 linux32
+ARG L32=linux32
 
+INCLUDE lib/alpha
 INCLUDE lib/builddeps_yum
-INCLUDE lib/gcc_install
-INCLUDE lib/tar_install
-INCLUDE lib/git_install
-INCLUDE lib/cmake_install
-INCLUDE lib/python_install
-
-WORKDIR /
-ENTRYPOINT ["linux32"]
-CMD ["/bin/bash"]
+INCLUDE lib/build_tools
+INCLUDE lib/omega

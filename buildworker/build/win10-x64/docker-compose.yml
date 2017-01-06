@@ -1,0 +1,22 @@
+# This template has variables that are substituted in when it is installed into
+# the `build` directory by our Makefile.  The variables are surrounded by curly
+# braces and substituted through simple `sed` commands.
+version: '2'
+services:
+  win10-x64:
+    restart: unless-stopped
+    build:
+      context: worker
+      args:
+        # These first three arguments are secret, but shared across all workers,
+        # so they're stored in the encrypted `secret.env` and transparently
+        # included by symlinking `secret.env` into each build directory as the
+        # special file `.env`, which is always transparently included by the
+        # docker-compose build process
+        - buildbot_server
+        - buildbot_port
+        - buildbot_password
+        # These two arguments are per-worker deals, and are substituted in by
+        # our make-shift make templating chops
+        - buildworker_name=win10-x64
+        - L32=       

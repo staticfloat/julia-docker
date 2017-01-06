@@ -1,11 +1,9 @@
 FROM ubuntu:16.04
 
-INCLUDE lib/builddeps_apt
-INCLUDE lib/gcc_install
-INCLUDE lib/tar_install
-INCLUDE lib/git_install
-INCLUDE lib/cmake_install
-INCLUDE lib/python_install
 
-WORKDIR /
-CMD ["/bin/bash"]
+
+
+INCLUDE lib/alpha
+INCLUDE lib/builddeps_apt
+INCLUDE lib/build_tools
+INCLUDE lib/omega

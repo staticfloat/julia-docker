@@ -1,18 +1,19 @@
 ## Download and install needed build dependencies for x86_64 yum-based systems
 # Start with tools that I love and always need by my side
-RUN $L32 yum update -y && $L32 yum install -y htop tmux vim curl net-tools which
+USER root
+RUN ${L32} yum update -y && ${L32} yum install -y htop tmux vim curl net-tools which sudo
 
 # Move on to bare necessities for Julia
-RUN $L32 yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
+RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
 
 # Dependencies we need to build git
-RUN $L32 yum install -y curl-devel expat-devel gettext-devel perl-devel
+RUN ${L32} yum install -y curl-devel expat-devel gettext-devel perl-devel
 
 # Dependencies we need to build gcc
-RUN $L32 yum install -y wget bzip2
+RUN ${L32} yum install -y wget bzip2
 
 # Dependencies we need to build python
-RUN $L32 yum install -y zlib-devel bzip2-devel
+RUN ${L32} yum install -y zlib-devel bzip2-devel
 
 # Dependencies we need to build tar
-RUN $L32 yum install -y xz
+RUN ${L32} yum install -y xz

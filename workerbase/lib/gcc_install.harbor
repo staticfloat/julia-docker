@@ -1,34 +1,42 @@
 ## Install GCC
 ARG binutils_version=2.27
-ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.gz
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
 ARG gcc_version=6.3.0
-ARG gcc_url=https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.gz
+ARG gcc_url=https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
-RUN mkdir -p /src
+USER buildworker
 WORKDIR /src
 
 # Download/extract both binutils and gcc
-RUN curl -q -# -L "${binutils_url}" -o binutils-${binutils_version}.tar.gz
-RUN curl -q -# -L "${gcc_url}" -o gcc-${gcc_version}.tar.gz
-RUN tar zxf binutils-${binutils_version}.tar.gz
-RUN tar zxf gcc-${gcc_version}.tar.gz
+RUN curl -q -# -L "${binutils_url}" -o binutils-${binutils_version}.tar.bz2
+RUN curl -q -# -L "${gcc_url}" -o gcc-${gcc_version}.tar.bz2
+RUN tar jxf binutils-${binutils_version}.tar.bz2
+RUN tar jxf gcc-${gcc_version}.tar.bz2
 
 # Build binutils!
 WORKDIR /src/binutils-${binutils_version}
-RUN $L32 ./configure --prefix=/usr/local
-RUN $L32 make -j4
-RUN $L32 make install
+RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} make -j4
+
+# Install binutils
+USER root
+RUN ${L32} make install
+
 
 # Build gcc!
+USER buildworker
 WORKDIR /src/gcc-${gcc_version}
-RUN $L32 contrib/download_prerequisites
+RUN ${L32} contrib/download_prerequisites
 RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
-RUN $L32 /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
-RUN $L32 make -j4
-RUN $L32 make install
+RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
+RUN ${L32} make -j4
 
-# Setup environment variables so that GCC takes precedence
+# Install gcc
+USER root
+RUN ${L32} make install
+
+# Setup environment variables so that GCC takes precedence from this point forth
 ENV PATH "/usr/local/bin:$PATH"
 ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
 
