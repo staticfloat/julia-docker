@@ -6,7 +6,7 @@ buildall:
 $(foreach f,$(HFS),$(eval $(call add_dep,buildall,build-$(f))))
 
 # Build "upall" target that brings up all images that are compatible with our arch
-$(foreach f,$(BUILD_HFS),$(eval $(call add_dep,upall,../workerbase/$(f).harbor)))
+$(foreach f,$(BUILD_HFS),$(eval $(call add_dep,deployall,deploy-$(f))))
 
 # Here's where we take our templates and build docker-compose files out of them
 define build_dockercompose
@@ -31,12 +31,12 @@ build/$(1)/docker-compose.yml: docker-compose.template.yml Dockerfile.template e
 pull-$(1):
 	docker pull $(call tag_name,$(1))
 
-up-$(1): build-$(1)
+deploy-$(1): build-$(1)
 	@# Build our new worker, take down the old one and bring the new one up
 	@cd build/$(1); \
 	docker-compose build --pull; \
 	docker-compose down --remove-orphans; \
-	docker-compose up
+	docker-compose up -d
 endef
 
 # Call build_dockercompose on each and every harborfile
