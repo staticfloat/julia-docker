@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-ubuntu16_04-x86` in the `workerbase` directory
-# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_ubuntu16_04:x86 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_ubuntu16_04:x86 .`
 
 FROM ivochkin/ubuntu-i386:xenial
 
@@ -21,19 +21,19 @@ RUN chown buildworker:buildworker /src
 ## Download and install needed build dependencies for x86_64 apt-based systems
 # Start with tools that I love and always need by my side
 USER root
-RUN ${L32} apt update && ${L32} apt install -y htop tmux vim curl sudo
+RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl sudo
 
 # Move on to bare necessities for Julia
-RUN ${L32} apt install -y build-essential g++ gcc gfortran m4 make libssl-dev patch
+RUN ${L32} apt-get install -y build-essential g++ gcc gfortran m4 make libssl-dev patch
 
 # Dependencies we need to build git
-RUN ${L32} apt install -y libcurl4-openssl-dev libexpat1-dev gettext
+RUN ${L32} apt-get install -y libcurl4-openssl-dev libexpat1-dev gettext
 
 # Dependencies we need to build gcc
-RUN ${L32} apt install -y wget
+RUN ${L32} apt-get install -y wget
 
 # Dependencies we need to build python
-RUN ${L32} apt install -y zlib1g-dev libbz2-dev
+RUN ${L32} apt-get install -y zlib1g-dev libbz2-dev
 # Download and install `tar` because some machines have it too old and don't
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with
@@ -88,7 +88,7 @@ RUN tar jxf gcc-${gcc_version}.tar.bz2
 
 # Build binutils!
 WORKDIR /src/binutils-${binutils_version}
-RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} ./configure --prefix=/usr/local ${EXTRA_BINUTILS_CONFIG_FLAGS}
 RUN ${L32} make -j4
 
 # Install binutils
@@ -102,7 +102,7 @@ WORKDIR /src/gcc-${gcc_version}
 RUN ${L32} contrib/download_prerequisites
 RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
-RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
+RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib ${EXTRA_GCC_CONFIG_FLAGS}
 RUN ${L32} make -j4
 
 # Install gcc

@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-win10-x64` in the `workerbase` directory
-# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_win10:x64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_win10:x64 .`
 
 # For a windows build, run `docker build .` manually, or `winpty docker build .`
 # if you're running inside of git bash.
@@ -16,7 +16,8 @@ COPY install_cygwin.ps1 install_cygwin.ps1
 RUN powershell ./install_cygwin.ps1
 
 # Add cygwin and the windows 10 sdk to our path
-#RUN C:\\cygwin\\bin\\bash.exe -c 'echo "export PATH=$PATH:/c/cygwin/bin:/c/Program Files (x86)/Windows Kits/10/bin/x64"'
+RUN C:\\cygwin\\bin\\bash.exe -c 'echo "export PATH=$PATH:/c/cygwin/bin:/c/Program Files (x86)/Windows Kits/10/bin/x64" >> /etc/profile'
 
 # Setup our entrypoint properly
-ENTRYPOINT ["C:\cygwin\bin\bash.exe"]
+ENTRYPOINT ["C:\cygwin\bin\sh.exe", "-c"]
+CMD ["bash"]

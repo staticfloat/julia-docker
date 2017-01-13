@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-centos5_11-x64` in the `workerbase` directory
-# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_centos5_11:x64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_centos5_11:x64 .`
 
 FROM centos:5
 
@@ -91,7 +91,7 @@ RUN tar jxf gcc-${gcc_version}.tar.bz2
 
 # Build binutils!
 WORKDIR /src/binutils-${binutils_version}
-RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} ./configure --prefix=/usr/local ${EXTRA_BINUTILS_CONFIG_FLAGS}
 RUN ${L32} make -j4
 
 # Install binutils
@@ -105,7 +105,7 @@ WORKDIR /src/gcc-${gcc_version}
 RUN ${L32} contrib/download_prerequisites
 RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
-RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib
+RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib ${EXTRA_GCC_CONFIG_FLAGS}
 RUN ${L32} make -j4
 
 # Install gcc

@@ -4,10 +4,8 @@ ifeq ($(BUILD_ARCH),x86_64)
 ARCH_FILTER=%-x64 %-x86
 else ifeq ($(BUILD_ARCH),ppc64le)
 ARCH_FILTER=%-ppc64le
-else ifeq ($(BUILD_ARCH),armv7l)
-ARCH_FILTER=%-arm
-else ifeq ($(BUILD_ARCH),armv8l)
-ARCH_FILTER=%-aarch64
+else ifeq ($(BUILD_ARCH),aarch64)
+ARCH_FILTER=%-aarch64 %-armv7l
 endif
 
 # Begin by listing all the Harborfiles in the `workerbase/` directory, and

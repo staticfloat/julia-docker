@@ -5,7 +5,7 @@ buildall:
 # Build "buildall" target that builds the docker-compose directories
 $(foreach f,$(HFS),$(eval $(call add_dep,buildall,build-$(f))))
 
-# Build "upall" target that brings up all images that are compatible with our arch
+# Build "delpoyall" target that brings up all images that are compatible with our arch
 $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,deployall,deploy-$(f))))
 
 # Here's where we take our templates and build docker-compose files out of them
