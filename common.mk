@@ -40,10 +40,23 @@ endef
 
 
 # If we have `--squash` support, then use it!
-DOCKER_BUILD := docker build
 ifneq ($(shell docker build --help 2>/dev/null | grep squash),)
-DOCKER_BUILD := $(DOCKER_BUILD) --squash
+DOCKER_BUILD = docker build --squash
+define docker_squash
+	# Do naaaaahsiiing
+endef
+else
+DOCKER_BUILD = docker build
+define docker_squash
+	echo "Manually squashing $(call tag_name,$(1))..."
+	@CONTAINER_ID=$$$$(docker run -d $(call tag_name,$(1))); \
+	TAR_PATH=$(subst :,_,$(1)).tar; \
+	docker export -o $$$$TAR_PATH $$$$CONTAINER_ID; \
+	docker import "$$$$TAR_PATH" $(call tag_name,$(1)); \
+	rm -f "$$$$TAR_PATH"
+endef
 endif
+
 
 # If we're on windows, plop a `winpty` onto the front of DOCKER_BUILD
 ifneq (,$(findstring MINGW,$(BUILD_OS)))

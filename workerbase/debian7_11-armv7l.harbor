@@ -1,0 +1,15 @@
+FROM armhf/debian:wheezy
+
+# This enables putting `linux32` before commands like `./configure` and `make`
+ARG L32=linux32
+
+# We need to manually override binutils/gcc's host triplets
+ARG TRIPLET="arm-linux-gnueabihf"
+#ARG TARGET="armv7l-unknown-linux-gnueabihf"
+ARG EXTRA_BINTULS_CONFIG_FLAGS="--host=${TRIPLET} --build=${TRIPLET} --target=${TRIPLET} --enable-lto --enable-plugins"
+ARG EXTRA_GCC_CONFIG_FLAGS="--host=${TRIPLET} --build=${TRIPLET} --target=${TRIPLET} --with-arch=armv7-a --with-float=hard --with-fpu=vfpv3-d16 --enable-lto --enable-plugin"
+
+INCLUDE lib/alpha
+INCLUDE lib/builddeps_apt
+INCLUDE lib/build_tools
+INCLUDE lib/omega
