@@ -9,7 +9,8 @@ ARG buildbot_branch=master
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
 RUN pip install --upgrade pip
 RUN pip install buildbot[tls] buildbot-www buildbot-waterfall-view \
-                buildbot-console-view urllib3[secure] requests ipython
+                buildbot-console-view urllib3[secure] requests ipython \
+                buildbot_profiler
 
 # Clone/configure buildbot (the ADD command is to rebuild the rest of the image
 # from here on out without caching in case the remote repo has changed)
