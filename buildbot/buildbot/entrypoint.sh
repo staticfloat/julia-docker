@@ -12,4 +12,5 @@ watch_the_log /buildbot/master/twistd.log &
 
 # Start our buildbot!
 cd /buildbot/master
+buildbot upgrade-master
 exec twistd -ny buildbot.tac
