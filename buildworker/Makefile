@@ -8,6 +8,9 @@ $(foreach f,$(HFS),$(eval $(call add_dep,buildall,build-$(f))))
 # Build "delpoyall" target that brings up all images that are compatible with our arch
 $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,deployall,deploy-$(f))))
 
+# Build "downall" target that takes down all workers that are compatible with our arch
+$(foreach f,$(BUILD_HFS),$(eval $(call add_dep,downall,down-$(f))))
+
 # Here's where we take our templates and build docker-compose files out of them
 define build_dockercompose
 build-$(1): build/$(1)/docker-compose.yml
@@ -37,11 +40,15 @@ deploy-$(1): build-$(1)
 	docker-compose build --pull; \
 	docker-compose down --remove-orphans; \
 	COMPOSE_HTTP_TIMEOUT=300 docker-compose up -d
+
+down-$(1):
+	@cd build/$(1); \
+	docker-compose down --remove-orphans
 endef
 
 # Call build_dockercompose on each and every harborfile
 $(foreach f,$(HFS),$(eval $(call build_dockercompose,$(f))))
 
 
-clean:
+clean: downall
 	rm -rf build
