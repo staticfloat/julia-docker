@@ -1,6 +1,6 @@
 run:
 	docker-compose build --pull
-	docker-compose run buildbot "buildbot upgrade-master /buildbot/master"
+	docker-compose run --entrypoint=buildbot buildbot upgrade-master /buildbot/master
 	docker-compose up -d
 
 clean:
