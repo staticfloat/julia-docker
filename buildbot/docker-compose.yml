@@ -1,46 +1,58 @@
 version: '2'
 
 services:
-  certbot:
-    restart: unless-stopped
-    image: staticfloat/docker-letsencrypt-cron
-    container_name: certbot
-    expose:
-      - 80
-    volumes:
-      - buildbot_certbot_letsencrypt:/etc/letsencrypt
-    restart: unless-stopped
-    environment:
-      - DOMAINS=${FQDN}
-      - EMAIL=staticfloat@gmail.com
-      - SEPARATE=true
-  buildbot:
-    restart: unless-stopped
-    build:
-      context: buildbot
-      args:
-      - buildbot_branch=${BUILDBOT_BRANCH}
-    container_name: buildbot
-    expose:
-      - 8010
-    ports:
-      - 9989:9989/tcp
-  frontend:
-    restart: unless-stopped
-    depends_on:
-      - certbot
-      - buildbot
-    build:
-      context: frontend
-      args:
-        - fqdn=${FQDN}
-    container_name: frontend
-    volumes:
-      - buildbot_certbot_letsencrypt:/etc/letsencrypt:ro
-    ports:
-      - 80:80/tcp
-      - 443:443/tcp
+    certbot:
+        restart: unless-stopped
+        image: staticfloat/docker-letsencrypt-cron
+        container_name: certbot
+        expose:
+            - 80
+        volumes:
+            - buildbot_certbot_letsencrypt:/etc/letsencrypt
+        restart: unless-stopped
+        environment:
+            - DOMAINS=${FQDN}
+            - EMAIL=staticfloat@gmail.com
+            - SEPARATE=true
+    db:
+        restart: unless-stopped
+        image: postgres
+        expose:
+            - 5432
+        environment:
+            - POSTGRES_USER=${DB_USER}
+            - POSTGRES_PASSWORD=${DB_PASSWORD}
+    buildbot:
+        restart: unless-stopped
+        depends_on:
+            - db
+        build:
+            context: buildbot
+            args:
+                - buildbot_branch=${BUILDBOT_BRANCH}
+                - db_user=${DB_USER}
+                - db_password=${DB_PASSWORD}
+        container_name: buildbot
+        expose:
+            - 8010
+        ports:
+            - 9989:9989/tcp
+    frontend:
+        restart: unless-stopped
+        depends_on:
+            - certbot
+            - buildbot
+        build:
+            context: frontend
+            args:
+                - fqdn=${FQDN}
+        container_name: frontend
+        volumes:
+            - buildbot_certbot_letsencrypt:/etc/letsencrypt:ro
+        ports:
+            - 80:80/tcp
+            - 443:443/tcp
 
 volumes:
-  buildbot_certbot_letsencrypt:
-    external: true
+    buildbot_certbot_letsencrypt:
+        external: true

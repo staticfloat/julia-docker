@@ -4,6 +4,8 @@ RUN mkdir -p /buildbot
 WORKDIR /buildbot
 
 ARG buildbot_branch=master
+ARG db_user
+ARG db_password
 
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
@@ -21,6 +23,8 @@ RUN buildbot create-master master
 # Install secret files (Note, you must have unlocked this repo, as these are all
 # encrypted, and failing to do so will give strange unicode errors!)
 COPY buildbot_secret.py /buildbot/master
+RUN echo "db_user=\"${db_user}\"" >> /buildbot/master/buildbot_secret.py
+RUN echo "db_password=\"${db_password}\"" >> /buildbot/master/buildbot_secret.py
 COPY julia.gpg /root/
 COPY awssecret /root/.awssecret
 RUN mkdir -p /root/.gnupg
