@@ -17,6 +17,7 @@ services:
     db:
         restart: unless-stopped
         image: postgres
+        container_name: db
         expose:
             - 5432
         environment:

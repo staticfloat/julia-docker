@@ -10,7 +10,7 @@ ARG db_password
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
 RUN pip install --upgrade pip
-RUN pip install buildbot[tls] buildbot-www buildbot-waterfall-view \
+RUN pip install psycopg2 buildbot[tls] buildbot-www buildbot-waterfall-view \
                 buildbot-console-view urllib3[secure] requests ipython \
                 buildbot_profiler
 
