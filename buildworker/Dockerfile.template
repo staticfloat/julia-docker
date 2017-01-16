@@ -16,4 +16,5 @@ RUN echo "Elliot Saba <staticfloat@gmail.com>" > worker/info/admin
 RUN echo "Julia $buildworker_name buildworker" > worker/info/host
 
 COPY start_worker.sh /start_worker.sh
+RUN chmod +x /start_worker.sh
 CMD ["/start_worker.sh"]
