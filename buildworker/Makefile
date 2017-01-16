@@ -51,5 +51,5 @@ endef
 $(foreach f,$(HFS),$(eval $(call build_dockercompose,$(f))))
 
 
-clean: downall
+clean:
 	rm -rf build
