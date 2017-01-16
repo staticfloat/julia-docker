@@ -213,4 +213,5 @@ WORKDIR /
 RUN echo "#!/bin/bash" > /entrypoint.sh; echo "${L32} \"\$@\"" >> /entrypoint.sh; chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
+USER buildworker
 
