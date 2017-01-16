@@ -38,7 +38,6 @@ deploy-$(1): build-$(1)
 	@# Build our new worker, take down the old one and bring the new one up
 	@cd build/$(1); \
 	docker-compose build --pull; \
-	docker-compose down --remove-orphans; \
 	COMPOSE_HTTP_TIMEOUT=300 docker-compose up -d
 
 down-$(1):
