@@ -14,7 +14,7 @@ $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,downall,down-$(f))))
 # Here's where we take our templates and build docker-compose files out of them
 define build_dockercompose
 build-$(1): build/$(1)/docker-compose.yml
-build/$(1)/docker-compose.yml: docker-compose.template.yml Dockerfile.template entrypoint.sh secret.env ../workerbase/$(1).harbor
+build/$(1)/docker-compose.yml: docker-compose.template.yml Dockerfile.template start_worker.sh secret.env ../workerbase/$(1).harbor
 	@echo $(1)
 	@rm -rf "build/$(1)"
 	@mkdir -p "build/$(1)/worker"
@@ -29,7 +29,7 @@ build/$(1)/docker-compose.yml: docker-compose.template.yml Dockerfile.template e
 	@echo "# Do not edit directly; edit the template files" >> "build/$(1)/worker/Dockerfile"
 	@echo "FROM $(call tag_name,$(1))" >> "build/$(1)/worker/Dockerfile"
 	@cat Dockerfile.template >> "build/$(1)/worker/Dockerfile"
-	@cp ./entrypoint.sh "build/$(1)/worker/entrypoint.sh"
+	@cp ./start_worker.sh "build/$(1)/worker/start_worker.sh"
 
 pull-$(1):
 	docker pull $(call tag_name,$(1))

@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-debian7_11-armv7l` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_debian7_11:armv7l .`
+# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_debian7_11:armv7l .`
 
 FROM armhf/debian:wheezy
 

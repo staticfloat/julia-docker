@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-ubuntu16_04-x86` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_ubuntu16_04:x86 .`
+# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_ubuntu16_04:x86 .`
 
 FROM ivochkin/ubuntu-i386:xenial
 

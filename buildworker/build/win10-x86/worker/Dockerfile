@@ -18,6 +18,5 @@ RUN $L32 buildbot-worker create-worker --keepalive=100 --umask 022 worker $build
 RUN echo "Elliot Saba <staticfloat@gmail.com>" > worker/info/admin
 RUN echo "Julia $buildworker_name buildworker" > worker/info/host
 
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/bin/sh"]
-CMD ["/entrypoint.sh"]
+COPY start_worker.sh /start_worker.sh
+CMD ["/start_worker.sh"]

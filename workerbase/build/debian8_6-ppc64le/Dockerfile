@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-debian8_6-ppc64le` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_debian8_6:ppc64le .`
+# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_debian8_6:ppc64le .`
 
 FROM ppc64le/debian:jessie
 
