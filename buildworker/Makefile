@@ -42,7 +42,7 @@ deploy-$(1): build-$(1)
 	COMPOSE_HTTP_TIMEOUT=300 docker-compose up -d
 
 down-$(1):
-	if [[ -d build/$(1) ]]; then \
+	if [ -d build/$(1) ]; then \
 		@cd build/$(1); \
 		docker-compose down --remove-orphans; \
 	fi
