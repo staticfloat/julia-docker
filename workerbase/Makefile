@@ -22,7 +22,6 @@ build-$(1): build/$(1)/Dockerfile
 
 # Running `make push-ubuntu16_04-x86` will upload that image to
 push-$(1):
-	$(call docker_squash,$(1))
 	docker push $(call tag_name,$(1))
 
 # This is how we build the actual Dockerfile

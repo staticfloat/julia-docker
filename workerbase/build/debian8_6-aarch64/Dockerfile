@@ -199,7 +199,18 @@ RUN pip install virtualenv
 WORKDIR /src
 RUN rm -rf Python-${python_version}*
 RUN rm -f get-pip.py
+# We need to override ld.so.conf to search /usr/local before /usr
+RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
+    echo "/usr/local/lib" >> /etc/ld.so.conf.new; \
+    cat /etc/ld.so.conf >> /etc/ld.so.conf.new; \
+    mv /etc/ld.so.conf.new /etc/ld.so.conf; \
+    ldconfig
+
 # These are our final words. Always.
 WORKDIR /
-ENTRYPOINT [${L32}]
+
+# Use /entrypoint.sh hack to get around the whole ${L32} ARG not being used in ENTRYPOINT thing.
+RUN echo "#!/bin/bash" > /entrypoint.sh; echo "${L32} \"\$@\"" >> /entrypoint.sh; chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
+
