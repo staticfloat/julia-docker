@@ -42,8 +42,10 @@ deploy-$(1): build-$(1)
 	COMPOSE_HTTP_TIMEOUT=300 docker-compose up -d
 
 down-$(1):
-	@cd build/$(1); \
-	docker-compose down --remove-orphans
+	if [[ -d build/$(1) ]]; then \
+		@cd build/$(1); \
+		docker-compose down --remove-orphans; \
+	fi
 endef
 
 # Call build_dockercompose on each and every harborfile
