@@ -1,7 +1,8 @@
 ## Download and install needed build dependencies for x86_64 yum-based systems
-# Start with tools that I love and always need by my side
 USER root
-RUN ${L32} yum update -y && ${L32} yum install -y htop tmux vim curl net-tools which sudo
+
+# Start with tools that I love and always need by my side
+RUN ${L32} yum update -y && ${L32} yum install -y htop tmux vim curl net-tools which gdb
 
 # Move on to bare necessities for Julia
 RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch

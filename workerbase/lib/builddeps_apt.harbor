@@ -1,7 +1,8 @@
 ## Download and install needed build dependencies for x86_64 apt-based systems
-# Start with tools that I love and always need by my side
 USER root
-RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl sudo
+
+# Start with tools that I love and always need by my side
+RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl gdb
 
 # Move on to bare necessities for Julia
 RUN ${L32} apt-get install -y build-essential g++ gcc gfortran m4 make libssl-dev patch
