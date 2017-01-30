@@ -1,19 +1,6 @@
 version: '2'
 
 services:
-    certbot:
-        restart: unless-stopped
-        image: staticfloat/docker-letsencrypt-cron
-        container_name: certbot
-        expose:
-            - 80
-        volumes:
-            - buildbot_certbot_letsencrypt:/etc/letsencrypt
-        restart: unless-stopped
-        environment:
-            - DOMAINS=${FQDN}
-            - EMAIL=staticfloat@gmail.com
-            - SEPARATE=true
     db:
         restart: unless-stopped
         image: postgres
@@ -41,19 +28,14 @@ services:
     frontend:
         restart: unless-stopped
         depends_on:
-            - certbot
             - buildbot
         build:
             context: frontend
             args:
                 - fqdn=${FQDN}
+        environment:
+            - CERTBOT_EMAIL=staticfloat@gmail.com
         container_name: frontend
-        volumes:
-            - buildbot_certbot_letsencrypt:/etc/letsencrypt:ro
         ports:
             - 80:80/tcp
             - 443:443/tcp
-
-volumes:
-    buildbot_certbot_letsencrypt:
-        external: true
