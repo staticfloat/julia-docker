@@ -15,7 +15,7 @@ RUN pip install psycopg2 buildbot[tls] buildbot-www buildbot-waterfall-view \
                 buildbot_profiler
 
 RUN git clone -b sf/github_access_token https://github.com/staticfloat/buildbot /buildbot_source
-RUN cd /buildbot_source/master && python setup.py install
+RUN cd /buildbot_source/master && python setup.py install --force
 
 # Clone/configure buildbot (the ADD command is to rebuild the rest of the image
 # from here on out without caching in case the remote repo has changed)
