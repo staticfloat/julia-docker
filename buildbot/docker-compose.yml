@@ -10,6 +10,8 @@ services:
         environment:
             - POSTGRES_USER=${DB_USER}
             - POSTGRES_PASSWORD=${DB_PASSWORD}
+        volumes:
+            - db_data:/var/lib/postgresql/data
     buildbot:
         restart: unless-stopped
         depends_on:
@@ -39,3 +41,5 @@ services:
         ports:
             - 80:80/tcp
             - 443:443/tcp
+volumes:
+    db_data:
