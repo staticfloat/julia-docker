@@ -1,0 +1,37 @@
+FROM debian:jessie
+
+# This enables putting `linux32` before commands like `./configure` and `make`
+#ARG L32=linux32
+
+# We need to manually override binutils/gcc's host triplets
+#ARG TRIPLET="arm-linux-gnueabihf"
+INCLUDE lib/alpha
+INCLUDE lib/builddeps_apt
+INCLUDE lib/tar_install
+
+# Install x86_64 gcc and all the other tools
+INCLUDE lib/gcc_install
+INCLUDE lib/git_install
+INCLUDE lib/cmake_install
+INCLUDE lib/python_install
+
+ARG HOSTBUILD="--host=x86_64-linux-gnu --build=x86_64-linux-gnu"
+
+# Start to install cross-compilers
+USER root
+RUN apt-get install -y binfmt-support qemu-user-static
+
+# Install armhf cross-compiler
+#ARG TRIPLET="ppc64le-linux-gnu"
+#ARG EXTRA_BINTULS_CONFIG_FLAGS="--host=${TRIPLET} --build=${TRIPLET} --target=${TRIPLET} --enable-lto --enable-plugins"
+#ARG EXTRA_GCC_CONFIG_FLAGS="--host=${TRIPLET} --build=${TRIPLET} --target=${TRIPLET} --with-arch=armv7-a --with-float=hard --with-fpu=vfpv3-d16 --enable-lto --enable-plugin"
+#INCLUDE lib/gcc_install
+
+
+# Install ppc64le cross-compiler
+ARG EXTRA_BINTULS_CONFIG_FLAGS="${HOSTBUILD} --target=ppc64le-linux-gnu"
+ARG EXTRA_GCC_CONFIG_FLAGS="${HOSTBUILD} --target=ppc64le-linux-gnu"
+INCLUDE lib/gcc_install
+
+INCLUDE lib/omega
+
