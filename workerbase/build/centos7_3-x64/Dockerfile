@@ -117,8 +117,11 @@ RUN ${L32} make install
 ENV PATH "/usr/local/bin:$PATH"
 ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
 ENV AR "/usr/local/bin/gcc-ar"
+ENV CMAKE_AR "/usr/local/bin/gcc-ar"
 ENV RANLIB "/usr/local/bin/gcc-ranlib"
+ENV CMAKE_RANLIB "/usr/local/bin/gcc-ranlib"
 ENV NM "/usr/local/bin/gcc-nm"
+ENV CMAKE_NM "/usr/local/bin/gcc-nm"
 
 # Now cleanup /src
 WORKDIR /src
