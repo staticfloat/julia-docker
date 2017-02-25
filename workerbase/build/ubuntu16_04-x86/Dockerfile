@@ -19,9 +19,10 @@ RUN useradd -m -s /bin/bash buildworker
 RUN mkdir -p /src
 RUN chown buildworker:buildworker /src
 ## Download and install needed build dependencies for x86_64 apt-based systems
-# Start with tools that I love and always need by my side
 USER root
-RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl sudo
+
+# Start with tools that I love and always need by my side
+RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl gdb
 
 # Move on to bare necessities for Julia
 RUN ${L32} apt-get install -y build-essential g++ gcc gfortran m4 make libssl-dev patch
@@ -112,6 +113,9 @@ RUN ${L32} make install
 # Setup environment variables so that GCC takes precedence from this point forth
 ENV PATH "/usr/local/bin:$PATH"
 ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
+ENV AR "/usr/local/bin/gcc-ar"
+ENV RANLIB "/usr/local/bin/gcc-ranlib"
+ENV NM "/usr/local/bin/gcc-nm"
 
 # Now cleanup /src
 WORKDIR /src
