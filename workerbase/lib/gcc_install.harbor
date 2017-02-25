@@ -39,6 +39,9 @@ RUN ${L32} make install
 # Setup environment variables so that GCC takes precedence from this point forth
 ENV PATH "/usr/local/bin:$PATH"
 ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
+ENV AR "/usr/local/bin/gcc-ar"
+ENV RANLIB "/usr/local/bin/gcc-ranlib"
+ENV NM "/usr/local/bin/gcc-nm"
 
 # Now cleanup /src
 WORKDIR /src
