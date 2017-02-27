@@ -110,15 +110,16 @@ RUN ${L32} make -j4
 USER root
 RUN ${L32} make install
 
+# Symlink LTO plugin into binutils directory
+RUN mkdir -p /usr/local/lib/bfd-plugins
+RUN ln -s $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib/bfd-plugins/
+
 # Setup environment variables so that GCC takes precedence from this point forth
 ENV PATH "/usr/local/bin:$PATH"
 ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
 ENV AR "/usr/local/bin/gcc-ar"
-ENV CMAKE_AR "/usr/local/bin/gcc-ar"
 ENV RANLIB "/usr/local/bin/gcc-ranlib"
-ENV CMAKE_RANLIB "/usr/local/bin/gcc-ranlib"
 ENV NM "/usr/local/bin/gcc-nm"
-ENV CMAKE_NM "/usr/local/bin/gcc-nm"
 
 # Now cleanup /src
 WORKDIR /src
