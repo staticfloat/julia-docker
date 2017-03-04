@@ -11,5 +11,10 @@ ARG EXTRA_GCC_CONFIG_FLAGS="--host=${TRIPLET} --build=${TRIPLET} --target=${TRIP
 INCLUDE lib/alpha
 INCLUDE lib/builddeps_apt
 INCLUDE lib/build_tools
+
+# This enables qemu-*-static emulation on x86_64
+ARG QEMU_ARCH=arm
+INCLUDE lib/multiarch
+
 INCLUDE lib/omega
 

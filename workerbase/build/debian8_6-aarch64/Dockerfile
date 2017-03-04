@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-debian8_6-aarch64` in the `workerbase` directory
-# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_debian8_6:aarch64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_debian8_6:aarch64 .`
 
 FROM aarch64/debian:jessie
 
@@ -207,6 +207,14 @@ RUN pip install virtualenv
 WORKDIR /src
 RUN rm -rf Python-${python_version}*
 RUN rm -f get-pip.py
+
+# This enables qemu-*-static emulation on x86_64
+ARG QEMU_ARCH=aarch64
+ARG QEMU_VER=2.8.0
+RUN curl -L https://github.com/multiarch/qemu-user-static/releases/download/v${QEMU_VER}/qemu-${QEMU_ARCH}-static -o /usr/bin/
+RUN chmod +x /usr/bin/qemu-${QEMU_ARCH}-static
+
+
 # We need to override ld.so.conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     echo "/usr/local/lib" >> /etc/ld.so.conf.new; \

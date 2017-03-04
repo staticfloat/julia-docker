@@ -1,0 +1,3 @@
+ARG QEMU_VER=2.8.0
+RUN curl -L https://github.com/multiarch/qemu-user-static/releases/download/v${QEMU_VER}/qemu-${QEMU_ARCH}-static -o /usr/bin/
+RUN chmod +x /usr/bin/qemu-${QEMU_ARCH}-static

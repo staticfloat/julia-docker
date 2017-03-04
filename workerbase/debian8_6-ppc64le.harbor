@@ -6,4 +6,9 @@ FROM ppc64le/debian:jessie
 INCLUDE lib/alpha
 INCLUDE lib/builddeps_apt
 INCLUDE lib/build_tools
+
+# This enables qemu-*-static emulation on x86_64
+ARG QEMU_ARCH=ppc64le
+INCLUDE lib/multiarch
+
 INCLUDE lib/omega
