@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-debian7_11-armv7l` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_debian7_11:armv7l .`
+# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_debian7_11:armv7l .`
 
 FROM armhf/debian:wheezy
 
@@ -81,7 +81,7 @@ RUN rm -rf tar-${tar_version}* || \
 ARG binutils_version=2.27
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
 ARG gcc_version=6.3.0
-ARG gcc_url=https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+ARG gcc_url=https://mirrors.concertpass.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
 USER buildworker
 WORKDIR /src
@@ -215,9 +215,16 @@ RUN rm -f get-pip.py
 
 # This enables qemu-*-static emulation on x86_64
 ARG QEMU_ARCH=arm
+USER root
+# Install binfmt-support
+RUN apt-get install -y binfmt-support
+
+# Download latest qemu-user-static releases
 ARG QEMU_VER=2.8.0
 RUN curl -L https://github.com/multiarch/qemu-user-static/releases/download/v${QEMU_VER}/qemu-${QEMU_ARCH}-static -o /usr/bin/
 RUN chmod +x /usr/bin/qemu-${QEMU_ARCH}-static
+
+USER buildworker
 
 # We need to override ld.so.conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \

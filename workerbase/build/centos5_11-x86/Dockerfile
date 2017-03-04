@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-centos5_11-x86` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_centos5_11:x86 .`
+# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_centos5_11:x86 .`
 
 FROM toopher/centos-i386:centos5
 
@@ -79,7 +79,7 @@ RUN rm -rf tar-${tar_version}* || \
 ARG binutils_version=2.27
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
 ARG gcc_version=6.3.0
-ARG gcc_url=https://mirrors-usa.go-parts.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+ARG gcc_url=https://mirrors.concertpass.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
 USER buildworker
 WORKDIR /src
