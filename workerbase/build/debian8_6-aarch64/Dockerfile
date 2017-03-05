@@ -219,8 +219,8 @@ ARG QEMU_VER=2.8.0
 RUN curl -L https://github.com/multiarch/qemu-user-static/releases/download/v${QEMU_VER}/qemu-${QEMU_ARCH}-static -o /usr/bin/qemu-${QEMU_ARCH}-static
 RUN chmod +x /usr/bin/qemu-${QEMU_ARCH}-static
 
-USER buildworker
 
+USER root
 
 # We need to override ld.so.conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \

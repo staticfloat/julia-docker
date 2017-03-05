@@ -207,6 +207,8 @@ RUN pip install virtualenv
 WORKDIR /src
 RUN rm -rf Python-${python_version}*
 RUN rm -f get-pip.py
+USER root
+
 # We need to override ld.so.conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     echo "/usr/local/lib" >> /etc/ld.so.conf.new; \
