@@ -13,4 +13,10 @@ ARCH_FLAGS="JULIA_CPU_TARGET=generic MARCH=armv7-a"
 endif
 
 build:
-	$(DOCKER_BUILD) --pull --build-arg "ARCH_FLAGS=$(ARCH_FLAGS)" -t staticfloat/julia:$(BUILD_ARCH)
+	$(DOCKER_BUILD) --pull --build-arg ARCH_FLAGS=$(ARCH_FLAGS) -t staticfloat/julia:$(BUILD_ARCH) .
+
+run: build
+	docker run -ti staticfloat/julia:$(BUILD_ARCH)
+
+push: build
+	docker push staticfloat/julia:$(BUILD_ARCH)
