@@ -4,7 +4,7 @@ FROM ubuntu:16.04
 ARG ARCH_FLAGS
 
 # These are the build dependencies for Julia
-ARG BUILD_DEPS="build-essential gfortran m4 python cmake curl git patchelf"
+ARG BUILD_DEPS="build-essential gfortran m4 python python-dev cmake curl git patchelf"
 RUN apt update && apt install -y ${BUILD_DEPS}
 
 # Clone julia, build and install
