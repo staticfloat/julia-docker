@@ -2,7 +2,7 @@
 ARG binutils_version=2.28
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
 ARG gcc_version=7.1.0
-ARG gcc_url=https://mirrors.concertpass.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
 USER buildworker
 WORKDIR /src
