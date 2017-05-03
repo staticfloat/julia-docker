@@ -75,9 +75,9 @@ RUN rm -rf tar-${tar_version}* || \
 # Download and install `gcc` because we want only the latest in cutting-edge
 # compiler technology, and also because LLVM is a needy little piece of software
 ## Install GCC
-ARG binutils_version=2.27
+ARG binutils_version=2.28
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
-ARG gcc_version=6.3.0
+ARG gcc_version=7.1.0
 ARG gcc_url=https://mirrors.concertpass.com/gcc/releases/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
 USER buildworker
