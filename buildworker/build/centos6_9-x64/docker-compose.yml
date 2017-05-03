@@ -3,7 +3,7 @@
 # braces and substituted through simple `sed` commands.
 version: '2'
 services:
-    centos5_11-x86:
+    centos6_9-x64:
         restart: unless-stopped
         build:
             context: worker
@@ -18,8 +18,8 @@ services:
                 - buildbot_password
                 # These two arguments are per-worker deals, and are substituted in by
                 # our make-shift make templating chops
-                - buildworker_name=centos5_11-x86
-                - L32=linux32
+                - buildworker_name=centos6_9-x64
+                - L32=       
         ulimits:
             nproc:  10000
             nofile: 10000
