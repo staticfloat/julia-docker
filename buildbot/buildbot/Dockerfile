@@ -10,17 +10,17 @@ ARG db_password
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
 RUN pip install --upgrade pip
-RUN pip install psycopg2 buildbot[tls] buildbot-www buildbot-waterfall-view \
-                buildbot-console-view urllib3[secure] requests ipython \
+
+# The ADD command is to rebuild the rest of the image from here on out
+# without caching in case there's a new version of buildbot out
+ADD https://pypi.python.org/pypi?:action=doap&name=buildbot /buildbot_doap.xml
+RUN pip install psycopg2 buildbot[tls,bundle] urllib3[secure] requests ipython \
                 buildbot_profiler
 
-RUN git clone -b sf/github_access_token https://github.com/staticfloat/buildbot /buildbot_source
-RUN pip uninstall buildbot
-RUN cd /buildbot_source/master && python setup.py install --force
-
-# Clone/configure buildbot (the ADD command is to rebuild the rest of the image
-# from here on out without caching in case the remote repo has changed)
-ADD https://api.github.com/repos/staticfloat/julia-buildbot/git/refs/heads/${buildbot_branch} /buildbot_version.json
+# Clone/configure buildbot configuration
+# the ADD command is to rebuild the rest of the image from here on out
+# without caching in case the remote repo has changed)
+ADD https://api.github.com/repos/staticfloat/julia-buildbot/git/refs/heads/${buildbot_branch} /julia-buildbot_version.json
 RUN git clone -b ${buildbot_branch} https://github.com/staticfloat/julia-buildbot.git .
 RUN buildbot create-master master
 
@@ -38,6 +38,7 @@ COPY ssh_host_rsa_key /etc/ssh/
 COPY ssh_host_rsa_key.pub /etc/ssh/
 COPY try_thrice /root/bin/try_thrice
 ADD https://raw.githubusercontent.com/timkay/aws/master/aws /root/bin/aws
+RUN chmod +x /root/bin/aws
 
 # Install entrypoint and run it!
 COPY entrypoint.sh /entrypoint.sh
