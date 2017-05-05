@@ -1,4 +1,4 @@
-FROM centos:5
+FROM centos:6.9
 
 
 
