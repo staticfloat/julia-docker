@@ -37,7 +37,7 @@ build/$(1)/Dockerfile: $(1).harbor Makefile
 	@echo "# Do not edit directly; edit the .harbor files" >> "build/$(1)/Dockerfile"
 	@echo "#" >> "build/$(1)/Dockerfile"
 	@echo "# To build this docker image via \`make\`, run \`make build-$(1)\` in the \`workerbase\` directory" >> "build/$(1)/Dockerfile"
-	@echo "# To build this docker image manually, run \`$(DOCKER_BUILD) --pull -t $(call tag_name,$(1)) .\`" >> "build/$(1)/Dockerfile"
+	@echo "# To build this docker image manually, run \`docker build --pull -t $(call tag_name,$(1)) .\`" >> "build/$(1)/Dockerfile"
 	@echo >> "build/$(1)/Dockerfile"
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
