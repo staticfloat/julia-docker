@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-debian8_6-aarch64` in the `workerbase` directory
-# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_debian8_6:aarch64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_debian8_6:aarch64 .`
 
 FROM aarch64/debian:jessie
 

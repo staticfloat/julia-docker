@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-centos7_3-x64` in the `workerbase` directory
-# To build this docker image manually, run `docker build --squash --pull -t staticfloat/julia_workerbase_centos7_3:x64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_centos7_3:x64 .`
 
 FROM centos:7
 
@@ -30,7 +30,7 @@ RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel
 RUN ${L32} yum install -y curl-devel expat-devel gettext-devel perl-devel
 
 # Dependencies we need to build gcc
-RUN ${L32} yum install -y wget bzip2
+RUN ${L32} yum install -y wget bzip2 tar
 
 # Dependencies we need to build python
 RUN ${L32} yum install -y zlib-devel bzip2-devel
