@@ -1,7 +1,7 @@
 # This template has variables that are substituted in when it is installed into
 # the `build` directory by our Makefile.  The variables are surrounded by curly
 # braces and substituted through simple `sed` commands.
-version: '3'
+version: '2.1'
 services:
     debian8_6-aarch64:
         restart: unless-stopped
