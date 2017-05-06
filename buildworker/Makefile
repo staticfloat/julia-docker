@@ -34,7 +34,7 @@ build/$(1)/docker-compose.yml: docker-compose.template.yml Dockerfile.template s
 pull-$(1):
 	docker pull $(call tag_name,$(1))
 
-deploy-$(1): build-$(1)
+deploy-$(1): build-$(1) network
 	@# Build our new worker, take down the old one and bring the new one up
 	@cd build/$(1); \
 	docker-compose build --pull; \
@@ -46,6 +46,12 @@ down-$(1):
 		docker-compose down --remove-orphans; \
 	fi
 endef
+
+# Makefile target to make our internal ipv6 network
+network:
+	@if [ -z "$(shell docker network ls | grep ipv6_internal)" ]; then \
+		docker network create --internal --ipv6 --subnet "fdeb:8a6f:18cc::/48" ipv6_internal; \
+	fi
 
 # Call build_dockercompose on each and every harborfile
 $(foreach f,$(HFS),$(eval $(call build_dockercompose,$(f))))

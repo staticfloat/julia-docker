@@ -1,7 +1,7 @@
 # This template has variables that are substituted in when it is installed into
 # the `build` directory by our Makefile.  The variables are surrounded by curly
 # braces and substituted through simple `sed` commands.
-version: '2'
+version: '3'
 services:
     debian8_6-ppc64le:
         restart: unless-stopped
@@ -23,3 +23,10 @@ services:
         ulimits:
             nproc:  10000
             nofile: 10000
+        networks:
+            - default
+            - ipv6_internal
+networks:
+    ipv6_internal:
+        external:
+            name: ipv6_internal
