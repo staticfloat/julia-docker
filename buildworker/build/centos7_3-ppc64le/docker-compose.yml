@@ -26,6 +26,25 @@ services:
         networks:
             - default
             - ipv6_internal
+    # Copy of above, but we don't build julia within this worker.  This is a
+    # second buildworker instance that is used to test the output of the first
+    # but without the benefit of the build tree; to ensure it works cleanly.
+    tabularasa-centos7_3-ppc64le:
+        restart: unless-stopped
+        build:
+            context: worker
+            args:
+                - buildbot_server
+                - buildbot_port
+                - buildbot_password
+                - buildworker_name=tabularasa_centos7_3-ppc64le
+                - L32=       
+        ulimits:
+            nproc:  10000
+            nofile: 10000
+        networks:
+            - default
+            - ipv6_internal
 networks:
     ipv6_internal:
         external:
