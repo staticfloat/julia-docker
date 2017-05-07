@@ -31,7 +31,7 @@ RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel
 RUN ${L32} yum install -y curl-devel expat-devel gettext-devel perl-devel
 
 # Dependencies we need to build gcc
-RUN ${L32} yum install -y wget bzip2
+RUN ${L32} yum install -y wget bzip2 tar
 
 # Dependencies we need to build python
 RUN ${L32} yum install -y zlib-devel bzip2-devel
