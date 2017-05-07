@@ -20,6 +20,9 @@ define build_dockerfile
 build-$(1): build/$(1)/Dockerfile
 	$(DOCKER_BUILD) --pull -t $(call tag_name,$(1)) "build/$(1)"
 
+shell-$(1):
+	docker run -ti $(call tag_name,$(1))
+
 # Running `make push-ubuntu16_04-x86` will upload that image to
 push-$(1):
 	docker push $(call tag_name,$(1))
