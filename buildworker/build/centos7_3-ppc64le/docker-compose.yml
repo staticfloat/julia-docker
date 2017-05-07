@@ -3,7 +3,7 @@
 # braces and substituted through simple `sed` commands.
 version: '2.1'
 services:
-    debian8_6-ppc64le:
+    centos7_3-ppc64le:
         restart: unless-stopped
         build:
             context: worker
@@ -18,7 +18,7 @@ services:
                 - buildbot_password
                 # These two arguments are per-worker deals, and are substituted in by
                 # our make-shift make templating chops
-                - buildworker_name=debian8_6-ppc64le
+                - buildworker_name=centos7_3-ppc64le
                 - L32=       
         ulimits:
             nproc:  10000
