@@ -5,7 +5,7 @@ buildall:
 # Build "buildall" target that builds the docker-compose directories
 $(foreach f,$(HFS),$(eval $(call add_dep,buildall,build-$(f))))
 
-# Build "delpoyall" target that brings up all images that are compatible with our arch
+# Build "deployall" target that brings up all images that are compatible with our arch
 $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,deployall,deploy-$(f))))
 
 # Build "downall" target that takes down all workers that are compatible with our arch
