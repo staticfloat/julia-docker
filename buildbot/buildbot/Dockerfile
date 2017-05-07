@@ -3,7 +3,7 @@ FROM python:2
 RUN mkdir -p /buildbot
 WORKDIR /buildbot
 
-ARG buildbot_branch=master
+ARG buildbot_branch
 ARG db_user
 ARG db_password
 
@@ -33,9 +33,6 @@ COPY julia.gpg /root/
 COPY awssecret /root/.awssecret
 RUN mkdir -p /root/.gnupg
 RUN gpg --import /root/julia.gpg
-COPY authorized_keys /buildbot/master
-COPY ssh_host_rsa_key /etc/ssh/
-COPY ssh_host_rsa_key.pub /etc/ssh/
 COPY try_thrice /root/bin/try_thrice
 ADD https://raw.githubusercontent.com/timkay/aws/master/aws /root/bin/aws
 RUN chmod +x /root/bin/aws
