@@ -4,7 +4,7 @@
 # To build this docker image via `make`, run `make build-centos6_9-x86` in the `workerbase` directory
 # To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_centos6_9:x86 .`
 
-FROM toopher/centos-i386:centos6
+FROM staticfloat/centos-i386:centos6
 
 # This enables putting `linux32` before commands like `./configure` and `make`
 ARG L32=linux32
