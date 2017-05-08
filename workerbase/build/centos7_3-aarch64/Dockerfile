@@ -38,6 +38,9 @@ RUN ${L32} yum install -y zlib-devel bzip2-devel
 
 # Dependencies we need to build tar
 RUN ${L32} yum install -y xz
+
+# Dependencies we need to do nightly SRPM packaging
+RUN ${L32} yum install -y rpmdevtools
 # Download and install `tar` because some machines have it too old and don't
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with

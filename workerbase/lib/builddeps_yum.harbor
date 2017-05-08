@@ -18,3 +18,6 @@ RUN ${L32} yum install -y zlib-devel bzip2-devel
 
 # Dependencies we need to build tar
 RUN ${L32} yum install -y xz
+
+# Dependencies we need to do nightly SRPM packaging
+RUN ${L32} yum install -y rpmdevtools
