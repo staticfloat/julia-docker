@@ -4,7 +4,7 @@ FROM armhf/debian:wheezy
 ARG L32=linux32
 
 INCLUDE lib/alpha
-RUN apt-get update && apt-get install -y python curl gcc gcc-c++ make
+RUN apt-get update && apt-get install -y python curl build-essential
 RUN curl -L 'https://bootstrap.pypa.io/get-pip.py' | python
 
 # This enables qemu-*-static emulation on x86_64
