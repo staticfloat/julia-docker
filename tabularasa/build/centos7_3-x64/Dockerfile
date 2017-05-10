@@ -18,7 +18,7 @@ RUN useradd -m -s /bin/bash buildworker
 # This is where we'll do all our work, so make it now
 RUN mkdir -p /src
 RUN chown buildworker:buildworker /src
-RUN yum update -y && yum install -y python curl gcc gcc-c++ make
+RUN yum update -y && yum install -y python python-devel curl gcc gcc-c++ make
 RUN curl -L 'https://bootstrap.pypa.io/get-pip.py' | python
 
 
