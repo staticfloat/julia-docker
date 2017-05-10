@@ -27,7 +27,7 @@ RUN chown buildworker:buildworker /src
 USER root
 
 # Start with tools that I love and always need by my side
-RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl gdb
+RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl gdb procps
 
 # Move on to bare necessities for Julia
 RUN ${L32} apt-get install -y build-essential g++ gcc gfortran m4 make libssl-dev patch

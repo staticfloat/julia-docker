@@ -32,7 +32,7 @@ services:
     tabularasa-centos7_3-aarch64:
         restart: unless-stopped
         build:
-            context: worker
+            context: tabularasa
             args:
                 - buildbot_server
                 - buildbot_port

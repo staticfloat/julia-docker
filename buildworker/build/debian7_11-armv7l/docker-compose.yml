@@ -32,7 +32,7 @@ services:
     tabularasa-debian7_11-armv7l:
         restart: unless-stopped
         build:
-            context: worker
+            context: tabularasa
             args:
                 - buildbot_server
                 - buildbot_port
