@@ -1,0 +1,14 @@
+FROM staticfloat/centos-i386:centos6
+
+# This enables putting `linux32` before commands like `./configure` and `make`
+ARG L32=linux32
+
+INCLUDE lib/alpha
+
+
+# Install python from source because centos is old
+RUN yum update && yum install gcc gcc-c++ make zlib-devel bzip2-devel curl
+INCLUDE lib/python_install
+
+
+INCLUDE lib/omega

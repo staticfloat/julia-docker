@@ -1,0 +1,12 @@
+FROM centos:6.9
+
+
+
+
+INCLUDE lib/alpha
+# Install python from source because centos is old
+RUN yum update && yum install gcc gcc-c++ make zlib-devel bzip2-devel curl
+INCLUDE lib/python_install
+
+
+INCLUDE lib/omega
