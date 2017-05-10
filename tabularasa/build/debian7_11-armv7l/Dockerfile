@@ -18,7 +18,7 @@ RUN useradd -m -s /bin/bash buildworker
 # This is where we'll do all our work, so make it now
 RUN mkdir -p /src
 RUN chown buildworker:buildworker /src
-RUN apt-get update && apt-get install -y python curl
+RUN apt-get update && apt-get install -y python curl gcc gcc-c++ make
 RUN curl -L 'https://bootstrap.pypa.io/get-pip.py' | python
 
 # This enables qemu-*-static emulation on x86_64

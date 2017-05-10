@@ -18,7 +18,7 @@ RUN useradd -m -s /bin/bash buildworker
 # This is where we'll do all our work, so make it now
 RUN mkdir -p /src
 RUN chown buildworker:buildworker /src
-RUN apt update && apt install -y python curl
+RUN apt update && apt install -y python curl build-essential
 RUN curl -L 'https://bootstrap.pypa.io/get-pip.py' | python
 USER root
 
