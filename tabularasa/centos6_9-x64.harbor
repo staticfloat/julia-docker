@@ -4,7 +4,7 @@ FROM centos:6.9
 
 
 INCLUDE lib/alpha
-RUN yum update -y && yum install -y gcc gcc-c++ make zlib-devel bzip2-devel curl
+RUN yum update -y && yum install -y gcc gcc-c++ make zlib-devel bzip2-devel curl tar
 INCLUDE lib/python_install
 
 
