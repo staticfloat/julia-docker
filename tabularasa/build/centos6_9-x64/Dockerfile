@@ -18,7 +18,7 @@ RUN useradd -m -s /bin/bash buildworker
 # This is where we'll do all our work, so make it now
 RUN mkdir -p /src
 RUN chown buildworker:buildworker /src
-RUN yum update -y && yum install -y gcc gcc-c++ make zlib-devel bzip2-devel curl tar xz
+RUN yum update -y && yum install -y gcc gcc-c++ make openssl-devel zlib-devel bzip2-devel curl tar xz
 ## Install python
 ARG python_version=2.7.13
 ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz
