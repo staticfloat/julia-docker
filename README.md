@@ -7,6 +7,8 @@ A collection of `Dockerfile`s related to the [Julia language](http://julialang.o
 
 * `workerbase`: This project contains the scripts that generate `Dockerfile`s to make the base worker images.  These images have cutting-edge versions of `gcc`, `python`, `cmake`, etc... all built and ready to compile cutting-edge Julia programs.  These are built across a variety of OS's and hardware architectures, and [get uploaded to the Docker Hub](https://hub.docker.com/search/?isAutomated=0&isOfficial=0&page=1&pullCount=0&q=julia_workerbase&starCount=0).
 
+* `tabularasa`: This project contains the scripts that generate `Dockerfile`s to make "blank" images that run buildbot worker instances for testing of built julia versions.  These are used to ensure that our releases are completely self-contained, and as such do not contain things like `libgfortran` preinstalled within them.
+
 * `buildworker`: This project contains the scripts that generate `Dockerfile`s to make the final worker docker-compose scripts.  These scripts can be used to easily start buildworker instances as services, connecting to the buildbot master instance and building away.
 
 In every case, if `Dockerfile`s or `docker-compose.yml` files are generated, they will be placed within a `build/` directory.  The aim of this repository is to keep the `build/` directories up to date, so that interested users can download this repository and use the prebuilt `Dockerfile`/`docker-compose.yml` contents to immediately get up and running, without having to bother with the generation steps.
