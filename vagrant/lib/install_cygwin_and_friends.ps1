@@ -47,7 +47,7 @@ function Install-WinSDK {
     param($arch="x86")
     Write-Verbose "Installing Windows SDK..."
     $client = new-object System.Net.WebClient
-    $client.DownloadFile( "https://download.microsoft.com/download/3/6/3/36301F10-B142-46FA-BE8C-728ECFD62EA5/windowssdk/winsdksetup.exe", "C:\Users\vagrant\winsdksetup.exe" )
+    $client.DownloadFile("https://download.microsoft.com/download/3/6/3/36301F10-B142-46FA-BE8C-728ECFD62EA5/windowssdk/winsdksetup.exe", "C:\Users\vagrant\winsdksetup.exe")
     Start-Process -FilePath "C:\Users\vagrant\winsdksetup.exe"
     $env:Path = $env:Path + ";C:\Program Files(x86)/Windows Kits/10/bin/${arch}"
 }

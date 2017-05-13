@@ -22,7 +22,7 @@ Vagrant.configure(2) do |config|
             vb.cpus = 2
             vb.memory = 2048
         end
-        tr.vm.provision "file", source: "lib/secret/buildbot_secret.sh", destination: "/Users/vagrant/secret.sh", run: "always"
-        tr.vm.provision "shell", path: "lib/buildbot_setup.sh", args: "tabularasa_{buildworker_name}", run: "always"
+        tr.vm.provision "file", source: "lib/secret/buildbot_secret.sh", destination: "/tmp/secret.sh", run: "always"
+        tr.vm.provision "shell", path: "lib/buildbot_setup.sh", args: "tabularasa_{buildworker_name}", upload_path: "/tmp/buildbot_setup.sh", run: "always"
     end
 end
