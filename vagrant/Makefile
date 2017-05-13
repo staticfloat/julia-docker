@@ -45,7 +45,7 @@ up-$(1): build/$(1)/Vagrantfile
 deploy-$(1): up-$(1)
 
 down-$(1): build/$(1)/Vagrantfile
-	cd build/$(1) && vagrant destroy
+	cd build/$(1) && vagrant destroy -f
 
 # Add this vagrantfile to our big deployall and downall targets
 buildall: build-$(1)
