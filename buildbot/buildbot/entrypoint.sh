@@ -12,5 +12,8 @@ watch_the_log /buildbot/master/twistd.log &
 
 # Start our buildbot!
 cd /buildbot/master
+
+# We're in docker, we don't care about twistd.pid
+rm -f twistd.pid
 buildbot upgrade-master
 exec twistd -ny buildbot.tac

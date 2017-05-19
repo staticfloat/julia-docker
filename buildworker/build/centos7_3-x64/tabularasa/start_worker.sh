@@ -12,4 +12,5 @@ watch_the_log /buildworker/worker/twistd.log &
 
 # Start our buildworker!
 cd /buildworker/worker
+rm -f twistd.pid
 exec twistd -ny buildbot.tac
