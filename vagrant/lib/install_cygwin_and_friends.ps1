@@ -40,7 +40,7 @@ function Install-Cygwin {
 
     Write-Verbose "Installing Cygwin and $pkg_list"
     Start-Process -wait -FilePath "$CygDir\setup.exe" -ArgumentList "-q -g -l $CygDir -s http://mirror.mit.edu/cygwin/ -R $CygDir -P $pkg_list"
-    $env:Path = $env:Path + ";$CygDir\bin"
+    $env:Path = "$CygDir\bin;" + $env:Path
 }
 
 function Install-WinSDK {

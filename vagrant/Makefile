@@ -48,7 +48,7 @@ down-$(1): build/$(1)/Vagrantfile
 	cd build/$(1) && vagrant destroy -f
 
 shell-$(1): build/$(1)/Vagrantfile
-	cd build/$(1) && vagrant ssh
+	cd build/$(1) && vagrant ssh buildworker
 
 # Add this vagrantfile to our big deployall and downall targets
 buildall: build-$(1)
