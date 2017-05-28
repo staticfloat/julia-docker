@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-win10-x64` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_win10:x64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase:win10-x64 .`
 
 FROM microsoft/windowsservercore:latest
 # For a windows build, run `docker build .` manually, or `winpty docker build .`

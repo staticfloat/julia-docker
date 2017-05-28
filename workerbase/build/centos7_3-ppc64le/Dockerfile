@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-centos7_3-ppc64le` in the `workerbase` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase_centos7_3:ppc64le .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_workerbase:centos7_3-ppc64le .`
 
 FROM ppc64le/centos:7
 

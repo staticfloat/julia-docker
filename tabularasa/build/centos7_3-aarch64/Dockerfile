@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-centos7_3-aarch64` in the `tabularasa` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/tabularasa_centos7_3:aarch64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_tabularasa:centos7_3-aarch64 .`
 
 FROM centos/aarch64
 

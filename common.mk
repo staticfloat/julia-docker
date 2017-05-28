@@ -28,11 +28,11 @@ endef
 # Helper function that takes in a Harborfile name, transforms `-` into `:`, so
 # that we can have name:arch taggings
 define worker_tag_name
-$(strip $(shell echo "staticfloat/julia_workerbase_$(1)" | tr "-" ":"))
+$(strip $(shell echo "staticfloat/julia_workerbase:$(1)"))
 endef
 
 define tabularasa_tag_name
-$(strip $(shell echo "staticfloat/tabularasa_$(1)" | tr "-" ":"))
+$(strip $(shell echo "staticfloat/julia_tabularasa:$(1)"))
 endef
 
 # Helper function that takes in a Harborfile path and spits out all the

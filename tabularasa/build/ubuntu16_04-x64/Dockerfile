@@ -2,7 +2,7 @@
 # Do not edit directly; edit the .harbor files
 #
 # To build this docker image via `make`, run `make build-ubuntu16_04-x64` in the `tabularasa` directory
-# To build this docker image manually, run `docker build --pull -t staticfloat/tabularasa_ubuntu16_04:x64 .`
+# To build this docker image manually, run `docker build --pull -t staticfloat/julia_tabularasa:ubuntu16_04-x64 .`
 
 FROM ubuntu:16.04
 
