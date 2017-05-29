@@ -10,7 +10,7 @@ BUILD_ARCHS=ppc64le
 else ifeq ($(BUILD_ARCH),aarch64)
 BUILD_ARCHS=aarch64 armv7l
 endif
-ARCH_FILTER=$(addprefix %-,$(BUILD_ARCHES))
+ARCH_FILTER=$(addprefix %-,$(BUILD_ARCHS))
 
 # Begin by listing all the Harborfiles in the `workerbase/` directory, and
 # storing those into $(HFS). Many of our rules will be built from these names
@@ -46,11 +46,6 @@ define harborfile_deps
 $(shell cat $(1) | grep INCLUDE | awk '{print $$2 ".harbor";}')
 endef
 
-
-# Convenience function to take in a semver X.Y.Z-foo and return X.Y
-define major_version
-$(shell echo -n $(1) | sed -r -n -e 's/v?([0-9]+\.[0-9]+).*/\1/gp')
-endef
 
 # If we have `--squash` support, then use it!
 ifneq ($(shell docker build --help 2>/dev/null | grep squash),)
