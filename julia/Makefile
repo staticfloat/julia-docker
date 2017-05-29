@@ -34,10 +34,15 @@ TAR_ARCH-x64=x86_64
 TAR_ARCH-x86=i686
 TAR_ARCH-ppc64le=ppc64le
 TAR_ARCH-aarch64=aarch64
-TAR_ARCH-armv7l=armv7l
+TAR_ARCH-armv7l=arm
+UP_ARCH-x64=x64
+UP_ARCH-x86=x86
+UP_ARCH-ppc64le=ppc64le
+UP_ARCH-aarch64=aarch64
+UP_ARCH-armv7l=arm
 
 define JULIA_URL
-$(strip https://julialang-s3.julialang.org/bin/linux/$(1)/$(call major_version,$(2))/julia-$(subst v,,$(2))-linux-$(TAR_ARCH-$(1)).tar.gz)
+$(strip https://julialang-s3.julialang.org/bin/linux/$(UP_ARCH-$(1))/$(call major_version,$(2))/julia-$(subst v,,$(2))-linux-$(TAR_ARCH-$(1)).tar.gz)
 endef
 
 define build_dockerfile

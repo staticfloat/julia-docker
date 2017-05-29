@@ -12,7 +12,7 @@ RUN ${L32} gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 3673DF529D9049
 # We template this in here instead of passing it in as an ARG at the top like
 # we do with L32 so that we can re-use the `apt update` and `gpg --keyserver`
 # steps above as much as possible as they take a nontrivial amount of time.
-ARG JULIA_URL="https://julialang-s3.julialang.org/bin/linux/armv7l/0.4/julia-0.4.1-linux-armv7l.tar.gz"
+ARG JULIA_URL="https://julialang-s3.julialang.org/bin/linux/arm/0.4/julia-0.4.1-linux-arm.tar.gz"
 
 # Download and verify Julia
 RUN ${L32} curl -sSL "${JULIA_URL}" -o julia.tar.gz && \
