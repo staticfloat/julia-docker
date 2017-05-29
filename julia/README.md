@@ -1,3 +1,3 @@
 # Julia
 
-Super-simple docker image that downloads build deps for Julia, installs julia, then cleans up the build deps.
+Super-simple docker image that downloads binary distributions of Julia across a wide range of versions and architectures.
