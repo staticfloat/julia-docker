@@ -12,8 +12,11 @@ else ifeq ($(BUILD_ARCH),armvl)
 ARCH_FLAGS="JULIA_CPU_TARGET=generic MARCH=armv7-a"
 endif
 
-build:
-	$(DOCKER_BUILD) --pull --build-arg ARCH_FLAGS=$(ARCH_FLAGS) -t staticfloat/julia:$(BUILD_ARCH) .
+# List of tags to build
+JULIA_TAG=v0.6.0-rc2
+
+build::
+	$(DOCKER_BUILD) --pull --build-arg JULIA_TAG=$(firstword $(subst -, ,$(JULIA_TAG))) --build-arg ARCH_FLAGS=$(ARCH_FLAGS) -t staticfloat/julia:$(BUILD_ARCH) .
 
 run: build
 	docker run -ti staticfloat/julia:$(BUILD_ARCH)
