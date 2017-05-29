@@ -1,0 +1,21 @@
+## Install ccache
+ARG ccache_version=3.3.4
+ARG ccache_url=https://www.samba.org/ftp/ccache/ccache-${ccache_version}.tar.xz
+
+USER buildworker
+WORKDIR /src
+
+# Download, extract, and build ccache
+RUN curl -q -# -L "${ccache_url}" -o ccache-${ccache_version}.tar.xz
+RUN tar Jxf ccache-${ccache_version}.tar.xz
+WORKDIR /src/ccache-${ccache_version}
+RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} make all -j4
+
+# Install ccache
+USER root
+RUN ${L32} make install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf ccache-${ccache_version}*
