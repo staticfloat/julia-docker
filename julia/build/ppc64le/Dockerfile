@@ -4,6 +4,7 @@ FROM multiarch/debian-debootstrap:ppc64le-stretch
 
 # Set things like MARCH and JULIA_CPU_TYPES
 ARG ARCH_FLAGS="JULIA_CPU_TARGET=pwr8"
+ARG L32=""
 
 # The revision of Julia we're building
 ARG REVISION

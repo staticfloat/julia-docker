@@ -41,11 +41,12 @@ build/$(1)/Dockerfile: build/$(1) Makefile Dockerfile
 	@echo >> "build/$(1)/Dockerfile"
 	@echo "# Set things like MARCH and JULIA_CPU_TYPES" >> "build/$(1)/Dockerfile"
 	@echo "ARG ARCH_FLAGS=\"$(ARCH_FLAGS-$(1))\"" >> "build/$(1)/Dockerfile"
+	@echo "ARG L32=\"$(L32-$(1))\"" >> "build/$(1)/Dockerfile"
 	@echo >> "build/$(1)/Dockerfile"
 	@cat Dockerfile >> "build/$(1)/Dockerfile"
 
 build-$(1): build/$(1)/Dockerfile
-	$(DOCKER_BUILD) --pull --build-arg L32=$(L32-$(1)) --build-arg REVISION=$(JULIA_TAG) -t $(call julia_tag_name,$(1)) build/$(1)
+	$(DOCKER_BUILD) --pull --build-arg REVISION=$(JULIA_TAG) -t $(call julia_tag_name,$(1)) build/$(1)
 
 push-$(1):
 	docker push staticfloat/julia:$(1)

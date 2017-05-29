@@ -4,6 +4,7 @@ FROM multiarch/debian-debootstrap:i386-stretch
 
 # Set things like MARCH and JULIA_CPU_TYPES
 ARG ARCH_FLAGS="JULIA_CPU_TARGET=pentium4 MARCH=pentium4"
+ARG L32="linux32"
 
 # The revision of Julia we're building
 ARG REVISION

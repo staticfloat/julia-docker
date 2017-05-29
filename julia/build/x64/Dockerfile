@@ -4,6 +4,7 @@ FROM multiarch/debian-debootstrap:amd64-stretch
 
 # Set things like MARCH and JULIA_CPU_TYPES
 ARG ARCH_FLAGS="MARCH=core2"
+ARG L32=""
 
 # The revision of Julia we're building
 ARG REVISION
