@@ -1,6 +1,7 @@
 # I use resilio-sync to develop across multiple computers
 .sync
 Icon?
+*.swp
 
 # This is just a symlink
 tabularasa/lib

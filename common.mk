@@ -32,10 +32,10 @@ endef
 # Helper function that takes in an arch or an OS-arch tuple and
 # prefixes it with the appropriate prefix
 define worker_tag_name
-$(shell echo -n "staticfloat/julia_workerbase:$(1)")
+$(strip staticfloat/julia_workerbase:$(1))
 endef
 define tabularasa_tag_name
-$(shell echo -n "staticfloat/julia_tabularasa:$(1)")
+$(strip staticfloat/julia_tabularasa:$(1))
 endef
 
 
