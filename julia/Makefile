@@ -55,7 +55,7 @@ build-$(2)-$(1): build/$(2)/Dockerfile.$(1)
 	$(DOCKER_BUILD) --pull -t $(call julia_tag_name,$(1),$(2)) -f build/$(2)/Dockerfile.$(1) build/$(2)
 
 push-$(2)-$(1):
-	docker push staticfloat/julia:$(call julia_tag_name,$(1),$(2))
+	docker push $(call julia_tag_name,$(1),$(2))
 endef
 
 # Construct the actual build targets for all the dockerfiles
