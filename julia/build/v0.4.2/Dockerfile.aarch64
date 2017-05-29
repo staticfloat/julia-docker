@@ -7,9 +7,6 @@ ARG ARCH_FLAGS="JULIA_CPU_TARGET=generic MARCH=armv8-a"
 ARG L32=""
 ARG REVISION="v0.4.2"
 
-# The revision of Julia we're building
-ARG REVISION
-
 # These are the build dependencies for Julia
 ARG BUILD_DEPS="build-essential gfortran m4 python python-dev cmake curl git patchelf"
 RUN ${L32} apt update && \

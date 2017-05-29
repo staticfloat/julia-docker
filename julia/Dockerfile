@@ -1,6 +1,3 @@
-# The revision of Julia we're building
-ARG REVISION
-
 # These are the build dependencies for Julia
 ARG BUILD_DEPS="build-essential gfortran m4 python python-dev cmake curl git patchelf"
 RUN ${L32} apt update && \
