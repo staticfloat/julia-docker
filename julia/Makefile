@@ -4,7 +4,9 @@ include ../common.mk
 all: dockerfiles
 
 # All the versions we'll generate Dockerfiles for
-VERS=v0.5.0 v0.5.1 v0.5.2 v0.6.0-rc2
+VERS:=$(VERS) v0.4.0 v0.4.1 v0.4.2 v0.4.3 v0.4.4 v0.4.5 v0.4.6 v0.4.7
+VERS:=$(VERS) v0.5.0 v0.5.1 v0.5.2
+VERS:=$(VERS) v0.6.0-rc2
 
 # Convenience function to build the docker tag for an image 
 define julia_tag_name
@@ -21,7 +23,7 @@ ARCH_FLAGS-armv7l=JULIA_CPU_TARGET=generic MARCH=armv7-a
 
 IMAGE-x64=multiarch/debian-debootstrap:amd64-stretch
 IMAGE-x86=multiarch/debian-debootstrap:i386-stretch
-IMAGE-ppc64le=multiarch/debian-debootstrap:ppc64le-stretch
+IMAGE-ppc64le=multiarch/debian-debootstrap:ppc64el-stretch
 IMAGE-aarch64=multiarch/debian-debootstrap:arm64-stretch
 IMAGE-armv7l=multiarch/debian-debootstrap:armhf-stretch
 

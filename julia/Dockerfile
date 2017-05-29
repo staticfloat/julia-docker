@@ -3,22 +3,21 @@ ARG REVISION
 
 # These are the build dependencies for Julia
 ARG BUILD_DEPS="build-essential gfortran m4 python python-dev cmake curl git patchelf"
-RUN ${L32} apt update && apt install -y ${BUILD_DEPS}
-
-# Clone julia, build and install
-RUN ${L32} git clone https://github.com/JuliaLang/julia.git /julia_build
-WORKDIR /julia_build
-RUN ${L32} git checkout ${REVISION}
-RUN ${L32} make -j4 ${ARCH_FLAGS} prefix=/usr install
-
-# Run fixup-libgfortran so that we store away our necessary libraries
-# before uninstalling libgfortran
-RUN ${L32} ./contrib/fixup-libgfortran.sh /usr/lib/julia/
-
-# Cleanup afterward
-WORKDIR /
-RUN ${L32} rm -rf /julia_build
-RUN ${L32} apt remove -y ${BUILD_DEPS}; apt autoremove -y; apt-get -y clean
-RUN ${L32} apt-get -y purge; rm -rf /var/lib/apt/lists/*
+RUN ${L32} apt update && \
+    ${L32} apt install -y ${BUILD_DEPS} && \
+    ${L32} git clone https://github.com/JuliaLang/julia.git /julia_build && \
+    \
+    cd /julia_build && \
+        ${L32} git checkout ${REVISION} && \
+        ${L32} make -j4 ${ARCH_FLAGS} prefix=/usr install && \
+        ${L32} ./contrib/fixup-libgfortran.sh /usr/lib/julia/ && \
+    \
+    cd / && \
+    ${L32} rm -rf /julia_build && \
+    ${L32} apt remove -y ${BUILD_DEPS} && \
+    ${L32} apt autoremove -y && \
+    ${L32} apt-get -y clean && \
+    ${L32} apt-get -y purge && \
+    ${L32} rm -rf /var/lib/apt/lists/*
 
 CMD ["/usr/bin/julia"]
