@@ -17,3 +17,6 @@ INCLUDE lib/cmake_install
 
 # Download and install `python` because buildbot doesn't like ancient versions
 INCLUDE lib/python_install
+
+# Download and install `ccache` to speed up compilation
+INCLUDE lib/ccache_install

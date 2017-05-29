@@ -22,10 +22,11 @@ RUN chown buildworker:buildworker /src
 USER root
 
 # Start with tools that I love and always need by my side
-RUN ${L32} apt-get update && ${L32} apt-get install -y htop tmux vim curl gdb procps
+RUN ${L32} apt-get update
+RUN ${L32} apt-get install -y htop tmux vim curl gdb procps pkg-config
 
-# Move on to bare necessities for Julia
-RUN ${L32} apt-get install -y build-essential g++ gcc gfortran m4 make libssl-dev patch
+# Dependencies we need to build julia
+RUN ${L32} apt-get install -y build-essential gfortran m4 libssl-dev patch
 
 # Dependencies we need to build git
 RUN ${L32} apt-get install -y libcurl4-openssl-dev libexpat1-dev gettext
@@ -207,6 +208,29 @@ RUN pip install virtualenv
 WORKDIR /src
 RUN rm -rf Python-${python_version}*
 RUN rm -f get-pip.py
+
+# Download and install `ccache` to speed up compilation
+## Install ccache
+ARG ccache_version=3.3.4
+ARG ccache_url=https://www.samba.org/ftp/ccache/ccache-${ccache_version}.tar.xz
+
+USER buildworker
+WORKDIR /src
+
+# Download, extract, and build ccache
+RUN curl -q -# -L "${ccache_url}" -o ccache-${ccache_version}.tar.xz
+RUN tar Jxf ccache-${ccache_version}.tar.xz
+WORKDIR /src/ccache-${ccache_version}
+RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} make all -j4
+
+# Install ccache
+USER root
+RUN ${L32} make install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf ccache-${ccache_version}*
 USER root
 
 # We need to override ld.so.conf to search /usr/local before /usr

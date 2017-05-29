@@ -22,9 +22,10 @@ RUN chown buildworker:buildworker /src
 USER root
 
 # Start with tools that I love and always need by my side
-RUN ${L32} yum update -y && ${L32} yum install -y htop tmux vim curl net-tools which gdb
+RUN ${L32} yum update -y
+RUN ${L32} yum install -y htop tmux vim curl net-tools which gdb pkg-config
 
-# Move on to bare necessities for Julia
+# Dependencies we need to build Julia
 RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
 
 # Dependencies we need to build git
@@ -213,6 +214,55 @@ RUN pip install virtualenv
 WORKDIR /src
 RUN rm -rf Python-${python_version}*
 RUN rm -f get-pip.py
+
+# Download and install `ccache` to speed up compilation
+## Install ccache
+ARG ccache_version=3.3.4
+ARG ccache_url=https://www.samba.org/ftp/ccache/ccache-${ccache_version}.tar.xz
+
+USER buildworker
+WORKDIR /src
+
+# Download, extract, and build ccache
+RUN curl -q -# -L "${ccache_url}" -o ccache-${ccache_version}.tar.xz
+RUN tar Jxf ccache-${ccache_version}.tar.xz
+WORKDIR /src/ccache-${ccache_version}
+RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} make all -j4
+
+# Install ccache
+USER root
+RUN ${L32} make install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf ccache-${ccache_version}*
+## Install rr
+ARG rr_version=4.5.0
+ARG rr_url=https://github.com/mozilla/rr/archive/${rr_version}.tar.gz
+
+USER root
+# We need to install python's pexpect module for rr.  sigh.
+RUN ${L32} pip install pexpect
+
+USER buildworker
+WORKDIR /src
+
+# Download, extract, and build rr
+RUN curl -q -# -L "${rr_url}" -o rr-${rr_version}.tar.gz
+RUN tar zxf rr-${rr_version}.tar.gz
+RUN mkdir -p /src/rr-${rr_version}/build/Release
+WORKDIR /src/rr-${rr_version}/build/Release
+RUN ${L32} cmake -DCMAKE_INSTALL_PREFIX=/usr/local -Ddisable32bit=TRUE ../..
+RUN ${L32} make all -j4
+
+# Install rr
+USER root
+RUN ${L32} make install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf rr-${rr_version}*
 USER root
 
 # We need to override ld.so.conf to search /usr/local before /usr
