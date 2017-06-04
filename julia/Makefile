@@ -4,11 +4,20 @@ include ../common.mk
 all: dockerfiles
 
 # All the versions we'll generate Dockerfiles for
-VERS:=$(VERS) v0.4.0 v0.4.1 v0.4.2 v0.4.3 v0.4.4 v0.4.5 v0.4.6 v0.4.7
-VERS:=$(VERS) v0.5.0 v0.5.1 v0.5.2
-VERS:=$(VERS) v0.6.0-rc2
+VERS := $(VERS) v0.4.0 v0.4.1 v0.4.2 v0.4.3 v0.4.4 v0.4.5 v0.4.6 v0.4.7
+VERS := $(VERS) v0.5.0 v0.5.1 v0.5.2
+VERS := $(VERS) v0.6.0-rc2
 
-# Convenience function to build the docker tag for an image 
+# Make some short version mappings
+SHORT_VERS := $(shell (for v in $(VERS); do echo $${v%.*}; done) | sort | uniq)
+
+# Convenience function to take in `v0.5` and spit out `v0.5.2` as the highest
+# matching version.  (At least, it was at the time of writing this comment)
+define expand_version
+$(lastword $(sort $(filter $(1)%,$(VERS))))
+endef
+
+# Convenience function to build the docker tag for an image
 define julia_tag_name
 $(strip staticfloat/julia:$(firstword $(subst -, ,$(2)))-$(1))
 endef
@@ -63,6 +72,16 @@ push-$(2)-$(1):
 	docker push $(call julia_tag_name,$(1),$(2))
 endef
 
+# Redo some of that work for the shortened names, which don't actually build
+# an image, but just re-tag a previously built image
+define build_retags
+push-$(2)-$(1):
+	docker push $(call julia_tag_name,$(1),$(2))
+
+retag-$(2)-$(1):
+	docker tag $(call julia_tag_name,$(1),$(call expand_version,$(2))) $(call julia_tag_name,$(1),$(2))
+endef
+
 # Construct the actual build targets for all the dockerfiles
 $(foreach v,$(VERS),$(foreach a,$(ARCHS),$(eval $(call build_dockerfile,$(a),$(v)))))
 
@@ -75,6 +94,11 @@ $(foreach v,$(VERS),$(foreach a,$(BUILD_ARCHS),$(eval $(call add_dep,buildall,bu
 
 # Build "pushall" target that pushes up the result of "buildall"
 $(foreach v,$(VERS),$(foreach a,$(BUILD_ARCHS),$(eval $(call add_dep,pushall,push-$(v)-$(a)))))
+
+# Also push up the short tag names as well. :)
+$(foreach v,$(SHORT_VERS),$(foreach a,$(ARCHS), $(eval $(call build_retags,$(a),$(v)))))
+$(foreach v,$(SHORT_VERS),$(foreach a,$(BUILD_ARCHS),$(eval $(call add_dep,pushall,retag-$(v)-$(a)))))
+$(foreach v,$(SHORT_VERS),$(foreach a,$(BUILD_ARCHS),$(eval $(call add_dep,pushall,push-$(v)-$(a)))))
 
 clean:
 	rm -rf build
