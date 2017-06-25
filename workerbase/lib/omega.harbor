@@ -11,7 +11,9 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 WORKDIR /
 
 # Use /entrypoint.sh hack to get around the whole ${L32} ARG not being used in ENTRYPOINT thing.
-RUN echo "#!/bin/bash" > /entrypoint.sh; echo "${L32} \"\$@\"" >> /entrypoint.sh; chmod +x /entrypoint.sh
+RUN echo "#!/bin/bash" > /entrypoint.sh; \
+    echo "${L32} \"\$@\"" >> /entrypoint.sh; \
+    chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
 USER buildworker
