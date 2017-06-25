@@ -82,6 +82,7 @@ RUN rm -rf tar-${tar_version}* || \
 ## Install GCC
 ARG binutils_version=2.28
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
+ARG binutils_targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32
 ARG gcc_version=7.1.0
 ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
@@ -96,7 +97,7 @@ RUN tar jxf gcc-${gcc_version}.tar.bz2
 
 # Build binutils!
 WORKDIR /src/binutils-${binutils_version}
-RUN ${L32} ./configure --prefix=/usr/local ${EXTRA_BINUTILS_CONFIG_FLAGS}
+RUN ${L32} ./configure --prefix=/usr/local --enable-targets=${binutils_targets} ${EXTRA_BINUTILS_CONFIG_FLAGS}
 RUN ${L32} make -j4
 
 # Install binutils
@@ -253,7 +254,9 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 WORKDIR /
 
 # Use /entrypoint.sh hack to get around the whole ${L32} ARG not being used in ENTRYPOINT thing.
-RUN echo "#!/bin/bash" > /entrypoint.sh; echo "${L32} \"\$@\"" >> /entrypoint.sh; chmod +x /entrypoint.sh
+RUN echo "#!/bin/bash" > /entrypoint.sh; \
+    echo "${L32} \"\$@\"" >> /entrypoint.sh; \
+    chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
 USER buildworker
