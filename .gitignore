@@ -5,3 +5,6 @@ Icon?
 
 # This is just a symlink
 tabularasa/lib
+
+# Editor stuff
+.vscode

@@ -7,10 +7,23 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     mv /etc/ld.so.conf.new /etc/ld.so.conf; \
     ldconfig
 
-# These are our final words. Always.
+# Cleanup downloads
+RUN rm -rf /downloads
+
+# Remove bootstrapping compiler toolchain if we need to
+RUN if [[ -n "${GCC_DEPS}" ]]; then \
+        if [[ -n "$(which yum 2>/dev/null)" ]]; then \
+            yum remove -y ${GCC_DEPS}; \
+        elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
+            apt-get remove -y ${GCC_DEPS}; \
+        fi; \
+    fi
+
+# Set a default working directory that we know is good
 WORKDIR /
 
-# Use /entrypoint.sh hack to get around the whole ${L32} ARG not being used in ENTRYPOINT thing.
+# Use /entrypoint.sh to conditionally apply ${L32} since we cna't use ARG
+# values within an actual ENTRYPOINT command.  :(
 RUN echo "#!/bin/bash" > /entrypoint.sh; \
     echo "${L32} \"\$@\"" >> /entrypoint.sh; \
     chmod +x /entrypoint.sh

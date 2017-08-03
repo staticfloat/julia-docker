@@ -1,18 +1,18 @@
 ## Download and install needed build dependencies for x86_64 apt-based systems
 USER root
-
-# Start with tools that I love and always need by my side
 RUN ${L32} apt-get update
-RUN ${L32} apt-get install -y htop tmux vim curl gdb procps pkg-config
 
-# Dependencies we need to build julia
-RUN ${L32} apt-get install -y build-essential gfortran m4 libssl-dev patch
+# Tools that make it easy to get stuff done within the docker image
+ARG NICE_TOOLS="vim curl gdb procps"
 
-# Dependencies we need to build git
-RUN ${L32} apt-get install -y libcurl4-openssl-dev libexpat1-dev gettext
+# Tools to bootstrap our compiler chain that we will remove afterward
+ARG GCC_DEPS="gcc g++"
 
-# Dependencies we need to build gcc
-RUN ${L32} apt-get install -y wget
+# Tools that we need to build Julia and other deps that we are not going to
+# build ourselves
+ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
+               libcurl4-openssl-dev libexpat1-dev gettext wget zlib1g-dev \ 
+               libbz2-dev"
 
-# Dependencies we need to build python
-RUN ${L32} apt-get install -y zlib1g-dev libbz2-dev
+# Install all these packages
+RUN ${L32} apt-get install -y ${NICE_TOOLS} ${GCC_DEPS} ${BUILD_DEPS}

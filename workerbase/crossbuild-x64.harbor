@@ -1,0 +1,66 @@
+# Build an image that contains all of our cross compilers and all that stuff.
+# Since we need virtually everything within the actual workerbase image, just
+# build off of that one instead of compiling it all over again
+FROM ubuntu:trusty
+
+# Setup a few things we need in order to make it through the build properly
+INCLUDE lib/alpha
+
+# Install build tools
+RUN apt update && apt install -y build-essential gobjc gobjc++ sudo curl make patch tar gawk autoconf python libtool
+RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
+RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
+USER buildworker
+
+INCLUDE lib/cmake_install
+
+# Get our bash script library ready
+COPY build_crosscompiler.sh /build.sh
+COPY patches /downloads/patches
+
+# build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
+ENV target="x86_64-linux-gnu"
+ENV glibc_version=2.12.2
+INCLUDE lib/linux_crosscompiler_install
+
+# build gcc for i686
+#ENV target="i686-linux-gnu"
+#ENV L32="linux32"
+#ENV glibc_version=2.12.2
+#INCLUDE lib/linux_crosscompiler_install
+#ENV L32=""
+
+# build osx cross-compiler
+ENV target="x86_64-apple-darwin14"
+INCLUDE lib/osx_crosscompiler_install
+
+# build gcc for aarch64
+ENV target="aarch64-linux-gnu"
+INCLUDE lib/linux_crosscompiler_install
+
+# build gcc for armv7l
+ENV target="arm-linux-gnueabihf"
+INCLUDE lib/linux_crosscompiler_install
+
+# build gcc for ppc64le (we need a more recent glibc here as well)
+# We require at least version 2.22 for the fixes to assembler problems:
+# https://sourceware.org/bugzilla/show_bug.cgi?id=18116
+# We require at least version 2.24 for the fixes to memset.S:
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
+ENV target="powerpc64le-linux-gnu"
+ENV glibc_version=2.25
+INCLUDE lib/linux_crosscompiler_install
+
+# build gcc for win64
+ENV target="x86_64-w64-mingw32"
+INCLUDE lib/win_crosscompiler_install
+
+USER root
+RUN apt remove -y build-essential
+
+# Override normal uname with something that fakes out based on ${target}
+COPY fake_uname.sh /usr/local/bin/uname
+RUN chmod +x /usr/local/bin/uname
+
+INCLUDE lib/omega

@@ -45,6 +45,9 @@ build/$(1)/Dockerfile: $(1).harbor Makefile
 	@echo >> "build/$(1)/Dockerfile"
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
+	@# Copy in any auxilliary scripts so they can be installed
+	@cp lib/*.sh "build/$(1)/"
+	@cp -R patches/ "build/$(1)/"
 	@# On Windows, copy in the powershell scripts too
 	@if [ -n "$(filter win%,$(1))" ]; then \
 		cp lib/*.ps1 "build/$(1)/"; \

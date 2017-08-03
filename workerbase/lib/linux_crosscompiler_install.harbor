@@ -1,0 +1,17 @@
+ENV linux_version=${linux_version:-4.12}
+ENV binutils_version=${binutils_version:-2.28}
+ENV gcc_version=${gcc_version:-7.1.0}
+ENV glibc_version=${glibc_version:-2.17}
+
+RUN source /build.sh; install_kernel_headers
+RUN source /build.sh; install_binutils
+RUN source /build.sh; install_gcc_stage1
+RUN source /build.sh; install_glibc_stage1
+RUN source /build.sh; install_gcc_stage2
+RUN source /build.sh; install_glibc_stage2
+RUN source /build.sh; install_gcc_stage3
+
+ENV linux_version=""
+ENV binutils_version=""
+ENV gcc_version=""
+ENV glibc_version=""

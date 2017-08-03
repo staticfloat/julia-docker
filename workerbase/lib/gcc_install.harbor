@@ -1,36 +1,20 @@
 ## Install GCC
-ARG binutils_version=2.28
-ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
-ARG binutils_targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32
 ARG gcc_version=7.1.0
 ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
 
+# Download and unpack gcc
 USER buildworker
 WORKDIR /src
-
-# Download/extract both binutils and gcc
-RUN curl -q -# -L "${binutils_url}" -o binutils-${binutils_version}.tar.bz2
-RUN curl -q -# -L "${gcc_url}" -o gcc-${gcc_version}.tar.bz2
-RUN tar jxf binutils-${binutils_version}.tar.bz2
-RUN tar jxf gcc-${gcc_version}.tar.bz2
-
-# Build binutils!
-WORKDIR /src/binutils-${binutils_version}
-RUN ${L32} ./configure --prefix=/usr/local --enable-targets=${binutils_targets} ${EXTRA_BINUTILS_CONFIG_FLAGS}
-RUN ${L32} make -j4
-
-# Install binutils
-USER root
-RUN ${L32} make install
-
+RUN download_unpack.sh "${gcc_url}"
 
 # Build gcc!
-USER buildworker
 WORKDIR /src/gcc-${gcc_version}
 RUN ${L32} contrib/download_prerequisites
 RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
-RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib ${EXTRA_GCC_CONFIG_FLAGS}
+RUN ${L32} /src/gcc-${gcc_version}/configure \
+    --prefix=/usr/local --enable-host-shared --enable-threads=posix \
+    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc
@@ -39,16 +23,16 @@ RUN ${L32} make install
 
 # Symlink LTO plugin into binutils directory
 RUN mkdir -p /usr/local/lib/bfd-plugins
-RUN ln -s $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib/bfd-plugins/
+RUN ln -sf $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib/bfd-plugins/
 
-# Setup environment variables so that GCC takes precedence from this point forth
+# Setup environment variables so that GCC takes precedence from this point on
 ENV PATH "/usr/local/bin:$PATH"
-ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
-ENV AR "/usr/local/bin/gcc-ar"
-ENV RANLIB "/usr/local/bin/gcc-ranlib"
-ENV NM "/usr/local/bin/gcc-nm"
+
+# Put our /lib and /lib64 directories into /etc/ld.so.conf.d so that they take precedence
+RUN echo "/usr/local/lib"    > /etc/ld.so.conf.d/0_new_gcc.conf
+RUN echo "/usr/local/lib64" >> /etc/ld.so.conf.d/0_new_gcc.conf
+RUN ldconfig
 
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf gcc-${gcc_version}*
-RUN rm -rf binutils-${binutils_version}*
