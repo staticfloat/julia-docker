@@ -278,7 +278,7 @@ install_osx_sdk()
     # Download OSX SDK
     sdk_version="$(target_to_darwin_sdk ${target})"
     sdk_url="https://www.dropbox.com/s/yfbesd249w10lpc/MacOSX${sdk_version}.sdk.tar.xz"
-    mkdir -p /opt/${target}
+    sudo mkdir -p /opt/${target}
     cd /opt/${target}
     sudo -E download_unpack.sh "${sdk_url}"
 }
