@@ -6,7 +6,7 @@ RUN ${L32} yum update -y
 ARG NICE_TOOLS="vim curl gdb net-tools which"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
-ARG GCC_DEPS="gcc gcc-c++"
+ARG TEMPORARY_DEPS="gcc gcc-c++"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
@@ -15,4 +15,4 @@ ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
                zlib-devel bzip2-devel xz rpmdevtools"
 
 # Install all these packages
-RUN ${L32} yum install -y ${NICE_TOOLS} ${GCC_DEPS} ${BUILD_DEPS}
+RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}

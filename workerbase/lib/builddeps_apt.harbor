@@ -6,7 +6,7 @@ RUN ${L32} apt-get update
 ARG NICE_TOOLS="vim curl gdb procps"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
-ARG GCC_DEPS="gcc g++"
+ARG TEMPORARY_DEPS="gcc g++"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
@@ -15,4 +15,4 @@ ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
                libbz2-dev"
 
 # Install all these packages
-RUN ${L32} apt-get install -y ${NICE_TOOLS} ${GCC_DEPS} ${BUILD_DEPS}
+RUN ${L32} apt-get install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}

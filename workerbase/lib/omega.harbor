@@ -11,11 +11,14 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 RUN rm -rf /downloads
 
 # Remove bootstrapping compiler toolchain if we need to
-RUN if [[ -n "${GCC_DEPS}" ]]; then \
+RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
         if [[ -n "$(which yum 2>/dev/null)" ]]; then \
-            yum remove -y ${GCC_DEPS}; \
+            yum remove -y ${TEMPORARY_DEPS}; \
+            yum clean all; \
         elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
-            apt-get remove -y ${GCC_DEPS}; \
+            apt-get remove -y ${TEMPORARY_DEPS}; \
+            apt-get autoremove; \
+            apt-get clean; \
         fi; \
     fi
 
