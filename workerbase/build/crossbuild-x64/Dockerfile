@@ -25,8 +25,9 @@ COPY download_unpack.sh /usr/bin
 
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
-# Install build tools
-RUN apt update && apt install -y build-essential gobjc gobjc++ sudo curl make patch tar gawk autoconf python libtool
+# Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
+ARG TEMPORARY_DEPS="build-essential gobjc gobjc++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -174,10 +175,13 @@ ENV binutils_version=""
 ENV gcc_version=""
 ENV mingw_version=""
 
-USER root
-RUN apt remove -y build-essential
+# build gcc for win32
+#ENV target="i686-w64-mingw32"
+#INCLUDE lib/win_crosscompiler_install
+
 
 # Override normal uname with something that fakes out based on ${target}
+USER root
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
 
@@ -194,11 +198,14 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 RUN rm -rf /downloads
 
 # Remove bootstrapping compiler toolchain if we need to
-RUN if [[ -n "${GCC_DEPS}" ]]; then \
+RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
         if [[ -n "$(which yum 2>/dev/null)" ]]; then \
-            yum remove -y ${GCC_DEPS}; \
+            yum remove -y ${TEMPORARY_DEPS}; \
+            yum clean all; \
         elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
-            apt-get remove -y ${GCC_DEPS}; \
+            apt-get remove -y ${TEMPORARY_DEPS}; \
+            apt-get autoremove; \
+            apt-get clean; \
         fi; \
     fi
 

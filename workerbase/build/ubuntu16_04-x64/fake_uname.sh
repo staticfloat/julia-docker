@@ -16,8 +16,8 @@ s_flag()
         *-apple-*)
             echo "Darwin"
             ;;
-        *-mingw-*)
-            echo "WINNT"
+        *-mingw*)
+            echo "MSYS_NT-6.3"
             ;;
         '')
             echo $(/bin/uname -s)

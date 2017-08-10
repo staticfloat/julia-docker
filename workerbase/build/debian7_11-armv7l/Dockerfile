@@ -36,7 +36,7 @@ RUN ${L32} apt-get update
 ARG NICE_TOOLS="vim curl gdb procps"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
-ARG GCC_DEPS="gcc g++"
+ARG TEMPORARY_DEPS="gcc g++"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
@@ -45,7 +45,7 @@ ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
                libbz2-dev"
 
 # Install all these packages
-RUN ${L32} apt-get install -y ${NICE_TOOLS} ${GCC_DEPS} ${BUILD_DEPS}
+RUN ${L32} apt-get install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
 # Download and install `tar` because some machines have it too old and don't
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with
@@ -294,11 +294,14 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 RUN rm -rf /downloads
 
 # Remove bootstrapping compiler toolchain if we need to
-RUN if [[ -n "${GCC_DEPS}" ]]; then \
+RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
         if [[ -n "$(which yum 2>/dev/null)" ]]; then \
-            yum remove -y ${GCC_DEPS}; \
+            yum remove -y ${TEMPORARY_DEPS}; \
+            yum clean all; \
         elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
-            apt-get remove -y ${GCC_DEPS}; \
+            apt-get remove -y ${TEMPORARY_DEPS}; \
+            apt-get autoremove; \
+            apt-get clean; \
         fi; \
     fi
 
