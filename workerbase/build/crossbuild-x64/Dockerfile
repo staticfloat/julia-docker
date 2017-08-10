@@ -89,9 +89,25 @@ ENV glibc_version=""
 #INCLUDE lib/linux_crosscompiler_install
 #ENV L32=""
 
-# build osx cross-compiler (disabled until licensing issues can be figured out)
-#ENV target="x86_64-apple-darwin14"
-#INCLUDE lib/osx_crosscompiler_install
+# build osx cross-compiler
+ENV target="x86_64-apple-darwin14"
+ENV libtapi_version=${libtapi_version:-1.30.0}
+ENV cctools_version=${cctools_version:-22ebe727a5cdc21059d45313cf52b4882157f6f0}
+ENV dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
+ENV gcc_version=${gcc_version:-7.1.0}
+
+RUN source /build.sh; install_osx_sdk
+RUN source /build.sh; install_libtapi
+RUN source /build.sh; install_cctools
+RUN source /build.sh; install_dsymutil
+RUN source /build.sh; install_gcc_stage1
+RUN source /build.sh; install_gcc_stage2
+RUN source /build.sh; install_gcc_stage3
+
+ENV libtapi_version=""
+ENV cctools_version=""
+ENV dsymutil_version=""
+ENV gcc_version=""
 
 # build gcc for aarch64
 ENV target="aarch64-linux-gnu"

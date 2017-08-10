@@ -277,13 +277,8 @@ install_osx_sdk()
 {
     # Download OSX SDK
     sdk_version="$(target_to_darwin_sdk ${target})"
-<<<<<<< 84dff19dbf5f536bd23507d4e3f0acb295ea826e
-    sdk_url="https://www.dropbox.com/s/yfbesd249w10lpc/MacOSX${sdk_version}.sdk.tar.xz"
-    sudo mkdir -p /opt/${target}
-=======
     sdk_url="https://davinci.cs.washington.edu/MacOSX${sdk_version}.sdk.tar.xz"
-    mkdir -p /opt/${target}
->>>>>>> New baked Dockerfiles
+    sudo mkdir -p /opt/${target}
     cd /opt/${target}
     sudo -E download_unpack.sh "${sdk_url}"
 }
