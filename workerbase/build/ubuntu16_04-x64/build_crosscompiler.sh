@@ -115,11 +115,17 @@ install_binutils()
     cd /src
     download_unpack.sh "${binutils_url}"
 
+    # On OSX, we need to ask for x86_64h not x86_64 so that we understsand AVX opcodes
+    configure_target=${target}
+    if [[ "${target}" == *apple* ]]; then
+        configure_target=$(echo ${target} | sed -e 's/x86_64/x86_64h/')
+    fi
+
     # Build binutils!
     cd /src/binutils-${binutils_version}
     ${L32} ./configure \
         --prefix=/opt/${target} \
-        --target=${target} \
+        --target=${configure_target} \
         --disable-multilib \
         --disable-werror
     ${L32} make -j4
@@ -281,6 +287,10 @@ install_osx_sdk()
     sudo mkdir -p /opt/${target}
     cd /opt/${target}
     sudo -E download_unpack.sh "${sdk_url}"
+
+    # Fix weird permissions on the SDK folder
+    sudo chmod 755 MacOSX*.sdk
+    sudo chmod 755 .
 }
 
 install_libtapi()
@@ -305,7 +315,7 @@ install_cctools()
     # Download cctools
     cctools_url=https://github.com/tpoechtrager/cctools-port/archive/${cctools_version}.tar.gz
     cd /src
-    download_unpack.sh "${cctools_url}" 
+    download_unpack.sh "${cctools_url}"
 
     # Install cctools
     cd /src/cctools-port-${cctools_version}/cctools
@@ -315,11 +325,13 @@ install_cctools()
     ${L32} automake --add-missing --force
     ${L32} autoreconf
     ${L32} ./autogen.sh
+
+    # cctools doesn't like 'x86_64h' target, so we strip out the 'h':
     ${L32} ./configure \
+        --target=${target} \
         --prefix=/opt/${target} \
         --disable-clang-as \
-        --with-libtapi=/opt/${target} \
-        --target=${target}
+        --with-libtapi=/opt/${target}
     ${L32} make -j4
     sudo -E ${L32} make install
 

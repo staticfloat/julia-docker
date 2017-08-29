@@ -2,7 +2,7 @@ MAINTAINER Elliot Saba <staticfloat@gmail.com>
 USER root
 
 # We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -m -s /bin/bash buildworker || true
+RUN useradd -u 1337 -m -s /bin/bash buildworker || true
 
 # These are where we'll do all our work, so make them now
 RUN mkdir -p /src /downloads

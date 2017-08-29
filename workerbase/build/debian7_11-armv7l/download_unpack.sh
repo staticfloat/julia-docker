@@ -23,3 +23,6 @@ elif [[ "${TARBALL}" == *.tar.xz ]]; then
 else
     echo "Unknown tarball type ${TARBALL#*.}" >&2
 fi
+
+# Tar sometimes keeps around user IDs and stuff that I don't like, fix that:
+chown $(id -u):$(id -g) -R .

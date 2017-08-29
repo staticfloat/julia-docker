@@ -13,7 +13,7 @@ MAINTAINER Elliot Saba <staticfloat@gmail.com>
 USER root
 
 # We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -m -s /bin/bash buildworker || true
+RUN useradd -u 1337 -m -s /bin/bash buildworker || true
 
 # These are where we'll do all our work, so make them now
 RUN mkdir -p /src /downloads
@@ -23,7 +23,8 @@ RUN chown buildworker:buildworker /src /downloads
 COPY download_unpack.sh /usr/bin
 
 # We want to be able to do things like "source"
-SHELL ["/bin/bash", "-c"]## Download and install needed build dependencies for x86_64 yum-based systems
+SHELL ["/bin/bash", "-c"]
+## Download and install needed build dependencies for x86_64 yum-based systems
 USER root
 RUN ${L32} yum update -y
 
@@ -283,8 +284,8 @@ RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
             yum clean all; \
         elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
             apt-get remove -y ${TEMPORARY_DEPS}; \
-            apt-get autoremove; \
-            apt-get clean; \
+            apt-get autoremove -y; \
+            apt-get clean -y; \
         fi; \
     fi
 

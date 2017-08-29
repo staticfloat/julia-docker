@@ -14,7 +14,7 @@ MAINTAINER Elliot Saba <staticfloat@gmail.com>
 USER root
 
 # We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -m -s /bin/bash buildworker || true
+RUN useradd -u 1337 -m -s /bin/bash buildworker || true
 
 # These are where we'll do all our work, so make them now
 RUN mkdir -p /src /downloads
@@ -25,9 +25,10 @@ COPY download_unpack.sh /usr/bin
 
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
+
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
 ARG TEMPORARY_DEPS="build-essential gobjc gobjc++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -220,8 +221,8 @@ RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
             yum clean all; \
         elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
             apt-get remove -y ${TEMPORARY_DEPS}; \
-            apt-get autoremove; \
-            apt-get clean; \
+            apt-get autoremove -y; \
+            apt-get clean -y; \
         fi; \
     fi
 

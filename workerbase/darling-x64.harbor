@@ -20,47 +20,20 @@ INCLUDE lib/cmake_install
 COPY build_crosscompiler.sh /build.sh
 COPY patches /downloads/patches
 
-# build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
-ENV target="x86_64-linux-gnu"
-ENV glibc_version=2.12.2
-INCLUDE lib/linux_crosscompiler_install
-
-# build gcc for i686
-#ENV target="i686-linux-gnu"
-#ENV L32="linux32"
-#ENV glibc_version=2.12.2
-#INCLUDE lib/linux_crosscompiler_install
-#ENV L32=""
+USER root
+RUN apt install -y linux-headers-generic
 
 # build osx cross-compiler
 ENV target="x86_64-apple-darwin14"
-INCLUDE lib/osx_crosscompiler_install
-
-# build gcc for aarch64
-ENV target="aarch64-linux-gnu"
-INCLUDE lib/linux_crosscompiler_install
-
-# build gcc for armv7l
-ENV target="arm-linux-gnueabihf"
-INCLUDE lib/linux_crosscompiler_install
-
-# build gcc for ppc64le (we need a more recent glibc here as well)
-# We require at least version 2.22 for the fixes to assembler problems:
-# https://sourceware.org/bugzilla/show_bug.cgi?id=18116
-# We require at least version 2.24 for the fixes to memset.S:
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
-ENV target="powerpc64le-linux-gnu"
-ENV glibc_version=2.25
-INCLUDE lib/linux_crosscompiler_install
-
-# build gcc for win64
-ENV target="x86_64-w64-mingw32"
-INCLUDE lib/win_crosscompiler_install
-
-# build gcc for win32
-#ENV target="i686-w64-mingw32"
-#INCLUDE lib/win_crosscompiler_install
-
+USER buildworker
+WORKDIR /src
+RUN git clone --recursive https://github.com/darlinghq/darling.git
+RUN mkdir -p /src/darling/build
+#ENV linux_version=${linux_version:-4.12}
+#RUN source /build.sh; install_kernel_headers
+WORKDIR /src/darling/build
+RUN cmake .. -DCMAKE_TOOLCHAIN_FILE=../Toolchain.cmake -DCMAKE_INSTALL_PREFIX=/opt/${target}
+RUN make V=1 VERBOSE=1
 
 # Override normal uname with something that fakes out based on ${target}
 USER root

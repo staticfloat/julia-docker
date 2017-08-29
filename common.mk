@@ -43,7 +43,7 @@ endef
 # harborfiles it has as a dependency.  This is nonrecursive, because that would
 # just be ridiculous, and I can't be bothered to do it.
 define harborfile_deps
-$(shell cat $(1) | grep INCLUDE | awk '{print $$2 ".harbor";}')
+$(shell cat $(1) | grep '^INCLUDE' | awk '{print $$2 ".harbor";}')
 endef
 
 
