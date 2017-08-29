@@ -13,11 +13,17 @@ MAINTAINER Elliot Saba <staticfloat@gmail.com>
 USER root
 
 # We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -m -s /bin/bash buildworker
+RUN useradd -u 1337 -m -s /bin/bash buildworker || true
 
-# This is where we'll do all our work, so make it now
-RUN mkdir -p /src
-RUN chown buildworker:buildworker /src
+# These are where we'll do all our work, so make them now
+RUN mkdir -p /src /downloads
+RUN chown buildworker:buildworker /src /downloads
+
+# We use the "download_unpack.sh" command a lot, throw it into /usr/bin
+COPY download_unpack.sh /usr/bin
+
+# We want to be able to do things like "source"
+SHELL ["/bin/bash", "-c"]
 RUN yum update -y && yum install -y gcc gcc-c++ make openssl-devel zlib-devel bzip2-devel curl tar xz
 ## Install python
 ARG python_version=2.7.13
@@ -27,10 +33,8 @@ ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 USER buildworker
 WORKDIR /src
 
-# Download/extract both Python and pip
-RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tar.xz
-RUN curl -q -# -L "${pip_url}" -o get-pip.py
-RUN tar Jxf Python-${python_version}.tar.xz
+# Use download_unpack to download and unpack python
+RUN download_unpack.sh "${python_url}"
 
 # Build the python sources!
 WORKDIR /src/Python-${python_version}
@@ -42,12 +46,13 @@ USER root
 RUN ${L32} make install
 
 # Install pip and install virtualenv (all as root, of course)
-RUN python /src/get-pip.py
+RUN curl -q -# -L "${pip_url}" -o get-pip.py
+RUN python ./get-pip.py
 RUN pip install virtualenv
 
 # Now cleanup /src
 WORKDIR /src
-RUN rm -rf Python-${python_version}*
+RUN rm -rf Python-${python_version}
 RUN rm -f get-pip.py
 
 
@@ -60,11 +65,29 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     mv /etc/ld.so.conf.new /etc/ld.so.conf; \
     ldconfig
 
-# These are our final words. Always.
+# Cleanup downloads
+RUN rm -rf /downloads
+
+# Remove bootstrapping compiler toolchain if we need to
+RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
+        if [[ -n "$(which yum 2>/dev/null)" ]]; then \
+            yum remove -y ${TEMPORARY_DEPS}; \
+            yum clean all; \
+        elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
+            apt-get remove -y ${TEMPORARY_DEPS}; \
+            apt-get autoremove -y; \
+            apt-get clean -y; \
+        fi; \
+    fi
+
+# Set a default working directory that we know is good
 WORKDIR /
 
-# Use /entrypoint.sh hack to get around the whole ${L32} ARG not being used in ENTRYPOINT thing.
-RUN echo "#!/bin/bash" > /entrypoint.sh; echo "${L32} \"\$@\"" >> /entrypoint.sh; chmod +x /entrypoint.sh
+# Use /entrypoint.sh to conditionally apply ${L32} since we cna't use ARG
+# values within an actual ENTRYPOINT command.  :(
+RUN echo "#!/bin/bash" > /entrypoint.sh; \
+    echo "${L32} \"\$@\"" >> /entrypoint.sh; \
+    chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
 USER buildworker
