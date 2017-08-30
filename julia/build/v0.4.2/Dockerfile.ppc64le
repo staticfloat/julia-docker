@@ -14,9 +14,11 @@ RUN ${L32} gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 3673DF529D9049
 # steps above as much as possible as they take a nontrivial amount of time.
 ARG JULIA_URL="https://julialang-s3.julialang.org/bin/linux/ppc64le/0.4/julia-0.4.2-linux-ppc64le.tar.gz"
 
-# Download and verify Julia
-RUN ${L32} curl -sSL "${JULIA_URL}" -o julia.tar.gz && \
-    ${L32} curl -sSL "${JULIA_URL}.asc" -o julia.tar.gz.asc && \
+# Download Julia
+RUN ${L32} curl -sSL "${JULIA_URL}" -o julia.tar.gz
+
+# Verify the Julia download (this is removed for builds without a .tar.gz.asc)
+RUN ${L32} curl -sSL "${JULIA_URL}.asc" -o julia.tar.gz.asc && \
     ${L32} gpg --batch --verify julia.tar.gz.asc julia.tar.gz && \
     ${L32} rm -r "${HOME}/.gnupg" julia.tar.gz.asc
 

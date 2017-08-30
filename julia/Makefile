@@ -66,7 +66,7 @@ $(strip https://julialang-s3.julialang.org/bin/linux/$(UP_ARCH-$(1))/$(call majo
 endef
 
 define JULIA_NIGHTLY_URL
-$(strip https://julialangnightlies-s3.julialang.org/bin/linux/$(UP_ARCH-$(1))/julia-$(subst v,,$(2))-linux$(TAR_NIGHTLY_ARCH-$(1)).tar.gz)
+$(strip https://julialangnightlies-s3.julialang.org/bin/linux/$(UP_ARCH-$(1))/julia-latest-linux$(TAR_NIGHTLY_ARCH-$(1)).tar.gz)
 endef
 
 define build_dockerfile
@@ -79,7 +79,7 @@ build/$(2)/Dockerfile.$(1): Makefile Dockerfile
 	@echo "ARG L32=\"$(L32-$(1))\"" >> "$$@"
 	@echo >> "$$@"
 	@if [ "$(2)" = "nightly" ]; then \
-		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_NIGHTLY_URL,$(1),$(2))&g' >> "$$@"; \
+		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_NIGHTLY_URL,$(1))&g' | grep -v .tar.gz.asc >> "$$@"; \
 	else \
 		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_URL,$(1),$(2))&g' >> "$$@"; \
 	fi

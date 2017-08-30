@@ -12,13 +12,11 @@ RUN ${L32} gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 3673DF529D9049
 # We template this in here instead of passing it in as an ARG at the top like
 # we do with L32 so that we can re-use the `apt update` and `gpg --keyserver`
 # steps above as much as possible as they take a nontrivial amount of time.
-ARG JULIA_URL="https://julialangnightlies-s3.julialang.org/bin/linux/x86/julia-nightly-linux32.tar.gz"
+ARG JULIA_URL="https://julialangnightlies-s3.julialang.org/bin/linux/x86/julia-latest-linux32.tar.gz"
 
-# Download and verify Julia
-RUN ${L32} curl -sSL "${JULIA_URL}" -o julia.tar.gz && \
-    ${L32} curl -sSL "${JULIA_URL}.asc" -o julia.tar.gz.asc && \
-    ${L32} gpg --batch --verify julia.tar.gz.asc julia.tar.gz && \
-    ${L32} rm -r "${HOME}/.gnupg" julia.tar.gz.asc
+# Download Julia
+RUN ${L32} curl -sSL "${JULIA_URL}" -o julia.tar.gz
+
 
 # Unpack Julia into /usr
 RUN ${L32} tar -xzf julia.tar.gz -C /usr --strip-components 1
