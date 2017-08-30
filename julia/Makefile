@@ -78,7 +78,7 @@ build/$(2)/Dockerfile.$(1): Makefile Dockerfile
 	@echo "FROM $(IMAGE-$(1))" >> "$$@"
 	@echo "ARG L32=\"$(L32-$(1))\"" >> "$$@"
 	@echo >> "$$@"
-	if [[ "$(2)" == "nightly" ]]; then \
+	@if [ "$(2)" = "nightly" ]; then \
 		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_NIGHTLY_URL,$(1),$(2))&g' >> "$$@"; \
 	else \
 		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_URL,$(1),$(2))&g' >> "$$@"; \
