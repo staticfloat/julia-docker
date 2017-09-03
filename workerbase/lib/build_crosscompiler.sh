@@ -160,6 +160,7 @@ install_gcc_stage1()
     # Download and unpack gcc
     cd /src
     download_unpack.sh "${gcc_url}"
+    cd /src/gcc-${gcc_version}
 
     # target-specific GCC configuration flags
     GCC_CONF_ARGS=""
@@ -175,18 +176,14 @@ install_gcc_stage1()
 
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-        #glibc_majmin="${glibc_version}"
-        #while [[ "${glibc_majmin#*.*.}" != "${glibc_majmin}" ]]; do
-        #    glibc_majmin="${glibc_majmin%.*}"
-        #done
-        #GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-glibc-version=${glibc_majmin}"
 
         # We need to patch libmpx on linux for i686
-        patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
+        if [[ "${target}" == i686* ]]; then
+            patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
+        fi
     fi
 
     # Build gcc (stage 1)
-    cd /src/gcc-${gcc_version}
     ${L32} contrib/download_prerequisites
     mkdir -p /src/gcc-${gcc_version}_build
     cd /src/gcc-${gcc_version}_build

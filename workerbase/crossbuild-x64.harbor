@@ -7,8 +7,8 @@ FROM ubuntu:trusty
 INCLUDE lib/alpha
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
-ARG TEMPORARY_DEPS="gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils
+ARG TEMPORARY_DEPS="gcc-multilib gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -16,7 +16,7 @@ USER buildworker
 
 # We still need a pretty recent cmake, so just build one from scratch like usual
 INCLUDE lib/cmake_install
-#INCLUDE lib/gcc_install
+INCLUDE lib/gcc_install
 
 # Get our bash script library ready
 COPY build_crosscompiler.sh /build.sh

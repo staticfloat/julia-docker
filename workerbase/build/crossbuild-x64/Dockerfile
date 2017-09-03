@@ -27,8 +27,8 @@ COPY download_unpack.sh /usr/bin
 SHELL ["/bin/bash", "-c"]
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
-ARG TEMPORARY_DEPS="gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils
+ARG TEMPORARY_DEPS="gcc-multilib gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -58,7 +58,44 @@ RUN ${L32} make install
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf cmake-${cmake_version}
-#INCLUDE lib/gcc_install
+## Install GCC
+ARG gcc_version=7.2.0
+ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
+
+# Download and unpack gcc
+USER buildworker
+WORKDIR /src
+RUN download_unpack.sh "${gcc_url}"
+
+# Build gcc!
+WORKDIR /src/gcc-${gcc_version}
+RUN ${L32} contrib/download_prerequisites
+RUN mkdir -p /src/gcc-${gcc_version}_build
+WORKDIR /src/gcc-${gcc_version}_build
+RUN ${L32} /src/gcc-${gcc_version}/configure \
+    --prefix=/usr/local --enable-host-shared --enable-threads=posix \
+    --enable-languages=c,c++,fortran,objc,obj-c++ --enable-multilib ${gcc_configure_flags}
+RUN ${L32} make -j4
+
+# Install gcc
+USER root
+RUN ${L32} make install
+
+# Symlink LTO plugin into binutils directory
+RUN mkdir -p /usr/local/lib/bfd-plugins
+RUN ln -sf $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib/bfd-plugins/
+
+# Setup environment variables so that GCC takes precedence from this point on
+ENV PATH "/usr/local/bin:$PATH"
+
+# Put our /lib and /lib64 directories into /etc/ld.so.conf.d so that they take precedence
+RUN echo "/usr/local/lib"    > /etc/ld.so.conf.d/0_new_gcc.conf
+RUN echo "/usr/local/lib64" >> /etc/ld.so.conf.d/0_new_gcc.conf
+RUN ldconfig
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf gcc-${gcc_version}*
 
 # Get our bash script library ready
 COPY build_crosscompiler.sh /build.sh
@@ -76,7 +113,7 @@ RUN source /build.sh; set -e; install_glibc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
 
-# build gcc for i686
+# build gcc for i686.  Again use an especially old glibc version to maximize compatibility
 ENV target="i686-linux-gnu"
 ENV L32="linux32"
 ENV glibc_version=2.12.2
@@ -100,7 +137,23 @@ RUN source /build.sh; set -e; install_gcc_stage1
 RUN source /build.sh; set -e; install_gcc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
 
-# build gcc for aarch64
+# build for win64/win32
+ENV target="x86_64-w64-mingw32"
+RUN source /build.sh; install_binutils
+RUN source /build.sh; install_mingw_stage1
+RUN source /build.sh; install_gcc_stage1
+RUN source /build.sh; install_mingw_stage2
+RUN source /build.sh; install_gcc_stage2
+RUN source /build.sh; install_gcc_stage3
+ENV target="i686-w64-mingw32"
+RUN source /build.sh; install_binutils
+RUN source /build.sh; install_mingw_stage1
+RUN source /build.sh; install_gcc_stage1
+RUN source /build.sh; install_mingw_stage2
+RUN source /build.sh; install_gcc_stage2
+RUN source /build.sh; install_gcc_stage3
+
+# build for arm7/arm8
 ENV target="aarch64-linux-gnu"
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
@@ -109,8 +162,6 @@ RUN source /build.sh; set -e; install_glibc_stage1
 RUN source /build.sh; set -e; install_gcc_stage2
 RUN source /build.sh; set -e; install_glibc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
-
-# build gcc for armv7l
 ENV target="arm-linux-gnueabihf"
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
@@ -135,25 +186,6 @@ RUN source /build.sh; set -e; install_gcc_stage2
 RUN source /build.sh; set -e; install_glibc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
-
-# build gcc for win64
-ENV target="x86_64-w64-mingw32"
-RUN source /build.sh; install_binutils
-RUN source /build.sh; install_mingw_stage1
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_mingw_stage2
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_gcc_stage3
-
-# build gcc for win32
-ENV target="i686-w64-mingw32"
-RUN source /build.sh; install_binutils
-RUN source /build.sh; install_mingw_stage1
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_mingw_stage2
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_gcc_stage3
-
 
 # Override normal uname with something that fakes out based on ${target}
 USER root
