@@ -20,11 +20,10 @@
 #
 # Ensure that you have set the following environment variables:
 #   target
-#   linux_version
-#   binutils_version
-#   gcc_version
-#   glibc_version
-
+#   linux_version (defaults to 4.12)
+#   binutils_version (defaults to 2.28)
+#   gcc_version (defaults to 7.2.0)
+#   glibc_version (defaults to 2.17)
 
 ## To build a cross-compile for OSX targets we:
 # 1) Download OSX SDK
@@ -41,10 +40,24 @@
 #
 # Ensure that you have set the following environment variables:
 #   target
-#   libtapi_version
-#   cctools_version
-#   dsymutil_version
-#   gcc_version
+#   libtapi_version (defaults to 1.30.0)
+#   cctools_version (defaults to 22ebe727a5cdc21059d45313cf52b4882157f6f0)
+#   dsymutil_version (defaults to 6fe249efadf6139a7f271fee87a5a0f44e2454cf)
+#   gcc_version (defaults to 7.1.0)
+
+# Set defaults of envvars
+linux_version=${linux_version:-4.12}
+binutils_version=${binutils_version:-2.28}
+gcc_version=${gcc_version:-7.2.0}
+glibc_version=${glibc_version:-2.17}
+
+# osx defaults
+libtapi_version=${libtapi_version:-1.30.0}
+cctools_version=${cctools_version:-22ebe727a5cdc21059d45313cf52b4882157f6f0}
+dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
+
+# windows defaults
+mingw_version=${mingw_version:-5.0.2}
 
 ## Function to take in a target such as `aarch64-linux-gnu`` and spit out a
 ## linux kernel arch like "arm64".
@@ -142,7 +155,7 @@ install_binutils()
 install_gcc_stage1()
 {
     # First argument is the version
-    gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+    gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
 
     # Download and unpack gcc
     cd /src
@@ -162,6 +175,14 @@ install_gcc_stage1()
 
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
+        #glibc_majmin="${glibc_version}"
+        #while [[ "${glibc_majmin#*.*.}" != "${glibc_majmin}" ]]; do
+        #    glibc_majmin="${glibc_majmin%.*}"
+        #done
+        #GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-glibc-version=${glibc_majmin}"
+
+        # We need to patch libmpx on linux for i686
+        patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
     fi
 
     # Build gcc (stage 1)
@@ -245,8 +266,8 @@ install_glibc_stage1()
         --target=${target} \
         --build=${MACHTYPE} \
         --with-headers=/opt/${target}/${target}/include \
-        --disable-multilib \
         --with-binutils=/opt/${target}/bin \
+        --enable-mulilib \
         --disable-werror \
         libc_cv_forced_unwind=yes \
         libc_cv_c_cleanup=yes
@@ -367,6 +388,10 @@ install_mingw_stage1()
     cd /src
     download_unpack.sh "${mingw_url}"
 
+    # Patch mingw to build 32-bit cross compiler with GCC 7.1+
+    cd /src/mingw-w64-v${mingw_version}
+    patch -p1 < /downloads/patches/mingw_gcc710_i686.patch
+
     # Install mingw headers
     cd /src/mingw-w64-v${mingw_version}/mingw-w64-headers
     ${L32} ./configure \
@@ -380,12 +405,21 @@ install_mingw_stage1()
 
 install_mingw_stage2()
 {
+    MINGW_CONF_ARGS=""
+    if [[ "${target}" == i686-* ]]; then
+        # If we're building a 32-bit build of mingw, add `--disable-lib64`
+        MINGW_CONF_ARGS="${MINGW_CONF_ARGS} --disable-lib64"
+    else
+        MINGW_CONF_ARGS="${MINGW_CONF_ARGS} --disable-lib32"
+    fi
+
     # Install crt
     mkdir -p /src/mingw-w64-v${mingw_version}-crt_build
     cd /src/mingw-w64-v${mingw_version}-crt_build
     ${L32} /src/mingw-w64-v${mingw_version}/mingw-w64-crt/configure \
         --prefix=/opt/${target}/${target} \
-        --host=${target}
+        --host=${target} \
+        ${MINGW_CONF_ARGS}
 
     ${L32} make -j4
     sudo ${L32} make install
@@ -412,4 +446,3 @@ install_mingw_stage2()
 # Ensure that PATH is setup properly
 export PATH=/opt/${target}/bin:$PATH
 
-set -e

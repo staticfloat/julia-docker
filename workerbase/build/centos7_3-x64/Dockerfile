@@ -102,8 +102,8 @@ RUN ${L32} make install
 WORKDIR /src
 RUN rm -rf binutils-${binutils_version}
 ## Install GCC
-ARG gcc_version=7.1.0
-ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+ARG gcc_version=7.2.0
+ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
 
 # Download and unpack gcc
 USER buildworker
@@ -117,7 +117,7 @@ RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
 RUN ${L32} /src/gcc-${gcc_version}/configure \
     --prefix=/usr/local --enable-host-shared --enable-threads=posix \
-    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
+    --enable-languages=c,c++,fortran,objc,obj-c++ --enable-multilib ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc

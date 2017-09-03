@@ -27,13 +27,14 @@ COPY download_unpack.sh /usr/bin
 SHELL ["/bin/bash", "-c"]
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
-ARG TEMPORARY_DEPS="build-essential gobjc gobjc++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb
+ARG TEMPORARY_DEPS="gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
 USER buildworker
 
+# We still need a pretty recent cmake, so just build one from scratch like usual
 ## Install cmake into /usr/local
 ARG cmake_version=3.6.3
 ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
@@ -57,6 +58,7 @@ RUN ${L32} make install
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf cmake-${cmake_version}
+#INCLUDE lib/gcc_install
 
 # Get our bash script library ready
 COPY build_crosscompiler.sh /build.sh
@@ -65,90 +67,58 @@ COPY patches /downloads/patches
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 ENV target="x86_64-linux-gnu"
 ENV glibc_version=2.12.2
-ENV linux_version=${linux_version:-4.12}
-ENV binutils_version=${binutils_version:-2.28}
-ENV gcc_version=${gcc_version:-7.1.0}
-ENV glibc_version=${glibc_version:-2.17}
-
-RUN source /build.sh; install_kernel_headers
-RUN source /build.sh; install_binutils
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_glibc_stage1
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_glibc_stage2
-RUN source /build.sh; install_gcc_stage3
-
-ENV linux_version=""
-ENV binutils_version=""
-ENV gcc_version=""
+RUN source /build.sh; set -e; install_kernel_headers
+RUN source /build.sh; set -e; install_binutils
+RUN source /build.sh; set -e; install_gcc_stage1
+RUN source /build.sh; set -e; install_glibc_stage1
+RUN source /build.sh; set -e; install_gcc_stage2
+RUN source /build.sh; set -e; install_glibc_stage2
+RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
 
 # build gcc for i686
-#ENV target="i686-linux-gnu"
-#ENV L32="linux32"
-#ENV glibc_version=2.12.2
-#INCLUDE lib/linux_crosscompiler_install
-#ENV L32=""
+ENV target="i686-linux-gnu"
+ENV L32="linux32"
+ENV glibc_version=2.12.2
+RUN source /build.sh; set -e; install_kernel_headers
+RUN source /build.sh; set -e; install_binutils
+RUN source /build.sh; set -e; install_gcc_stage1
+RUN source /build.sh; set -e; install_glibc_stage1
+RUN source /build.sh; set -e; install_gcc_stage2
+RUN source /build.sh; set -e; install_glibc_stage2
+RUN source /build.sh; set -e; install_gcc_stage3
+ENV L32=""
+ENV glibc_version=""
 
 # build osx cross-compiler
 ENV target="x86_64-apple-darwin14"
-ENV libtapi_version=${libtapi_version:-1.30.0}
-ENV cctools_version=${cctools_version:-22ebe727a5cdc21059d45313cf52b4882157f6f0}
-ENV dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
-ENV gcc_version=${gcc_version:-7.1.0}
-
-RUN source /build.sh; install_osx_sdk
-RUN source /build.sh; install_libtapi
-RUN source /build.sh; install_cctools
-RUN source /build.sh; install_dsymutil
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_gcc_stage3
-
-ENV libtapi_version=""
-ENV cctools_version=""
-ENV dsymutil_version=""
-ENV gcc_version=""
+RUN source /build.sh; set -e; install_osx_sdk
+RUN source /build.sh; set -e; install_libtapi
+RUN source /build.sh; set -e; install_cctools
+RUN source /build.sh; set -e; install_dsymutil
+RUN source /build.sh; set -e; install_gcc_stage1
+RUN source /build.sh; set -e; install_gcc_stage2
+RUN source /build.sh; set -e; install_gcc_stage3
 
 # build gcc for aarch64
 ENV target="aarch64-linux-gnu"
-ENV linux_version=${linux_version:-4.12}
-ENV binutils_version=${binutils_version:-2.28}
-ENV gcc_version=${gcc_version:-7.1.0}
-ENV glibc_version=${glibc_version:-2.17}
-
-RUN source /build.sh; install_kernel_headers
-RUN source /build.sh; install_binutils
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_glibc_stage1
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_glibc_stage2
-RUN source /build.sh; install_gcc_stage3
-
-ENV linux_version=""
-ENV binutils_version=""
-ENV gcc_version=""
-ENV glibc_version=""
+RUN source /build.sh; set -e; install_kernel_headers
+RUN source /build.sh; set -e; install_binutils
+RUN source /build.sh; set -e; install_gcc_stage1
+RUN source /build.sh; set -e; install_glibc_stage1
+RUN source /build.sh; set -e; install_gcc_stage2
+RUN source /build.sh; set -e; install_glibc_stage2
+RUN source /build.sh; set -e; install_gcc_stage3
 
 # build gcc for armv7l
 ENV target="arm-linux-gnueabihf"
-ENV linux_version=${linux_version:-4.12}
-ENV binutils_version=${binutils_version:-2.28}
-ENV gcc_version=${gcc_version:-7.1.0}
-ENV glibc_version=${glibc_version:-2.17}
-
-RUN source /build.sh; install_kernel_headers
-RUN source /build.sh; install_binutils
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_glibc_stage1
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_glibc_stage2
-RUN source /build.sh; install_gcc_stage3
-
-ENV linux_version=""
-ENV binutils_version=""
-ENV gcc_version=""
-ENV glibc_version=""
+RUN source /build.sh; set -e; install_kernel_headers
+RUN source /build.sh; set -e; install_binutils
+RUN source /build.sh; set -e; install_gcc_stage1
+RUN source /build.sh; set -e; install_glibc_stage1
+RUN source /build.sh; set -e; install_gcc_stage2
+RUN source /build.sh; set -e; install_glibc_stage2
+RUN source /build.sh; set -e; install_gcc_stage3
 
 # build gcc for ppc64le (we need a more recent glibc here as well)
 # We require at least version 2.22 for the fixes to assembler problems:
@@ -157,30 +127,17 @@ ENV glibc_version=""
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
 ENV target="powerpc64le-linux-gnu"
 ENV glibc_version=2.25
-ENV linux_version=${linux_version:-4.12}
-ENV binutils_version=${binutils_version:-2.28}
-ENV gcc_version=${gcc_version:-7.1.0}
-ENV glibc_version=${glibc_version:-2.17}
-
-RUN source /build.sh; install_kernel_headers
-RUN source /build.sh; install_binutils
-RUN source /build.sh; install_gcc_stage1
-RUN source /build.sh; install_glibc_stage1
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_glibc_stage2
-RUN source /build.sh; install_gcc_stage3
-
-ENV linux_version=""
-ENV binutils_version=""
-ENV gcc_version=""
+RUN source /build.sh; set -e; install_kernel_headers
+RUN source /build.sh; set -e; install_binutils
+RUN source /build.sh; set -e; install_gcc_stage1
+RUN source /build.sh; set -e; install_glibc_stage1
+RUN source /build.sh; set -e; install_gcc_stage2
+RUN source /build.sh; set -e; install_glibc_stage2
+RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
 
 # build gcc for win64
 ENV target="x86_64-w64-mingw32"
-ENV binutils_version=${binutils_version:-2.28}
-ENV gcc_version=${gcc_version:-7.1.0}
-ENV mingw_version=${mingw_version:-5.0.2}
-
 RUN source /build.sh; install_binutils
 RUN source /build.sh; install_mingw_stage1
 RUN source /build.sh; install_gcc_stage1
@@ -188,13 +145,14 @@ RUN source /build.sh; install_mingw_stage2
 RUN source /build.sh; install_gcc_stage2
 RUN source /build.sh; install_gcc_stage3
 
-ENV binutils_version=""
-ENV gcc_version=""
-ENV mingw_version=""
-
 # build gcc for win32
-#ENV target="i686-w64-mingw32"
-#INCLUDE lib/win_crosscompiler_install
+ENV target="i686-w64-mingw32"
+RUN source /build.sh; install_binutils
+RUN source /build.sh; install_mingw_stage1
+RUN source /build.sh; install_gcc_stage1
+RUN source /build.sh; install_mingw_stage2
+RUN source /build.sh; install_gcc_stage2
+RUN source /build.sh; install_gcc_stage3
 
 
 # Override normal uname with something that fakes out based on ${target}
