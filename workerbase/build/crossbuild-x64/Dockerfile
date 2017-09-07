@@ -28,7 +28,7 @@ SHELL ["/bin/bash", "-c"]
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
 ARG TEMPORARY_DEPS="gcc-multilib gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1 patchelf
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -74,7 +74,7 @@ RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
 RUN ${L32} /src/gcc-${gcc_version}/configure \
     --prefix=/usr/local --enable-host-shared --enable-threads=posix \
-    --enable-languages=c,c++,fortran,objc,obj-c++ --enable-multilib ${gcc_configure_flags}
+    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc
@@ -92,6 +92,9 @@ ENV PATH "/usr/local/bin:$PATH"
 RUN echo "/usr/local/lib"    > /etc/ld.so.conf.d/0_new_gcc.conf
 RUN echo "/usr/local/lib64" >> /etc/ld.so.conf.d/0_new_gcc.conf
 RUN ldconfig
+
+# Add a `cc` symlink to gcc:
+RUN ln -sf /usr/local/bin/gcc /usr/local/bin/cc
 
 # Now cleanup /src
 WORKDIR /src

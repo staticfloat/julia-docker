@@ -29,7 +29,7 @@ USER root
 RUN ${L32} apt-get update
 
 # Tools that make it easy to get stuff done within the docker image
-ARG NICE_TOOLS="vim curl gdb procps"
+ARG NICE_TOOLS="vim curl gdb procps patchelf"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
 ARG TEMPORARY_DEPS="gcc g++"
@@ -117,7 +117,7 @@ RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
 RUN ${L32} /src/gcc-${gcc_version}/configure \
     --prefix=/usr/local --enable-host-shared --enable-threads=posix \
-    --enable-languages=c,c++,fortran,objc,obj-c++ --enable-multilib ${gcc_configure_flags}
+    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc
@@ -135,6 +135,9 @@ ENV PATH "/usr/local/bin:$PATH"
 RUN echo "/usr/local/lib"    > /etc/ld.so.conf.d/0_new_gcc.conf
 RUN echo "/usr/local/lib64" >> /etc/ld.so.conf.d/0_new_gcc.conf
 RUN ldconfig
+
+# Add a `cc` symlink to gcc:
+RUN ln -sf /usr/local/bin/gcc /usr/local/bin/cc
 
 # Now cleanup /src
 WORKDIR /src
