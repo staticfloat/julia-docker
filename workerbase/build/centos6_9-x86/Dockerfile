@@ -25,6 +25,9 @@ USER root
 RUN ${L32} yum update -y
 RUN ${L32} yum install -y htop tmux vim curl net-tools which gdb pkg-config
 
+# The "nice-to-have"s
+RUN ${L32} yum install -y patchelf
+
 # Dependencies we need to build Julia
 RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
 
@@ -128,6 +131,9 @@ ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
 ENV AR "/usr/local/bin/gcc-ar"
 ENV RANLIB "/usr/local/bin/gcc-ranlib"
 ENV NM "/usr/local/bin/gcc-nm"
+
+# Set up a symlink for the ubiquitous cc
+RUN ln -s $(which gcc) /usr/local/bin/cc
 
 # Now cleanup /src
 WORKDIR /src
