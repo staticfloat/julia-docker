@@ -59,6 +59,12 @@ dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
 # windows defaults
 mingw_version=${mingw_version:-5.0.2}
 
+# By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
+nproc=$(($(nproc) + 1))
+if [[ $(nproc) > 8 ]]; then
+    nproc=8
+fi
+
 ## Function to take in a target such as `aarch64-linux-gnu`` and spit out a
 ## linux kernel arch like "arm64".
 target_to_linux_arch()
@@ -141,7 +147,7 @@ install_binutils()
         --target=${configure_target} \
         --disable-multilib \
         --disable-werror
-    ${L32} make -j4
+    ${L32} make -j${nproc}
 
     # Install binutils
     sudo -E ${L32} make install
@@ -193,11 +199,12 @@ install_gcc_stage1()
         --host=${MACHTYPE} \
         --build=${MACHTYPE} \
         --enable-threads=posix \
+        --enable-host-shared \
         --disable-multilib \
         --disable-werror \
         ${GCC_CONF_ARGS}
 
-    ${L32} make -j4 all-gcc
+    ${L32} make -j${nproc} all-gcc
 
     # Install gcc (stage 1)
     sudo -E ${L32} make install-gcc
@@ -209,7 +216,7 @@ install_gcc_stage2()
 {
     # Install libgcc (stage 2)
     cd /src/gcc-${gcc_version}_build
-    ${L32} make -j4 all-target-libgcc
+    ${L32} make -j${nproc} all-target-libgcc
     sudo -E ${L32} make install-target-libgcc
 }
 
@@ -219,12 +226,21 @@ install_gcc_stage3()
 {
     # Install everything else like gfortran (stage 3)
     cd /src/gcc-${gcc_version}_build
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup
     cd /src
     sudo -E rm -rf gcc-${gcc_version}*
+
+    # Finally, create a bunch of symlinks stripping out the target so that
+    # things like `gcc` "just work", as long as we've got our path set properly
+    for f in /opt/${target}/bin/${target}-*; do
+        fbase=$(basename $f)
+        # We don't worry about failure to create these symlinks, as sometimes there are files
+        # name ridiculous things like ${target}-${target}-foo, which screws this up
+        ln -s $f /opt/${target}/bin/${fbase#${target}-} || true
+    done
 }
 
 ## Helper to install stage1 of glibc, e.g. the headers and crt1.o and friends
@@ -269,7 +285,7 @@ install_glibc_stage1()
         libc_cv_forced_unwind=yes \
         libc_cv_c_cleanup=yes
 
-    ${L32} make -j4 csu/subdir_lib
+    ${L32} make -j${nproc} csu/subdir_lib
     sudo -E ${L32} make install-bootstrap-headers=yes install-headers
 
     # Manually copy over bits/stdio_lim.h
@@ -288,7 +304,7 @@ install_glibc_stage2()
 {
     cd /src/glibc-${glibc_version}_build
     sudo -E chown buildworker:buildworker -R /src/glibc-${glibc_version}_build
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup
@@ -318,7 +334,10 @@ install_libtapi()
     cd /src
     download_unpack.sh "${libtapi_url}"
 
-    # Build and install libtapi
+    # Build and install libtapi (We have to tell it to explicitly use clang)
+    export MACOSX_DEPLOYMENT_TARGET=10.10
+    export CC="clang"
+    export CXX="clang++"
     cd /src/apple-libtapi-${libtapi_version}
     INSTALLPREFIX=/opt/${target} ${L32} ./build.sh
     sudo -E INSTALLPREFIX=/opt/${target} ${L32} ./install.sh
@@ -350,7 +369,7 @@ install_cctools()
         --prefix=/opt/${target} \
         --disable-clang-as \
         --with-libtapi=/opt/${target}
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup
@@ -371,7 +390,7 @@ install_dsymutil()
         -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_TARGETS_TO_BUILD="X86" \
         -DLLVM_ENABLE_ASSERTIONS=Off
-    ${L32} make -f tools/dsymutil/Makefile -j4
+    ${L32} make -f tools/dsymutil/Makefile -j${nproc}
     sudo -E cp bin/llvm-dsymutil /usr/local/bin/dsymutil
 
     # Cleanup
@@ -418,7 +437,7 @@ install_mingw_stage2()
         --host=${target} \
         ${MINGW_CONF_ARGS}
 
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo ${L32} make install
 
     # Install winpthreads
@@ -430,7 +449,7 @@ install_mingw_stage2()
         --enable-static \
         --enable-shared
 
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo ${L32} make install
 
     # Cleanup

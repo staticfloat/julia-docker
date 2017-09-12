@@ -27,8 +27,13 @@ COPY download_unpack.sh /usr/bin
 SHELL ["/bin/bash", "-c"]
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
+<<<<<<< e9c33e05eadd0f7a1d8e0f284d855221b88b38db
 ARG TEMPORARY_DEPS="gcc-multilib gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
 RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1 patchelf
+=======
+ARG TEMPORARY_DEPS="gcc-multilib gcc g++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
+>>>>>>> Bake
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -130,7 +135,7 @@ RUN source /build.sh; set -e; install_gcc_stage3
 ENV L32=""
 ENV glibc_version=""
 
-# build osx cross-compiler
+# build for mac64
 ENV target="x86_64-apple-darwin14"
 RUN source /build.sh; set -e; install_osx_sdk
 RUN source /build.sh; set -e; install_libtapi
@@ -139,6 +144,7 @@ RUN source /build.sh; set -e; install_dsymutil
 RUN source /build.sh; set -e; install_gcc_stage1
 RUN source /build.sh; set -e; install_gcc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
+
 
 # build for win64/win32
 ENV target="x86_64-w64-mingw32"
@@ -189,6 +195,7 @@ RUN source /build.sh; set -e; install_gcc_stage2
 RUN source /build.sh; set -e; install_glibc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
+ENV target=""
 
 # Override normal uname with something that fakes out based on ${target}
 USER root

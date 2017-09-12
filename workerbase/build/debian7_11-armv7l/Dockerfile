@@ -84,8 +84,8 @@ RUN rm -rf tar-${tar_version}* || \
 # Download and install `gcc` because we want only the latest in cutting-edge
 # compiler technology, and also because LLVM is a needy little piece of software
 ## Install binutils
-ARG binutils_version=2.28
-ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
+ARG binutils_version=2.29
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz
 
 # Use download_unpack to download and unpack binutils and gcc
 USER buildworker
