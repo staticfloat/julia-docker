@@ -1,6 +1,6 @@
 ## Install binutils
-ARG binutils_version=2.28
-ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
+ARG binutils_version=2.29
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz
 
 # Use download_unpack to download and unpack binutils and gcc
 USER buildworker
