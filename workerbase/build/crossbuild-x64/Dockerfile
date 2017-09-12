@@ -192,6 +192,9 @@ RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
 ENV target=""
 
+# Clear out our custom-built native GCC
+RUN rm -rf /usr/local/bin/* /usr/local/lib/gcc /usr/local/lib64/* /usr/local/libexec/gcc /usr/local/include/c++
+
 # Override normal uname with something that fakes out based on ${target}
 USER root
 COPY fake_uname.sh /usr/local/bin/uname
