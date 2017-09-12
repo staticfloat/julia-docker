@@ -7,8 +7,8 @@ FROM ubuntu:trusty
 INCLUDE lib/alpha
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
-ARG TEMPORARY_DEPS="gcc-multilib gcc clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1 patchelf
+ARG TEMPORARY_DEPS="gcc-multilib gcc g++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
+RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
 RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
@@ -36,9 +36,10 @@ INCLUDE lib/linux_crosscompiler_install
 ENV L32=""
 ENV glibc_version=""
 
-# build osx cross-compiler
+# build for mac64
 ENV target="x86_64-apple-darwin14"
 INCLUDE lib/osx_crosscompiler_install
+
 
 # build for win64/win32
 ENV target="x86_64-w64-mingw32"
@@ -61,6 +62,7 @@ ENV target="powerpc64le-linux-gnu"
 ENV glibc_version=2.25
 INCLUDE lib/linux_crosscompiler_install
 ENV glibc_version=""
+ENV target=""
 
 # Override normal uname with something that fakes out based on ${target}
 USER root
