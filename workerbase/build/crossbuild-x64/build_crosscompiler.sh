@@ -391,7 +391,7 @@ install_dsymutil()
         -DLLVM_TARGETS_TO_BUILD="X86" \
         -DLLVM_ENABLE_ASSERTIONS=Off
     ${L32} make -f tools/dsymutil/Makefile -j${nproc}
-    sudo -E cp bin/llvm-dsymutil /usr/local/bin/dsymutil
+    sudo -E cp bin/llvm-dsymutil /opt/${target}/bin/dsymutil
 
     # Cleanup
     cd /src
