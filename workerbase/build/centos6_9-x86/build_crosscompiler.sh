@@ -134,17 +134,11 @@ install_binutils()
     cd /src
     download_unpack.sh "${binutils_url}"
 
-    # On OSX, we need to ask for x86_64h not x86_64 so that we understsand AVX opcodes
-    configure_target=${target}
-    if [[ "${target}" == *apple* ]]; then
-        configure_target=$(echo ${target} | sed -e 's/x86_64/x86_64h/')
-    fi
-
     # Build binutils!
     cd /src/binutils-${binutils_version}
     ${L32} ./configure \
         --prefix=/opt/${target} \
-        --target=${configure_target} \
+        --target=${target} \
         --disable-multilib \
         --disable-werror
     ${L32} make -j${nproc}
@@ -208,6 +202,9 @@ install_gcc_stage1()
 
     # Install gcc (stage 1)
     sudo -E ${L32} make install-gcc
+
+    # Because this always writes out .texi files, we have to chown them back.  >:(
+    sudo -E ${L32} chown $(id -u):$(id -g) -R .
 }
 
 
@@ -239,7 +236,7 @@ install_gcc_stage3()
         fbase=$(basename $f)
         # We don't worry about failure to create these symlinks, as sometimes there are files
         # name ridiculous things like ${target}-${target}-foo, which screws this up
-        ln -s $f /opt/${target}/bin/${fbase#${target}-} || true
+        sudo ln -s $f /opt/${target}/bin/${fbase#${target}-} || true
     done
 }
 
@@ -288,6 +285,10 @@ install_glibc_stage1()
     ${L32} make -j${nproc} csu/subdir_lib
     sudo -E ${L32} make install-bootstrap-headers=yes install-headers
 
+    sudo -E mkdir -p /opt/${target}/${target}/include/bits
+    sudo -E mkdir -p /opt/${target}/${target}/include/gnu
+    sudo -E mkdir -p /opt/${target}/${target}/lib
+
     # Manually copy over bits/stdio_lim.h
     sudo -E install bits/stdio_lim.h /opt/${target}/${target}/include/bits/
 
@@ -323,8 +324,8 @@ install_osx_sdk()
     sudo -E download_unpack.sh "${sdk_url}"
 
     # Fix weird permissions on the SDK folder
-    sudo chmod 755 MacOSX*.sdk
     sudo chmod 755 .
+    sudo chmod 755 MacOSX*.sdk
 }
 
 install_libtapi()

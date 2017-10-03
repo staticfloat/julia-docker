@@ -66,6 +66,7 @@ COPY patches /downloads/patches
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 ENV target="x86_64-linux-gnu"
 ENV glibc_version=2.12.2
+USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
 RUN source /build.sh; set -e; install_gcc_stage1
@@ -79,6 +80,7 @@ ENV glibc_version=""
 ENV target="i686-linux-gnu"
 ENV L32="linux32"
 ENV glibc_version=2.12.2
+USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
 RUN source /build.sh; set -e; install_gcc_stage1
@@ -91,6 +93,7 @@ ENV glibc_version=""
 
 # build for mac64
 ENV target="x86_64-apple-darwin14"
+USER buildworker
 RUN source /build.sh; set -e; install_osx_sdk
 RUN source /build.sh; set -e; install_libtapi
 RUN source /build.sh; set -e; install_cctools
@@ -102,6 +105,7 @@ RUN source /build.sh; set -e; install_gcc_stage3
 
 # build for win64/win32
 ENV target="x86_64-w64-mingw32"
+USER buildworker
 RUN source /build.sh; install_binutils
 RUN source /build.sh; install_mingw_stage1
 RUN source /build.sh; install_gcc_stage1
@@ -109,6 +113,7 @@ RUN source /build.sh; install_mingw_stage2
 RUN source /build.sh; install_gcc_stage2
 RUN source /build.sh; install_gcc_stage3
 ENV target="i686-w64-mingw32"
+USER buildworker
 RUN source /build.sh; install_binutils
 RUN source /build.sh; install_mingw_stage1
 RUN source /build.sh; install_gcc_stage1
@@ -118,6 +123,7 @@ RUN source /build.sh; install_gcc_stage3
 
 # build for arm7/arm8
 ENV target="aarch64-linux-gnu"
+USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
 RUN source /build.sh; set -e; install_gcc_stage1
@@ -126,6 +132,7 @@ RUN source /build.sh; set -e; install_gcc_stage2
 RUN source /build.sh; set -e; install_glibc_stage2
 RUN source /build.sh; set -e; install_gcc_stage3
 ENV target="arm-linux-gnueabihf"
+USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
 RUN source /build.sh; set -e; install_gcc_stage1
@@ -141,6 +148,7 @@ RUN source /build.sh; set -e; install_gcc_stage3
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
 ENV target="powerpc64le-linux-gnu"
 ENV glibc_version=2.25
+USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
 RUN source /build.sh; set -e; install_gcc_stage1
@@ -151,10 +159,41 @@ RUN source /build.sh; set -e; install_gcc_stage3
 ENV glibc_version=""
 ENV target=""
 
+# We want a super binutils, so build it up
+ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32 --prefix=/opt/super_binutils"
+## Install binutils
+ARG binutils_version=2.29
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz
+
+# Use download_unpack to download and unpack binutils and gcc
+USER buildworker
+WORKDIR /src
+RUN download_unpack.sh "${binutils_url}"
+
+# Build binutils!  Because it's cheap and easy, we enable essentially every
+# target under the sun for binutils
+WORKDIR /src/binutils-${binutils_version}
+RUN ${L32} ./configure --prefix=/usr/local \
+                       ${binutils_configure_flags}
+RUN ${L32} make -j4
+
+# Install binutils
+USER root
+RUN ${L32} make install
+
+# Cleanup
+WORKDIR /src
+RUN rm -rf binutils-${binutils_version}
+
 # Override normal uname with something that fakes out based on ${target}
 USER root
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
+
+# We don't want to lose llvm-3.4, as that's needed by the OSX tools
+RUN apt install -y llvm-3.4
+# compilers are really bad at cleaning up after themselves
+RUN apt-get remove -y clang-3.4 libclang-common-3.4-dev libclang1-3.4 gcc-4.8 
 
 USER root
 

@@ -1,3 +1,4 @@
+USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
 RUN source /build.sh; set -e; install_gcc_stage1

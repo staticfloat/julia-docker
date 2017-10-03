@@ -63,9 +63,18 @@ INCLUDE lib/linux_crosscompiler_install
 ENV glibc_version=""
 ENV target=""
 
+# We want a super binutils, so build it up
+ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32 --prefix=/opt/super_binutils"
+INCLUDE lib/binutils_install
+
 # Override normal uname with something that fakes out based on ${target}
 USER root
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
+
+# We don't want to lose llvm-3.4, as that's needed by the OSX tools
+RUN apt install -y llvm-3.4
+# compilers are really bad at cleaning up after themselves
+RUN apt-get remove -y clang-3.4 libclang-common-3.4-dev libclang1-3.4 gcc-4.8 
 
 INCLUDE lib/omega
