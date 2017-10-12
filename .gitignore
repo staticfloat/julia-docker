@@ -5,6 +5,8 @@ Icon?
 
 # This is just a symlink
 tabularasa/lib
+crossbuild/lib
+crossbuild/patches
 
 # None of that vscode nonsense
 .vscode
