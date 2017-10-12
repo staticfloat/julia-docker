@@ -13,35 +13,35 @@ MAINTAINER Elliot Saba <staticfloat@gmail.com>
 USER root
 
 # We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -m -s /bin/bash buildworker
+RUN useradd -u 1337 -m -s /bin/bash buildworker || true
 
-# This is where we'll do all our work, so make it now
-RUN mkdir -p /src
-RUN chown buildworker:buildworker /src
+# These are where we'll do all our work, so make them now
+RUN mkdir -p /src /downloads
+RUN chown buildworker:buildworker /src /downloads
+
+# We use the "download_unpack.sh" command a lot, throw it into /usr/bin
+COPY download_unpack.sh /usr/bin
+
+# We want to be able to do things like "source"
+SHELL ["/bin/bash", "-c"]
 ## Download and install needed build dependencies for x86_64 yum-based systems
 USER root
-
-# Start with tools that I love and always need by my side
 RUN ${L32} yum update -y
-RUN ${L32} yum install -y htop tmux vim curl net-tools which gdb pkg-config
 
-# Dependencies we need to build Julia
-RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
+# Tools that make it easy to get stuff done within the docker image
+ARG NICE_TOOLS="vim curl gdb net-tools which patchelf"
 
-# Dependencies we need to build git
-RUN ${L32} yum install -y curl-devel expat-devel gettext-devel perl-devel
+# Tools to bootstrap our compiler chain that we will remove afterward
+ARG TEMPORARY_DEPS="gcc gcc-c++"
 
-# Dependencies we need to build gcc
-RUN ${L32} yum install -y wget bzip2 tar
+# Tools that we need to build Julia and other deps that we are not going to
+# build ourselves
+ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
+               expat-devel gettext-devel perl-devel wget bzip2 tar \ 
+               zlib-devel bzip2-devel xz rpmdevtools"
 
-# Dependencies we need to build python
-RUN ${L32} yum install -y zlib-devel bzip2-devel
-
-# Dependencies we need to build tar
-RUN ${L32} yum install -y xz
-
-# Dependencies we need to do nightly SRPM packaging
-RUN ${L32} yum install -y rpmdevtools
+# Install all these packages
+RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
 # Download and install `tar` because some machines have it too old and don't
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with
@@ -53,9 +53,8 @@ ARG tar_url=https://ftp.gnu.org/gnu/tar/tar-${tar_version}.tar.gz
 USER buildworker
 WORKDIR /src
 
-# Download/extract tar
-RUN curl -q -# -L "${tar_url}" -o tar-${tar_version}.tar.gz
-RUN tar zxf tar-${tar_version}.tar.gz
+# Use download_unpack to download and unpack tar
+RUN download_unpack.sh "${tar_url}"
 
 # Build the tar sources!
 WORKDIR /src/tar-${tar_version}
@@ -79,39 +78,46 @@ RUN rm -rf tar-${tar_version}* || \
 
 # Download and install `gcc` because we want only the latest in cutting-edge
 # compiler technology, and also because LLVM is a needy little piece of software
-## Install GCC
-ARG binutils_version=2.28
-ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2
-ARG binutils_targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32
-ARG gcc_version=7.1.0
-ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+## Install binutils
+ARG binutils_version=2.29
+ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz
 
+# Use download_unpack to download and unpack binutils and gcc
 USER buildworker
 WORKDIR /src
+RUN download_unpack.sh "${binutils_url}"
 
-# Download/extract both binutils and gcc
-RUN curl -q -# -L "${binutils_url}" -o binutils-${binutils_version}.tar.bz2
-RUN curl -q -# -L "${gcc_url}" -o gcc-${gcc_version}.tar.bz2
-RUN tar jxf binutils-${binutils_version}.tar.bz2
-RUN tar jxf gcc-${gcc_version}.tar.bz2
-
-# Build binutils!
+# Build binutils!  Because it's cheap and easy, we enable essentially every
+# target under the sun for binutils
 WORKDIR /src/binutils-${binutils_version}
-RUN ${L32} ./configure --prefix=/usr/local --enable-targets=${binutils_targets} ${EXTRA_BINUTILS_CONFIG_FLAGS}
+RUN ${L32} ./configure --prefix=/usr/local \
+                       ${binutils_configure_flags}
 RUN ${L32} make -j4
 
 # Install binutils
 USER root
 RUN ${L32} make install
 
+# Cleanup
+WORKDIR /src
+RUN rm -rf binutils-${binutils_version}
+## Install GCC
+ARG gcc_version=7.2.0
+ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
+
+# Download and unpack gcc
+USER buildworker
+WORKDIR /src
+RUN download_unpack.sh "${gcc_url}"
 
 # Build gcc!
-USER buildworker
 WORKDIR /src/gcc-${gcc_version}
 RUN ${L32} contrib/download_prerequisites
 RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
-RUN ${L32} /src/gcc-${gcc_version}/configure --prefix=/usr/local --enable-host-shared --enable-threads=posix --enable-languages=c,c++,fortran --disable-multilib ${EXTRA_GCC_CONFIG_FLAGS}
+RUN ${L32} /src/gcc-${gcc_version}/configure \
+    --prefix=/usr/local --enable-host-shared --enable-threads=posix \
+    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc
@@ -120,19 +126,44 @@ RUN ${L32} make install
 
 # Symlink LTO plugin into binutils directory
 RUN mkdir -p /usr/local/lib/bfd-plugins
-RUN ln -s $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib/bfd-plugins/
+RUN ln -sf $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib/bfd-plugins/
 
-# Setup environment variables so that GCC takes precedence from this point forth
+# Setup environment variables so that GCC takes precedence from this point on
 ENV PATH "/usr/local/bin:$PATH"
-ENV LD_LIBRARY_PATH "/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH"
-ENV AR "/usr/local/bin/gcc-ar"
-ENV RANLIB "/usr/local/bin/gcc-ranlib"
-ENV NM "/usr/local/bin/gcc-nm"
+
+# Put our /lib and /lib64 directories into /etc/ld.so.conf.d so that they take precedence
+RUN echo "/usr/local/lib"    > /etc/ld.so.conf.d/0_new_gcc.conf
+RUN echo "/usr/local/lib64" >> /etc/ld.so.conf.d/0_new_gcc.conf
+RUN ldconfig
+
+# Add a `cc` symlink to gcc:
+RUN ln -sf /usr/local/bin/gcc /usr/local/bin/cc
 
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf gcc-${gcc_version}*
-RUN rm -rf binutils-${binutils_version}*
+
+# Download and install `libtool` based off of our GCC version
+## Install libtool
+ARG libtool_version=2.4.6
+ARG libtool_url=http://ftpmirror.gnu.org/libtool/libtool-${libtool_version}.tar.gz
+
+USER buildworker
+WORKDIR /src
+
+# Use download_unpack to download and unpack libtool
+RUN download_unpack.sh "${libtool_url}"
+WORKDIR /src/libtool-${libtool_version}
+RUN ${L32} ./configure --prefix=/usr/local
+RUN ${L32} make all -j4
+
+# Install libtool
+USER root
+RUN ${L32} make install
+
+# cleanup /src
+WORKDIR /src
+RUN rm -rf libtool-${libtool_version}
 
 # Download and install `git` because some of the distributions we build on are
 # old enough that `git` isn't even installable from the default distributions
@@ -143,9 +174,8 @@ ARG git_url=https://github.com/git/git/archive/v${git_version}.tar.gz
 USER buildworker
 WORKDIR /src
 
-# Download, extract, and build git
-RUN curl -q -# -L "${git_url}" -o git-${git_version}.tgz
-RUN tar zxf git-${git_version}.tgz
+# Use download_unpack to download and unpack git
+RUN download_unpack.sh "${git_url}" /downloads/git-${git_version}.tar.gz
 WORKDIR /src/git-${git_version}
 RUN ${L32} make prefix=/usr/local all -j4
 
@@ -155,7 +185,7 @@ RUN ${L32} make prefix=/usr/local install
 
 # cleanup /src
 WORKDIR /src
-RUN rm -rf git-${git_version}*
+RUN rm -rf git-${git_version}
 
 # Download and install `cmake` because LLVM again.  Whiner.
 ## Install cmake into /usr/local
@@ -167,9 +197,7 @@ WORKDIR /src
 
 # Unfortunately, we have to pass `-k` to `curl` because cmake.org has weird SSL
 # certificates, and old versions of `curl` can't deal with it.  :(
-RUN curl -q -# -L -k "${cmake_url}" -o cmake-${cmake_version}.tar.gz
-RUN tar zxf cmake-${cmake_version}.tar.gz
-
+RUN EXTRA_CURL_FLAGS="-k" download_unpack.sh "${cmake_url}"
 
 # Build the cmake sources!
 WORKDIR /src/cmake-${cmake_version}
@@ -182,7 +210,7 @@ RUN ${L32} make install
 
 # Now cleanup /src
 WORKDIR /src
-RUN rm -rf cmake-${cmake_version}*
+RUN rm -rf cmake-${cmake_version}
 
 # Download and install `python` because buildbot doesn't like ancient versions
 ## Install python
@@ -193,10 +221,8 @@ ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 USER buildworker
 WORKDIR /src
 
-# Download/extract both Python and pip
-RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tar.xz
-RUN curl -q -# -L "${pip_url}" -o get-pip.py
-RUN tar Jxf Python-${python_version}.tar.xz
+# Use download_unpack to download and unpack python
+RUN download_unpack.sh "${python_url}"
 
 # Build the python sources!
 WORKDIR /src/Python-${python_version}
@@ -208,12 +234,13 @@ USER root
 RUN ${L32} make install
 
 # Install pip and install virtualenv (all as root, of course)
-RUN python /src/get-pip.py
+RUN curl -q -# -L "${pip_url}" -o get-pip.py
+RUN python ./get-pip.py
 RUN pip install virtualenv
 
 # Now cleanup /src
 WORKDIR /src
-RUN rm -rf Python-${python_version}*
+RUN rm -rf Python-${python_version}
 RUN rm -f get-pip.py
 
 # Download and install `ccache` to speed up compilation
@@ -224,9 +251,9 @@ ARG ccache_url=https://www.samba.org/ftp/ccache/ccache-${ccache_version}.tar.xz
 USER buildworker
 WORKDIR /src
 
-# Download, extract, and build ccache
-RUN curl -q -# -L "${ccache_url}" -o ccache-${ccache_version}.tar.xz
-RUN tar Jxf ccache-${ccache_version}.tar.xz
+# Use download_unpack to download and unpack ccache
+RUN download_unpack.sh "${ccache_url}"
+
 WORKDIR /src/ccache-${ccache_version}
 # We need to patch ccache's configure system since it's ancient
 RUN curl -L 'https://raw.githubusercontent.com/jd-gascuel/ccache/437b5ff4ca7bbcabd225816132e4665180cfa18e/config.guess' > config.guess
@@ -240,7 +267,7 @@ RUN ${L32} make install
 
 # cleanup /src
 WORKDIR /src
-RUN rm -rf ccache-${ccache_version}*
+RUN rm -rf ccache-${ccache_version}
 USER root
 
 # We need to override ld.so.conf to search /usr/local before /usr
@@ -250,10 +277,26 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     mv /etc/ld.so.conf.new /etc/ld.so.conf; \
     ldconfig
 
-# These are our final words. Always.
+# Cleanup downloads
+RUN rm -rf /downloads
+
+# Remove bootstrapping compiler toolchain if we need to
+RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
+        if [[ -n "$(which yum 2>/dev/null)" ]]; then \
+            yum remove -y ${TEMPORARY_DEPS}; \
+            yum clean all; \
+        elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
+            apt-get remove -y ${TEMPORARY_DEPS}; \
+            apt-get autoremove -y; \
+            apt-get clean -y; \
+        fi; \
+    fi
+
+# Set a default working directory that we know is good
 WORKDIR /
 
-# Use /entrypoint.sh hack to get around the whole ${L32} ARG not being used in ENTRYPOINT thing.
+# Use /entrypoint.sh to conditionally apply ${L32} since we cna't use ARG
+# values within an actual ENTRYPOINT command.  :(
 RUN echo "#!/bin/bash" > /entrypoint.sh; \
     echo "${L32} \"\$@\"" >> /entrypoint.sh; \
     chmod +x /entrypoint.sh

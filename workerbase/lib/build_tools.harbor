@@ -6,7 +6,11 @@ INCLUDE lib/tar_install
 
 # Download and install `gcc` because we want only the latest in cutting-edge
 # compiler technology, and also because LLVM is a needy little piece of software
+INCLUDE lib/binutils_install
 INCLUDE lib/gcc_install
+
+# Download and install `libtool` based off of our GCC version
+INCLUDE lib/libtool_install
 
 # Download and install `git` because some of the distributions we build on are
 # old enough that `git` isn't even installable from the default distributions

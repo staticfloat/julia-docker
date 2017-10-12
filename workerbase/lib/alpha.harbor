@@ -2,8 +2,14 @@ MAINTAINER Elliot Saba <staticfloat@gmail.com>
 USER root
 
 # We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -m -s /bin/bash buildworker
+RUN useradd -u 1337 -m -s /bin/bash buildworker || true
 
-# This is where we'll do all our work, so make it now
-RUN mkdir -p /src
-RUN chown buildworker:buildworker /src
+# These are where we'll do all our work, so make them now
+RUN mkdir -p /src /downloads
+RUN chown buildworker:buildworker /src /downloads
+
+# We use the "download_unpack.sh" command a lot, throw it into /usr/bin
+COPY download_unpack.sh /usr/bin
+
+# We want to be able to do things like "source"
+SHELL ["/bin/bash", "-c"]

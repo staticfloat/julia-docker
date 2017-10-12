@@ -1,24 +1,18 @@
 ## Download and install needed build dependencies for x86_64 yum-based systems
 USER root
-
-# Start with tools that I love and always need by my side
 RUN ${L32} yum update -y
-RUN ${L32} yum install -y htop tmux vim curl net-tools which gdb pkg-config
 
-# Dependencies we need to build Julia
-RUN ${L32} yum install -y gcc gcc-c++ gcc-gfortran m4 make openssl openssl-devel patch
+# Tools that make it easy to get stuff done within the docker image
+ARG NICE_TOOLS="vim curl gdb net-tools which patchelf"
 
-# Dependencies we need to build git
-RUN ${L32} yum install -y curl-devel expat-devel gettext-devel perl-devel
+# Tools to bootstrap our compiler chain that we will remove afterward
+ARG TEMPORARY_DEPS="gcc gcc-c++"
 
-# Dependencies we need to build gcc
-RUN ${L32} yum install -y wget bzip2 tar
+# Tools that we need to build Julia and other deps that we are not going to
+# build ourselves
+ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
+               expat-devel gettext-devel perl-devel wget bzip2 tar \ 
+               zlib-devel bzip2-devel xz rpmdevtools"
 
-# Dependencies we need to build python
-RUN ${L32} yum install -y zlib-devel bzip2-devel
-
-# Dependencies we need to build tar
-RUN ${L32} yum install -y xz
-
-# Dependencies we need to do nightly SRPM packaging
-RUN ${L32} yum install -y rpmdevtools
+# Install all these packages
+RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}

@@ -6,10 +6,8 @@ ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 USER buildworker
 WORKDIR /src
 
-# Download/extract both Python and pip
-RUN curl -q -# -L "${python_url}" -o Python-${python_version}.tar.xz
-RUN curl -q -# -L "${pip_url}" -o get-pip.py
-RUN tar Jxf Python-${python_version}.tar.xz
+# Use download_unpack to download and unpack python
+RUN download_unpack.sh "${python_url}"
 
 # Build the python sources!
 WORKDIR /src/Python-${python_version}
@@ -21,10 +19,11 @@ USER root
 RUN ${L32} make install
 
 # Install pip and install virtualenv (all as root, of course)
-RUN python /src/get-pip.py
+RUN curl -q -# -L "${pip_url}" -o get-pip.py
+RUN python ./get-pip.py
 RUN pip install virtualenv
 
 # Now cleanup /src
 WORKDIR /src
-RUN rm -rf Python-${python_version}*
+RUN rm -rf Python-${python_version}
 RUN rm -f get-pip.py

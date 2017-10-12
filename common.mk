@@ -19,9 +19,13 @@ HFS=$(notdir $(basename $(wildcard $(dir $(MAKEFILE_LIST))/workerbase/*.harbor))
 # Build a second list that is filtered by our build architecture and OS, because
 # win can't build for non-win (and vice versa) and x86 can't build for ppc64le.
 ifneq (,$(findstring MINGW,$(BUILD_OS)))
-BUILD_HFS=$(filter win%,$(filter $(ARCH_FILTER),$(HFS)))
+define BUILD_FILT
+$(filter win%,$(filter $(ARCH_FILTER),$(1)))
+endef
 else
-BUILD_HFS=$(filter-out win%,$(filter $(ARCH_FILTER),$(HFS)))
+define BUILD_FILT
+$(filter-out win%,$(filter $(ARCH_FILTER),$(1)))
+endef
 endif
 
 # Helper function that adds $(2) as a dependency to rule $(1)
@@ -37,13 +41,16 @@ endef
 define tabularasa_tag_name
 $(strip staticfloat/julia_tabularasa:$(1))
 endef
+define crossbuild_tag_name
+$(strip staticfloat/julia_$(firstword $(subst -, ,$(1)))):$(lastword $(subst -, ,$(1))))
+endef
 
 
 # Helper function that takes in a Harborfile path and spits out all the
 # harborfiles it has as a dependency.  This is nonrecursive, because that would
 # just be ridiculous, and I can't be bothered to do it.
 define harborfile_deps
-$(shell cat $(1) | grep INCLUDE | awk '{print $$2 ".harbor";}')
+$(shell cat $(1) | grep '^INCLUDE' | awk '{print $$2 ".harbor";}')
 endef
 
 

@@ -9,9 +9,9 @@ RUN ${L32} pip install pexpect
 USER buildworker
 WORKDIR /src
 
-# Download, extract, and build rr
-RUN curl -q -# -L "${rr_url}" -o rr-${rr_version}.tar.gz
-RUN tar zxf rr-${rr_version}.tar.gz
+# Use download_unpack to download and unpack rr
+RUN download_unpack.sh "${rr_url}" /downloads/rr-${rr_version}.tar.gz
+
 RUN mkdir -p /src/rr-${rr_version}/build/Release
 WORKDIR /src/rr-${rr_version}/build/Release
 RUN ${L32} cmake -DCMAKE_INSTALL_PREFIX=/usr/local -Ddisable32bit=TRUE ../..

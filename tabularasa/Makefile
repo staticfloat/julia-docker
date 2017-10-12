@@ -1,5 +1,9 @@
 include ../common.mk
 
+# Only include HFS entries that exist within this directory as well
+HFS:=$(filter $(subst .harbor,,$(wildcard *.harbor)),$(HFS))
+BUILD_HFS=$(call BUILD_FILT,$(HFS))
+
 # Build "dockerfiles" target that assembles all Dockerfiles
 $(foreach f,$(HFS),$(eval $(call add_dep,dockerfiles,build/$(f)/Dockerfile)))
 
@@ -47,6 +51,7 @@ build/$(1)/Dockerfile: $(1).harbor lib Makefile
 	@echo >> "build/$(1)/Dockerfile"
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
+	@cp lib/*.sh "build/$(1)/"
 endef
 
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))

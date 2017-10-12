@@ -5,6 +5,7 @@ $(foreach f,$(HFS),$(eval $(call add_dep,dockerfiles,build/$(f)/Dockerfile)))
 
 # Build "buildall" target that attempts to build every Dockerfile in the room,
 # but only from the ones that our build architecture can manage.
+BUILD_HFS=$(call BUILD_FILT,$(HFS))
 $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,buildall,build-$(f))))
 
 # Build "pushall" target that pushes up the result of "buildall"
@@ -45,6 +46,9 @@ build/$(1)/Dockerfile: $(1).harbor Makefile
 	@echo >> "build/$(1)/Dockerfile"
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
+	@# Copy in any auxilliary scripts so they can be installed
+	@cp lib/*.sh "build/$(1)/"
+	@cp -R patches/ "build/$(1)/"
 	@# On Windows, copy in the powershell scripts too
 	@if [ -n "$(filter win%,$(1))" ]; then \
 		cp lib/*.ps1 "build/$(1)/"; \

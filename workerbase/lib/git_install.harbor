@@ -5,9 +5,8 @@ ARG git_url=https://github.com/git/git/archive/v${git_version}.tar.gz
 USER buildworker
 WORKDIR /src
 
-# Download, extract, and build git
-RUN curl -q -# -L "${git_url}" -o git-${git_version}.tgz
-RUN tar zxf git-${git_version}.tgz
+# Use download_unpack to download and unpack git
+RUN download_unpack.sh "${git_url}" /downloads/git-${git_version}.tar.gz
 WORKDIR /src/git-${git_version}
 RUN ${L32} make prefix=/usr/local all -j4
 
@@ -17,4 +16,4 @@ RUN ${L32} make prefix=/usr/local install
 
 # cleanup /src
 WORKDIR /src
-RUN rm -rf git-${git_version}*
+RUN rm -rf git-${git_version}
