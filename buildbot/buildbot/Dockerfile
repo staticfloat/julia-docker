@@ -15,7 +15,7 @@ RUN pip install --upgrade pip
 # without caching in case there's a new version of buildbot out
 ADD https://pypi.python.org/pypi?:action=doap&name=buildbot /buildbot_doap.xml
 RUN pip install psycopg2 buildbot[tls,bundle] urllib3[secure] requests ipython \
-                buildbot_profiler
+                buildbot_profiler docker
 
 # Clone/configure buildbot configuration
 # the ADD command is to rebuild the rest of the image from here on out

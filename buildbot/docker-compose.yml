@@ -27,6 +27,8 @@ services:
             - 8010
         ports:
             - 9989:9989/tcp
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
     frontend:
         restart: unless-stopped
         depends_on:
