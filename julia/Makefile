@@ -7,9 +7,12 @@ all: dockerfiles
 VERS := $(VERS) v0.4.0 v0.4.1 v0.4.2 v0.4.3 v0.4.4 v0.4.5 v0.4.6 v0.4.7
 VERS := $(VERS) v0.5.0 v0.5.1 v0.5.2
 VERS := $(VERS) v0.6.0
+VERS := $(VERS) nightly
 
 # Make some short version mappings
 SHORT_VERS := $(shell (for v in $(VERS); do echo $${v%.*}; done) | sort | uniq)
+# But don't let "nightly" into the short version mappings
+SHORT_VERS := $(filter-out nightly,$(SHORT_VERS))
 
 # Convenience function to take in `v0.5` and spit out `v0.5.2` as the highest
 # matching version.  (At least, it was at the time of writing this comment)
@@ -50,8 +53,20 @@ UP_ARCH-ppc64le=ppc64le
 UP_ARCH-aarch64=aarch64
 UP_ARCH-armv7l=arm
 
+# grumble grumble EVEN MORE INCONSISTENCY
+TAR_NIGHTLY_ARCH-x64=64
+TAR_NIGHTLY_ARCH-x86=32
+TAR_NIGHTLY_ARCH-ppc64le=ppc64
+TAR_NIGHTLY_ARCH-aarch64=aarch64
+TAR_NIGHTLY_ARCH-armv7l=arm
+
+
 define JULIA_URL
 $(strip https://julialang-s3.julialang.org/bin/linux/$(UP_ARCH-$(1))/$(call major_version,$(2))/julia-$(subst v,,$(2))-linux-$(TAR_ARCH-$(1)).tar.gz)
+endef
+
+define JULIA_NIGHTLY_URL
+$(strip https://julialangnightlies-s3.julialang.org/bin/linux/$(UP_ARCH-$(1))/julia-latest-linux$(TAR_NIGHTLY_ARCH-$(1)).tar.gz)
 endef
 
 define build_dockerfile
@@ -63,7 +78,11 @@ build/$(2)/Dockerfile.$(1): Makefile Dockerfile
 	@echo "FROM $(IMAGE-$(1))" >> "$$@"
 	@echo "ARG L32=\"$(L32-$(1))\"" >> "$$@"
 	@echo >> "$$@"
-	@cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_URL,$(1),$(2))&g' >> "$$@"
+	@if [ "$(2)" = "nightly" ]; then \
+		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_NIGHTLY_URL,$(1))&g' | grep -v .tar.gz.asc >> "$$@"; \
+	else \
+		cat Dockerfile | sed -e 's&{{JULIA_URL}}&$(call JULIA_URL,$(1),$(2))&g' >> "$$@"; \
+	fi
 
 build-$(2)-$(1): build/$(2)/Dockerfile.$(1)
 	$(DOCKER_BUILD) --pull -t $(call julia_tag_name,$(1),$(2)) -f build/$(2)/Dockerfile.$(1) build/$(2)
