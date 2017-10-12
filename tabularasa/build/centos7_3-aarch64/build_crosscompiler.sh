@@ -20,11 +20,10 @@
 #
 # Ensure that you have set the following environment variables:
 #   target
-#   linux_version
-#   binutils_version
-#   gcc_version
-#   glibc_version
-
+#   linux_version (defaults to 4.12)
+#   binutils_version (defaults to 2.28)
+#   gcc_version (defaults to 7.2.0)
+#   glibc_version (defaults to 2.17)
 
 ## To build a cross-compile for OSX targets we:
 # 1) Download OSX SDK
@@ -41,10 +40,30 @@
 #
 # Ensure that you have set the following environment variables:
 #   target
-#   libtapi_version
-#   cctools_version
-#   dsymutil_version
-#   gcc_version
+#   libtapi_version (defaults to 1.30.0)
+#   cctools_version (defaults to 22ebe727a5cdc21059d45313cf52b4882157f6f0)
+#   dsymutil_version (defaults to 6fe249efadf6139a7f271fee87a5a0f44e2454cf)
+#   gcc_version (defaults to 7.1.0)
+
+# Set defaults of envvars
+linux_version=${linux_version:-4.12}
+binutils_version=${binutils_version:-2.28}
+gcc_version=${gcc_version:-7.2.0}
+glibc_version=${glibc_version:-2.17}
+
+# osx defaults
+libtapi_version=${libtapi_version:-1.30.0}
+cctools_version=${cctools_version:-22ebe727a5cdc21059d45313cf52b4882157f6f0}
+dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
+
+# windows defaults
+mingw_version=${mingw_version:-5.0.2}
+
+# By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
+nproc=$(($(nproc) + 1))
+if [[ $(nproc) > 8 ]]; then
+    nproc=8
+fi
 
 ## Function to take in a target such as `aarch64-linux-gnu`` and spit out a
 ## linux kernel arch like "arm64".
@@ -115,20 +134,14 @@ install_binutils()
     cd /src
     download_unpack.sh "${binutils_url}"
 
-    # On OSX, we need to ask for x86_64h not x86_64 so that we understsand AVX opcodes
-    configure_target=${target}
-    if [[ "${target}" == *apple* ]]; then
-        configure_target=$(echo ${target} | sed -e 's/x86_64/x86_64h/')
-    fi
-
     # Build binutils!
     cd /src/binutils-${binutils_version}
     ${L32} ./configure \
         --prefix=/opt/${target} \
-        --target=${configure_target} \
+        --target=${target} \
         --disable-multilib \
         --disable-werror
-    ${L32} make -j4
+    ${L32} make -j${nproc}
 
     # Install binutils
     sudo -E ${L32} make install
@@ -142,11 +155,12 @@ install_binutils()
 install_gcc_stage1()
 {
     # First argument is the version
-    gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.bz2
+    gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
 
     # Download and unpack gcc
     cd /src
     download_unpack.sh "${gcc_url}"
+    cd /src/gcc-${gcc_version}
 
     # target-specific GCC configuration flags
     GCC_CONF_ARGS=""
@@ -162,10 +176,14 @@ install_gcc_stage1()
 
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
+
+        # We need to patch libmpx on linux for i686
+        if [[ "${target}" == i686* ]]; then
+            patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
+        fi
     fi
 
     # Build gcc (stage 1)
-    cd /src/gcc-${gcc_version}
     ${L32} contrib/download_prerequisites
     mkdir -p /src/gcc-${gcc_version}_build
     cd /src/gcc-${gcc_version}_build
@@ -175,14 +193,18 @@ install_gcc_stage1()
         --host=${MACHTYPE} \
         --build=${MACHTYPE} \
         --enable-threads=posix \
+        --enable-host-shared \
         --disable-multilib \
         --disable-werror \
         ${GCC_CONF_ARGS}
 
-    ${L32} make -j4 all-gcc
+    ${L32} make -j${nproc} all-gcc
 
     # Install gcc (stage 1)
     sudo -E ${L32} make install-gcc
+
+    # Because this always writes out .texi files, we have to chown them back.  >:(
+    sudo -E ${L32} chown $(id -u):$(id -g) -R .
 }
 
 
@@ -191,7 +213,7 @@ install_gcc_stage2()
 {
     # Install libgcc (stage 2)
     cd /src/gcc-${gcc_version}_build
-    ${L32} make -j4 all-target-libgcc
+    ${L32} make -j${nproc} all-target-libgcc
     sudo -E ${L32} make install-target-libgcc
 }
 
@@ -201,12 +223,21 @@ install_gcc_stage3()
 {
     # Install everything else like gfortran (stage 3)
     cd /src/gcc-${gcc_version}_build
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup
     cd /src
     sudo -E rm -rf gcc-${gcc_version}*
+
+    # Finally, create a bunch of symlinks stripping out the target so that
+    # things like `gcc` "just work", as long as we've got our path set properly
+    for f in /opt/${target}/bin/${target}-*; do
+        fbase=$(basename $f)
+        # We don't worry about failure to create these symlinks, as sometimes there are files
+        # name ridiculous things like ${target}-${target}-foo, which screws this up
+        sudo ln -s $f /opt/${target}/bin/${fbase#${target}-} || true
+    done
 }
 
 ## Helper to install stage1 of glibc, e.g. the headers and crt1.o and friends
@@ -245,14 +276,18 @@ install_glibc_stage1()
         --target=${target} \
         --build=${MACHTYPE} \
         --with-headers=/opt/${target}/${target}/include \
-        --disable-multilib \
         --with-binutils=/opt/${target}/bin \
+        --enable-mulilib \
         --disable-werror \
         libc_cv_forced_unwind=yes \
         libc_cv_c_cleanup=yes
 
-    ${L32} make -j4 csu/subdir_lib
+    ${L32} make -j${nproc} csu/subdir_lib
     sudo -E ${L32} make install-bootstrap-headers=yes install-headers
+
+    sudo -E mkdir -p /opt/${target}/${target}/include/bits
+    sudo -E mkdir -p /opt/${target}/${target}/include/gnu
+    sudo -E mkdir -p /opt/${target}/${target}/lib
 
     # Manually copy over bits/stdio_lim.h
     sudo -E install bits/stdio_lim.h /opt/${target}/${target}/include/bits/
@@ -270,7 +305,7 @@ install_glibc_stage2()
 {
     cd /src/glibc-${glibc_version}_build
     sudo -E chown buildworker:buildworker -R /src/glibc-${glibc_version}_build
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup
@@ -289,8 +324,8 @@ install_osx_sdk()
     sudo -E download_unpack.sh "${sdk_url}"
 
     # Fix weird permissions on the SDK folder
-    sudo chmod 755 MacOSX*.sdk
     sudo chmod 755 .
+    sudo chmod 755 MacOSX*.sdk
 }
 
 install_libtapi()
@@ -300,7 +335,10 @@ install_libtapi()
     cd /src
     download_unpack.sh "${libtapi_url}"
 
-    # Build and install libtapi
+    # Build and install libtapi (We have to tell it to explicitly use clang)
+    export MACOSX_DEPLOYMENT_TARGET=10.10
+    export CC="clang"
+    export CXX="clang++"
     cd /src/apple-libtapi-${libtapi_version}
     INSTALLPREFIX=/opt/${target} ${L32} ./build.sh
     sudo -E INSTALLPREFIX=/opt/${target} ${L32} ./install.sh
@@ -332,7 +370,7 @@ install_cctools()
         --prefix=/opt/${target} \
         --disable-clang-as \
         --with-libtapi=/opt/${target}
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup
@@ -353,8 +391,8 @@ install_dsymutil()
         -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_TARGETS_TO_BUILD="X86" \
         -DLLVM_ENABLE_ASSERTIONS=Off
-    ${L32} make -f tools/dsymutil/Makefile -j4
-    sudo -E cp bin/llvm-dsymutil /usr/local/bin/dsymutil
+    ${L32} make -f tools/dsymutil/Makefile -j${nproc}
+    sudo -E cp bin/llvm-dsymutil /opt/${target}/bin/dsymutil
 
     # Cleanup
     cd /src
@@ -366,6 +404,10 @@ install_mingw_stage1()
     mingw_url=https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v${mingw_version}.tar.bz2
     cd /src
     download_unpack.sh "${mingw_url}"
+
+    # Patch mingw to build 32-bit cross compiler with GCC 7.1+
+    cd /src/mingw-w64-v${mingw_version}
+    patch -p1 < /downloads/patches/mingw_gcc710_i686.patch
 
     # Install mingw headers
     cd /src/mingw-w64-v${mingw_version}/mingw-w64-headers
@@ -380,14 +422,23 @@ install_mingw_stage1()
 
 install_mingw_stage2()
 {
+    MINGW_CONF_ARGS=""
+    if [[ "${target}" == i686-* ]]; then
+        # If we're building a 32-bit build of mingw, add `--disable-lib64`
+        MINGW_CONF_ARGS="${MINGW_CONF_ARGS} --disable-lib64"
+    else
+        MINGW_CONF_ARGS="${MINGW_CONF_ARGS} --disable-lib32"
+    fi
+
     # Install crt
     mkdir -p /src/mingw-w64-v${mingw_version}-crt_build
     cd /src/mingw-w64-v${mingw_version}-crt_build
     ${L32} /src/mingw-w64-v${mingw_version}/mingw-w64-crt/configure \
         --prefix=/opt/${target}/${target} \
-        --host=${target}
+        --host=${target} \
+        ${MINGW_CONF_ARGS}
 
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo ${L32} make install
 
     # Install winpthreads
@@ -399,7 +450,7 @@ install_mingw_stage2()
         --enable-static \
         --enable-shared
 
-    ${L32} make -j4
+    ${L32} make -j${nproc}
     sudo ${L32} make install
 
     # Cleanup
@@ -412,4 +463,3 @@ install_mingw_stage2()
 # Ensure that PATH is setup properly
 export PATH=/opt/${target}/bin:$PATH
 
-set -e

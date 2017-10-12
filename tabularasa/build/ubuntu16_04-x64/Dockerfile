@@ -24,7 +24,7 @@ COPY download_unpack.sh /usr/bin
 
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
-RUN apt update && apt install -y python python-dev curl build-essential
+RUN apt update && apt install -y python python-dev curl build-essential unzip
 RUN curl -L 'https://bootstrap.pypa.io/get-pip.py' | python
 USER root
 
