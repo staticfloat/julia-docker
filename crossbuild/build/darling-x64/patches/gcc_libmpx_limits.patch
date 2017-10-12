@@ -1,0 +1,16 @@
+diff --git a/libmpx/mpxrt/mpxrt-utils.c b/libmpx/mpxrt/mpxrt-utils.c
+index 63ee7c6..9ed991c 100644
+--- a/libmpx/mpxrt/mpxrt-utils.c
++++ b/libmpx/mpxrt/mpxrt-utils.c
+@@ -45,7 +45,11 @@
+ #include <stdarg.h>
+ #include <stdlib.h>
+ #include <string.h>
++#ifdef __linux__
++#include <linux/limits.h>
++#else
+ #include <limits.h>
++#endif
+ #include <pthread.h>
+ #include "mpxrt-utils.h"
+ 

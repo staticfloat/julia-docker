@@ -17,7 +17,8 @@ $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,pushall,push-$(f))))
 # This is where we put our derived harbor files
 lib:
 	ln -sf ../workerbase/lib lib
-
+patches:
+	ln -sf ../workerbase/patches patches
 
 define build_dockerfile
 # Running just `make build-crossbuild-x64` will build that image
@@ -32,7 +33,7 @@ push-$(1):
 	docker push $(call crossbuild_tag_name,$(1))
 
 # This is how we build the actual Dockerfile
-build/$(1)/Dockerfile: $(1).harbor lib Makefile
+build/$(1)/Dockerfile: $(1).harbor lib patches Makefile
 	@if [ ! -f "$(1).harbor" ]; then \
 		echo "Target \"$(1)\" is invalid, recheck your spelling good sir."; \
 		exit 1; \
@@ -52,10 +53,11 @@ build/$(1)/Dockerfile: $(1).harbor lib Makefile
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
 	@cp lib/*.sh "build/$(1)/"
+	@cp -R patches/ "build/$(1)/"
 endef
 
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
 
 clean:
-	rm -rf build lib
+	rm -rf build lib patches
