@@ -11,7 +11,11 @@ A collection of `Dockerfile`s related to the [Julia language](http://julialang.o
 
 * `tabularasa`: This project contains the scripts that generate `Dockerfile`s to make "blank" images that run buildbot worker instances for testing of built julia versions.  These are used to ensure that our releases are completely self-contained, and as such do not contain things like `libgfortran` preinstalled within them.
 
-* `buildworker`: This project contains the scripts that generate `Dockerfile`s to make the final worker docker-compose scripts.  These scripts can be used to easily start buildworker instances as services, connecting to the buildbot master instance and building away.
+* `buildworker`: This project contains the scripts that generate `Dockerfile`s to make the final worker docker-compose configurations.  These configurations can be used to easily start buildworker instances as services, connecting to the buildbot master instance and building away.
+
+* `vagrant`: This is a mostly-abandoned attempt to setup [Vagrant](https://www.vagrantup.com) configurations for Windows and MacOS buildbots.  Probably horrificly bitrotted, and will be deleted as soon as a more reliable setup is chanced upon.
+
+* `crossbuild`: The source for the `staticfloat/julia_crossbuild` docker images used by [`BinaryBuilder.jl`](https://github.com/JuliaPackaging/BinaryBuilder.jl) to perform crossbuilds of various binaries for use with [`BinaryProvider.jl`](https://github.com/JuliaPackaging/BinaryProvider.jl).
 
 In every case, if `Dockerfile`s or `docker-compose.yml` files are generated, they will be placed within a `build/` directory.  The aim of this repository is to keep the `build/` directories up to date, so that interested users can download this repository and use the prebuilt `Dockerfile`/`docker-compose.yml` contents to immediately get up and running, without having to bother with the generation steps.
 
