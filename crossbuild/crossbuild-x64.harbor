@@ -15,7 +15,10 @@ RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
 USER buildworker
 
 # We still need a pretty recent cmake, so just build one from scratch like usual
+USER buildworker
 INCLUDE lib/cmake_install
+
+USER buildworker
 
 # Get our bash script library ready
 COPY build_crosscompiler.sh /build.sh

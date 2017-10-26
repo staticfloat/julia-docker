@@ -2,25 +2,33 @@
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with
 # our new GCC, but that's okay.
+USER buildworker
 INCLUDE lib/tar_install
 
 # Download and install `gcc` because we want only the latest in cutting-edge
 # compiler technology, and also because LLVM is a needy little piece of software
+USER buildworker
 INCLUDE lib/binutils_install
+USER buildworker
 INCLUDE lib/gcc_install
 
 # Download and install `libtool` based off of our GCC version
+USER buildworker
 INCLUDE lib/libtool_install
 
 # Download and install `git` because some of the distributions we build on are
 # old enough that `git` isn't even installable from the default distributions
+USER buildworker
 INCLUDE lib/git_install
 
 # Download and install `cmake` because LLVM again.  Whiner.
+USER buildworker
 INCLUDE lib/cmake_install
 
 # Download and install `python` because buildbot doesn't like ancient versions
+USER buildworker
 INCLUDE lib/python_install
 
 # Download and install `ccache` to speed up compilation
+USER buildworker
 INCLUDE lib/ccache_install
