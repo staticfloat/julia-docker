@@ -274,6 +274,9 @@ install_glibc_stage1()
         patch -p1 < /downloads/patches/glibc_i686_asm.patch
     fi
 
+    # patch for building old glibc on newer binutils
+    patch -p0 < /downloads/patches/glibc_nocommon.patch
+
     # build glibc
     mkdir -p /src/glibc-${glibc_version}_build
     cd /src/glibc-${glibc_version}_build
