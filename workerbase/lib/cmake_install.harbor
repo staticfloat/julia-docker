@@ -2,7 +2,6 @@
 ARG cmake_version=3.6.3
 ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Unfortunately, we have to pass `-k` to `curl` because cmake.org has weird SSL

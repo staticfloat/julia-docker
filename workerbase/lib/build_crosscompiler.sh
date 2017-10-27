@@ -9,6 +9,7 @@
 # 6) Install the rest of glibc
 # 7) Build a complete gcc/gfortran
 
+
 # These steps are given by the following bash functions:
 #   install_kernel_headers
 #   install_binutils
@@ -47,7 +48,7 @@
 
 # Set defaults of envvars
 linux_version=${linux_version:-4.12}
-binutils_version=${binutils_version:-2.28}
+binutils_version=${binutils_version:-2.29.1}
 gcc_version=${gcc_version:-7.2.0}
 glibc_version=${glibc_version:-2.17}
 
@@ -60,8 +61,14 @@ dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
 mingw_version=${mingw_version:-5.0.2}
 
 # By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
-nproc=$(($(nproc) + 1))
-if [[ $(nproc) > 8 ]]; then
+nproc_cmd='nproc'
+if type nproc 2> /dev/null ; then
+    nproc_cmd='nproc'
+else
+    nproc_cmd="cat /proc/cpuinfo | grep 'processor' | wc -l"
+fi
+nproc=$(eval "$nproc_cmd")
+if [[ $nproc > 8 ]]; then
     nproc=8
 fi
 
@@ -174,13 +181,9 @@ install_gcc_stage1()
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
     fi
 
+    patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-
-        # We need to patch libmpx on linux for i686
-        if [[ "${target}" == i686* ]]; then
-            patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
-        fi
     fi
 
     # Build gcc (stage 1)
@@ -244,7 +247,7 @@ install_gcc_stage3()
 install_glibc_stage1()
 {
     # First argument is the version
-    glibc_url="http://gnu.mirrors.pair.com/gnu/glibc/glibc-${glibc_version}.tar.xz"
+    glibc_url="http://mirrors.peers.community/mirrors/gnu/glibc/glibc-${glibc_version}.tar.xz"
     cd /src
     download_unpack.sh "${glibc_url}"
 
@@ -256,6 +259,10 @@ install_glibc_stage1()
     if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then 
         patch -p1 < /downloads/patches/glibc_arm_gcc_fix.patch
     fi
+
+    # Patch glibc's sunrpc cross generator to work with musl
+    # See https://sourceware.org/bugzilla/show_bug.cgi?id=21604
+    patch -p0 < /downloads/patches/glibc-sunrpc.patch
 
     # patch glibc's stupid gcc version check (we don't require this one, as if
     # it doesn't apply cleanly, it's probably fine)
@@ -274,7 +281,6 @@ install_glibc_stage1()
         --prefix=/opt/${target}/${target} \
         --host=${target} \
         --target=${target} \
-        --build=${MACHTYPE} \
         --with-headers=/opt/${target}/${target}/include \
         --with-binutils=/opt/${target}/bin \
         --enable-mulilib \
@@ -304,7 +310,7 @@ install_glibc_stage1()
 install_glibc_stage2()
 {
     cd /src/glibc-${glibc_version}_build
-    sudo -E chown buildworker:buildworker -R /src/glibc-${glibc_version}_build
+    sudo -E chown $(id -u):$(id -g) -R /src/glibc-${glibc_version}_build
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
@@ -335,11 +341,14 @@ install_libtapi()
     cd /src
     download_unpack.sh "${libtapi_url}"
 
+    cd /src/apple-libtapi-${libtapi_version}
+    # Backport of https://reviews.llvm.org/D39297 to fix build on musl
+    patch -p1 < /downloads/patches/libtapi_llvm_dynlib.patch
+
     # Build and install libtapi (We have to tell it to explicitly use clang)
     export MACOSX_DEPLOYMENT_TARGET=10.10
     export CC="clang"
     export CXX="clang++"
-    cd /src/apple-libtapi-${libtapi_version}
     INSTALLPREFIX=/opt/${target} ${L32} ./build.sh
     sudo -E INSTALLPREFIX=/opt/${target} ${L32} ./install.sh
 
@@ -354,6 +363,10 @@ install_cctools()
     cctools_url=https://github.com/tpoechtrager/cctools-port/archive/${cctools_version}.tar.gz
     cd /src
     download_unpack.sh "${cctools_url}"
+
+    cd /src/cctools-port-${cctools_version}
+    # Fix build on musl (https://github.com/tpoechtrager/cctools-port/pull/36)
+    patch -p1 < /downloads/patches/cctools_musl.patch
 
     # Install cctools
     cd /src/cctools-port-${cctools_version}/cctools
@@ -384,6 +397,10 @@ install_dsymutil()
     cd /src
     download_unpack.sh "${dsymutil_url}"
 
+    cd /src/llvm-dsymutil-${dsymutil_version}
+    # Backport of https://reviews.llvm.org/D39297 to fix build on musl
+    patch -p1 < /downloads/patches/dsymutil_llvm_dynlib.patch
+
     # Install dsymutil
     mkdir -p /src/llvm-dsymutil-${dsymutil_version}/build
     cd /src/llvm-dsymutil-${dsymutil_version}/build
@@ -393,6 +410,9 @@ install_dsymutil()
         -DLLVM_ENABLE_ASSERTIONS=Off
     ${L32} make -f tools/dsymutil/Makefile -j${nproc}
     sudo -E cp bin/llvm-dsymutil /opt/${target}/bin/dsymutil
+    ${L32} make -f tools/llvm-ar/Makefile -j${nproc}
+    sudo -E cp bin/llvm-ar /opt/${target}/bin/${target}-ar
+    sudo -E cp bin/llvm-ranlib /opt/${target}/bin/${target}-ranlib
 
     # Cleanup
     cd /src

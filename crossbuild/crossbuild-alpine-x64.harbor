@@ -1,28 +1,32 @@
 # Build an image that contains all of our cross compilers and all that stuff.
 # Since we need virtually everything within the actual workerbase image, just
 # build off of that one instead of compiling it all over again
-FROM ubuntu:trusty
+FROM alpine:3.6
 
-# Setup a few things we need in order to make it through the build properly
-INCLUDE lib/alpha
+# These are where we'll do all our work, so make them now
+RUN mkdir -p /src /downloads
+
+# We use the "download_unpack.sh" command a lot, throw it into /usr/bin
+COPY download_unpack.sh /usr/bin
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
-ARG TEMPORARY_DEPS="gcc-multilib gcc g++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
-RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
-RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
-USER buildworker
+ARG TEMPORARY_DEPS="gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev"
+RUN apk add --update ${TEMPORARY_DEPS} curl make patch tar gawk autoconf automake python libtool git bison flex pkgconfig zip unzip gdb xz bash sudo file libintl
+
+# We want to be able to do things like "source"
+SHELL ["/bin/bash", "-c"]
 
 # We still need a pretty recent cmake, so just build one from scratch like usual
-USER buildworker
 INCLUDE lib/cmake_install
-
-USER buildworker
 
 # Get our bash script library ready
 COPY build_crosscompiler.sh /build.sh
 COPY patches /downloads/patches
+
+# GCC uses gnuisms for sha512sum. Fix that
+RUN rm /usr/bin/sha512sum
+COPY fake_sha512sum.sh /usr/bin/sha512sum
+RUN /bin/busybox chmod +x /usr/bin/sha512sum
 
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 ENV target="x86_64-linux-gnu"
@@ -71,13 +75,25 @@ ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,a
 INCLUDE lib/binutils_install
 
 # Override normal uname with something that fakes out based on ${target}
-USER root
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
 
-# We don't want to lose llvm-3.4, as that's needed by the OSX tools
-RUN apt install -y llvm-3.4
-# compilers are really bad at cleaning up after themselves
-RUN apt-get remove -y clang-3.4 libclang-common-3.4-dev libclang1-3.4 gcc-4.8 
+# We need to override the ld conf to search /usr/local before /usr
+RUN echo "/usr/local/lib64:/usr/local/lib:/lib:/usr/local/lib:/usr/lib" > /etc/ld-musl-x86_64.path
 
-INCLUDE lib/omega
+# Cleanup downloads
+RUN rm -rf /downloads
+
+# Remove bootstrapping compiler toolchain if we need to
+RUN apk del ${TEMPORARY_DEPS}
+
+# Set a default working directory that we know is good
+WORKDIR /
+
+# Use /entrypoint.sh to conditionally apply ${L32} since we cna't use ARG
+# values within an actual ENTRYPOINT command.  :(
+RUN echo "#!/bin/bash" > /entrypoint.sh; \
+    echo "${L32} \"\$@\"" >> /entrypoint.sh; \
+    chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/bin/bash"]
