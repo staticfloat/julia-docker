@@ -219,7 +219,10 @@ install_glibc()
     patch -p0 < $system_root/downloads/patches/glibc-sunrpc.patch
 
     # patch for building old glibc on newer binutils
-    patch -p0 < $system_root/downloads/patches/glibc_nocommon.patch
+    # These patches don't apply on those versions of glibc where they
+    # are not needed, but that's ok.
+    patch -p0 < $system_root/downloads/patches/glibc_nocommon.patch || true
+    patch -p0 < $system_root/downloads/patches/glibc_regexp_nocommon.patch || true
 
     cd ${system_root}/src/glibc-${glibc_version}
 
@@ -231,12 +234,18 @@ install_glibc()
         --host=${target} \
         --with-headers=${system_root}/opt/${target}/${target}/sys-root/usr/include \
         --with-binutils=${system_root}/opt/${target}/bin \
-        --enable-multilib \
-        --disable-werror
+        --disable-multilib \
+        --disable-werror \
+	libc_cv_forced_unwind=yes \
+        libc_cv_c_cleanup=yes
 
     sudo -E chown $(id -u):$(id -g) -R ${system_root}/src/glibc-${glibc_version}_build
     ${L32} make -j${nproc}
-    sudo -E ${L32} make install DESTDIR=/opt/${target}/${target}/sys-root
+    sudo -E ${L32} make install install_root=/opt/${target}/${target}/sys-root
+
+    # GCC won't build (crti.o: no such file or directory) unless these directories exist.
+    # They can be empty though. 
+    sudo -E ${L32} mkdir /opt/${target}/${target}/sys-root/{lib,usr/lib} || true
 
     # Cleanup
     cd ${system_root}/src
@@ -262,6 +271,7 @@ install_gcc()
     #patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
+	GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=/opt/${target}/${target}/sys-root" 
     fi
 
     # Build gcc (stage 1)
@@ -276,7 +286,6 @@ install_gcc()
         --enable-host-shared \
         --disable-multilib \
         --disable-werror \
-        --with-native-system-header-dir=${system_root}/opt/${target}/${target}/sys-root/usr/include \
         ${GCC_CONF_ARGS}
 
     ${L32} make -j${nproc}
@@ -315,7 +324,8 @@ install_binutils()
     ${L32} ./configure \
         --prefix=/opt/${target} \
         --target=${target} \
-        --disable-multilib \
+	--with-sysroot=/opt/${target}/${target}/sys-root \
+        --enable-multilib \
         --disable-werror
     ${L32} make -j${nproc}
 
@@ -444,7 +454,10 @@ install_glibc_stage1()
     fi
 
     # patch for building old glibc on newer binutils
-    patch -p0 < $system_root/downloads/patches/glibc_nocommon.patch
+    # These patches don't apply on those versions of glibc where they
+    # are not needed, but that's ok.
+    patch -p0 < $system_root/downloads/patches/glibc_nocommon.patch || true
+    patch -p0 < $system_root/downloads/patches/glibc_regexp_nocommon.patch || true
 
     # build glibc
     mkdir -p $system_root/src/glibc-${glibc_version}_build
