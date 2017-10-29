@@ -58,6 +58,24 @@ endef
 
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
+rootfs.tar.gz: build-crossbuild-alpine-x64
+	echo "Exporting build image to $@"
+	@ IMG_NAME=$(call crossbuild_tag_name,crossbuild-alpine-x64); \
+	echo "Starting docker container for $$IMG_NAME..."; \
+	CONTAINER_ID=$$(docker run -ti --rm -d $$IMG_NAME bash); \
+	echo "Running in container $$CONTAINER_ID, exporting..."; \
+	docker export $$CONTAINER_ID | gzip -9 > $@; \
+	echo "Stopping container..."; \
+	docker stop $$CONTAINER_ID
+
+rootfs.tar.gz.sha512: rootfs.tar.gz
+	shasum -a 512 $< | cut -d' ' -f1 > $@
+
+push-rootfs: rootfs.tar.gz rootfs.tar.gz.sha512
+	aws s3 cp --acl public-read ./rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs.tar.gz
+	aws s3 cp --acl public-read ./rootfs.tar.gz.sha512 s3://julialangmirror/binarybuilder-rootfs.tar.gz.sha512
+
+
 
 clean:
 	rm -rf build lib patches
