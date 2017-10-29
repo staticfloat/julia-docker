@@ -81,8 +81,8 @@ RUN chmod +x /usr/local/bin/uname
 # We need to override the ld conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64:/usr/local/lib:/lib:/usr/local/lib:/usr/lib" > /etc/ld-musl-x86_64.path
 
-# Cleanup downloads
-RUN rm -rf /downloads
+# Cleanup downloads and build.sh
+RUN rm -rf /downloads /build.sh
 
 # Remove bootstrapping compiler toolchain if we need to
 RUN apk del ${TEMPORARY_DEPS}
