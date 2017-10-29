@@ -72,8 +72,9 @@ rootfs.tar.gz.sha512: rootfs.tar.gz
 	shasum -a 512 $< | cut -d' ' -f1 > $@
 
 push-rootfs: rootfs.tar.gz rootfs.tar.gz.sha512
-	aws s3 cp --acl public-read ./rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs.tar.gz
-	aws s3 cp --acl public-read ./rootfs.tar.gz.sha512 s3://julialangmirror/binarybuilder-rootfs.tar.gz.sha512
+	DATE_STR=$$(date +%Y-%m-%d); \
+	aws s3 cp --acl public-read ./rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz; \
+	aws s3 cp --acl public-read ./rootfs.tar.gz.sha512 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha512
 
 
 
