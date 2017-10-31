@@ -315,6 +315,7 @@ USER root
 RUN make install
 WORKDIR /src
 RUN rm -rf wine
+ENV WINEARCH=win64
 
 USER root
 RUN rm -f /build.sh

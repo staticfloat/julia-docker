@@ -299,7 +299,7 @@ RUN source /build.sh; install_gcc
 
 # Install Wine
 USER root
-RUN yum install -y libstdc++.i686 flex bison
+RUN yum install -y libstdc++ flex bison
 USER buildworker
 USER buildworker
 WORKDIR /src
@@ -315,6 +315,7 @@ USER root
 RUN make install
 WORKDIR /src
 RUN rm -rf wine
+ENV WINEARCH=win32
 
 USER root
 RUN rm -f /build.sh

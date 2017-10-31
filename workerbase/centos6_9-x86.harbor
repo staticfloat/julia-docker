@@ -17,9 +17,10 @@ INCLUDE lib/win_crosscompiler_install
 
 # Install Wine
 USER root
-RUN yum install -y libstdc++.i686 flex bison
+RUN yum install -y libstdc++ flex bison
 USER buildworker
 INCLUDE lib/wine_install
+ENV WINEARCH=win32
 
 USER root
 RUN rm -f /build.sh

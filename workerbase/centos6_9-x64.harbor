@@ -20,6 +20,7 @@ USER root
 RUN yum install -y libstdc++.i686 flex bison
 USER buildworker
 INCLUDE lib/wine_install
+ENV WINEARCH=win64
 
 USER root
 RUN rm -f /build.sh
