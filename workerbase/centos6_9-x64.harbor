@@ -12,10 +12,10 @@ COPY patches /downloads/patches
 
 # Also install windows cross-compilers
 ENV target="x86_64-w64-mingw32"
-#ENV PATH=$PATH:/opt/x86_64-w64-mingw32/bin
 USER buildworker
 INCLUDE lib/win_crosscompiler_install
 
+# Install Wine
 USER root
 RUN yum install -y libstdc++.i686 flex bison
 USER buildworker

@@ -283,6 +283,41 @@ RUN ${L32} make install
 # cleanup /src
 WORKDIR /src
 RUN rm -rf ccache-${ccache_version}
+
+COPY build_crosscompiler.sh /build.sh
+COPY patches /downloads/patches
+
+# Also install windows cross-compilers
+ENV target="x86_64-w64-mingw32"
+USER buildworker
+RUN source /build.sh; install_binutils
+RUN source /build.sh; download_gcc
+RUN source /build.sh; install_gcc_bootstrap
+RUN source /build.sh; install_mingw_stage1
+RUN source /build.sh; install_mingw_stage2
+RUN source /build.sh; install_gcc
+
+# Install Wine
+USER root
+RUN yum install -y libstdc++.i686 flex bison
+USER buildworker
+USER buildworker
+WORKDIR /src
+
+ARG wine_version=2.0.3
+
+RUN git clone https://github.com/wine-mirror/wine.git -b wine-${wine_version}
+WORKDIR /src/wine
+RUN ./configure --without-x --without-freetype
+RUN make -j3
+
+USER root
+RUN make install
+WORKDIR /src
+RUN rm -rf wine
+
+USER root
+RUN rm -f /build.sh
 USER root
 
 # We need to override ld.so.conf to search /usr/local before /usr
