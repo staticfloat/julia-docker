@@ -5,41 +5,26 @@
 # To build this docker image manually, run `docker build --pull -t staticfloat/julia_crossbuild:x64 .`
 
 # Build an image that contains all of our cross compilers and all that stuff.
-# Since we need virtually everything within the actual workerbase image, just
-# build off of that one instead of compiling it all over again
-FROM ubuntu:trusty
-
-# Setup a few things we need in order to make it through the build properly
-MAINTAINER Elliot Saba <staticfloat@gmail.com>
-USER root
-
-# We create a `buildworker` user so that we don't have to run everything as root
-RUN useradd -u 1337 -m -s /bin/bash buildworker || true
+FROM alpine:3.6
 
 # These are where we'll do all our work, so make them now
 RUN mkdir -p /src /downloads
-RUN chown buildworker:buildworker /src /downloads
 
 # We use the "download_unpack.sh" command a lot, throw it into /usr/bin
 COPY download_unpack.sh /usr/bin
 
+# Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
+ARG TEMPORARY_DEPS="gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev"
+RUN apk add --update ${TEMPORARY_DEPS} curl make patch tar gawk autoconf automake python libtool git bison flex pkgconfig zip unzip gdb xz bash sudo file libintl
+
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
-
-# Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
-ARG TEMPORARY_DEPS="gcc-multilib gcc g++ clang libfuse-dev libfreetype6-dev libtiff-dev libgl1-mesa-dev linux-headers-generic"
-RUN apt update && apt install -y ${TEMPORARY_DEPS} sudo curl make patch tar gawk autoconf python libtool git bison flex pkg-config zip unzip gdb xz-utils lib32z1
-RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-RUN sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
-RUN sed -i.bak -e 's/Defaults[[:space:]]*secure_path=.*//g' /etc/sudoers
-USER buildworker
 
 # We still need a pretty recent cmake, so just build one from scratch like usual
 ## Install cmake into /usr/local
 ARG cmake_version=3.6.3
 ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Unfortunately, we have to pass `-k` to `curl` because cmake.org has weird SSL
@@ -63,83 +48,76 @@ RUN rm -rf cmake-${cmake_version}
 COPY build_crosscompiler.sh /build.sh
 COPY patches /downloads/patches
 
+# GCC uses gnuisms for sha512sum. Fix that
+RUN rm /usr/bin/sha512sum
+COPY fake_sha512sum.sh /usr/bin/sha512sum
+RUN /bin/busybox chmod +x /usr/bin/sha512sum
+
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 ENV target="x86_64-linux-gnu"
 ENV glibc_version=2.12.2
-USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
-RUN source /build.sh; set -e; install_gcc_stage1
-RUN source /build.sh; set -e; install_glibc_stage1
-RUN source /build.sh; set -e; install_gcc_stage2
-RUN source /build.sh; set -e; install_glibc_stage2
-RUN source /build.sh; set -e; install_gcc_stage3
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc_bootstrap
+RUN source /build.sh; set -e; install_glibc
+RUN source /build.sh; set -e; install_gcc
 ENV glibc_version=""
 
 # build gcc for i686.  Again use an especially old glibc version to maximize compatibility
 ENV target="i686-linux-gnu"
 ENV L32="linux32"
 ENV glibc_version=2.12.2
-USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
-RUN source /build.sh; set -e; install_gcc_stage1
-RUN source /build.sh; set -e; install_glibc_stage1
-RUN source /build.sh; set -e; install_gcc_stage2
-RUN source /build.sh; set -e; install_glibc_stage2
-RUN source /build.sh; set -e; install_gcc_stage3
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc_bootstrap
+RUN source /build.sh; set -e; install_glibc
+RUN source /build.sh; set -e; install_gcc
 ENV L32=""
 ENV glibc_version=""
 
 # build for mac64
 ENV target="x86_64-apple-darwin14"
-USER buildworker
 RUN source /build.sh; set -e; install_osx_sdk
 RUN source /build.sh; set -e; install_libtapi
 RUN source /build.sh; set -e; install_cctools
 RUN source /build.sh; set -e; install_dsymutil
-RUN source /build.sh; set -e; install_gcc_stage1
-RUN source /build.sh; set -e; install_gcc_stage2
-RUN source /build.sh; set -e; install_gcc_stage3
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc
 
 
 # build for win64/win32
 ENV target="x86_64-w64-mingw32"
-USER buildworker
 RUN source /build.sh; install_binutils
+RUN source /build.sh; download_gcc
+RUN source /build.sh; install_gcc_bootstrap
 RUN source /build.sh; install_mingw_stage1
-RUN source /build.sh; install_gcc_stage1
 RUN source /build.sh; install_mingw_stage2
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_gcc_stage3
+RUN source /build.sh; install_gcc
 ENV target="i686-w64-mingw32"
-USER buildworker
 RUN source /build.sh; install_binutils
+RUN source /build.sh; download_gcc
+RUN source /build.sh; install_gcc_bootstrap
 RUN source /build.sh; install_mingw_stage1
-RUN source /build.sh; install_gcc_stage1
 RUN source /build.sh; install_mingw_stage2
-RUN source /build.sh; install_gcc_stage2
-RUN source /build.sh; install_gcc_stage3
+RUN source /build.sh; install_gcc
 
 # build for arm7/arm8
 ENV target="aarch64-linux-gnu"
-USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
-RUN source /build.sh; set -e; install_gcc_stage1
-RUN source /build.sh; set -e; install_glibc_stage1
-RUN source /build.sh; set -e; install_gcc_stage2
-RUN source /build.sh; set -e; install_glibc_stage2
-RUN source /build.sh; set -e; install_gcc_stage3
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc_bootstrap
+RUN source /build.sh; set -e; install_glibc
+RUN source /build.sh; set -e; install_gcc
 ENV target="arm-linux-gnueabihf"
-USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
-RUN source /build.sh; set -e; install_gcc_stage1
-RUN source /build.sh; set -e; install_glibc_stage1
-RUN source /build.sh; set -e; install_gcc_stage2
-RUN source /build.sh; set -e; install_glibc_stage2
-RUN source /build.sh; set -e; install_gcc_stage3
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc_bootstrap
+RUN source /build.sh; set -e; install_glibc
+RUN source /build.sh; set -e; install_gcc
 
 # build gcc for ppc64le (we need a more recent glibc here as well)
 # We require at least version 2.22 for the fixes to assembler problems:
@@ -148,25 +126,22 @@ RUN source /build.sh; set -e; install_gcc_stage3
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
 ENV target="powerpc64le-linux-gnu"
 ENV glibc_version=2.25
-USER buildworker
 RUN source /build.sh; set -e; install_kernel_headers
 RUN source /build.sh; set -e; install_binutils
-RUN source /build.sh; set -e; install_gcc_stage1
-RUN source /build.sh; set -e; install_glibc_stage1
-RUN source /build.sh; set -e; install_gcc_stage2
-RUN source /build.sh; set -e; install_glibc_stage2
-RUN source /build.sh; set -e; install_gcc_stage3
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc_bootstrap
+RUN source /build.sh; set -e; install_glibc
+RUN source /build.sh; set -e; install_gcc
 ENV glibc_version=""
 ENV target=""
 
 # We want a super binutils, so build it up
 ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32 --prefix=/opt/super_binutils"
 ## Install binutils
-ARG binutils_version=2.29
+ARG binutils_version=2.29.1
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz
 
 # Use download_unpack to download and unpack binutils and gcc
-USER buildworker
 WORKDIR /src
 RUN download_unpack.sh "${binutils_url}"
 
@@ -186,38 +161,17 @@ WORKDIR /src
 RUN rm -rf binutils-${binutils_version}
 
 # Override normal uname with something that fakes out based on ${target}
-USER root
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
 
-# We don't want to lose llvm-3.4, as that's needed by the OSX tools
-RUN apt install -y llvm-3.4
-# compilers are really bad at cleaning up after themselves
-RUN apt-get remove -y clang-3.4 libclang-common-3.4-dev libclang1-3.4 gcc-4.8 
+# We need to override the ld conf to search /usr/local before /usr
+RUN echo "/usr/local/lib64:/usr/local/lib:/lib:/usr/local/lib:/usr/lib" > /etc/ld-musl-x86_64.path
 
-USER root
-
-# We need to override ld.so.conf to search /usr/local before /usr
-RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
-    echo "/usr/local/lib" >> /etc/ld.so.conf.new; \
-    cat /etc/ld.so.conf >> /etc/ld.so.conf.new; \
-    mv /etc/ld.so.conf.new /etc/ld.so.conf; \
-    ldconfig
-
-# Cleanup downloads
-RUN rm -rf /downloads
+# Cleanup downloads and build.sh
+RUN rm -rf /downloads /build.sh
 
 # Remove bootstrapping compiler toolchain if we need to
-RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \
-        if [[ -n "$(which yum 2>/dev/null)" ]]; then \
-            yum remove -y ${TEMPORARY_DEPS}; \
-            yum clean all; \
-        elif [[ -n "$(which apt-get 2>/dev/null)" ]]; then \
-            apt-get remove -y ${TEMPORARY_DEPS}; \
-            apt-get autoremove -y; \
-            apt-get clean -y; \
-        fi; \
-    fi
+RUN apk del ${TEMPORARY_DEPS}
 
 # Set a default working directory that we know is good
 WORKDIR /
@@ -229,4 +183,3 @@ RUN echo "#!/bin/bash" > /entrypoint.sh; \
     chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
-USER buildworker

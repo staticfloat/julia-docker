@@ -22,6 +22,10 @@ RUN chown buildworker:buildworker /src /downloads
 # We use the "download_unpack.sh" command a lot, throw it into /usr/bin
 COPY download_unpack.sh /usr/bin
 
+# Add ourselves to sudoers
+RUN mkdir -p /etc/sudoers.d
+RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/buildworker
+
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
 ## Download and install needed build dependencies for x86_64 yum-based systems
@@ -29,10 +33,10 @@ USER root
 RUN ${L32} yum update -y
 
 # Tools that make it easy to get stuff done within the docker image
-ARG NICE_TOOLS="vim curl gdb net-tools which patchelf"
+ARG NICE_TOOLS="vim curl gdb net-tools which patchelf sudo"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
-ARG TEMPORARY_DEPS="gcc gcc-c++"
+ARG TEMPORARY_DEPS="gcc gcc-c++ glibc-devel.i686 glibc-devel"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
@@ -42,10 +46,15 @@ ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
 
 # Install all these packages
 RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
+
+# Fixup sudo problems
+RUN ${L32} sed -i.bak -e 's/Defaults[[:space:]]*env_reset//g' /etc/sudoers
+RUN ${L32} sed -i.bak -e 's/Defaults[[:space:]]*secure_path[[:space:]]*=.*//g' /etc/sudoers
 # Download and install `tar` because some machines have it too old and don't
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with
 # our new GCC, but that's okay.
+USER buildworker
 ## Install tar
 ARG tar_version=1.29
 ARG tar_url=https://ftp.gnu.org/gnu/tar/tar-${tar_version}.tar.gz
@@ -78,12 +87,12 @@ RUN rm -rf tar-${tar_version}* || \
 
 # Download and install `gcc` because we want only the latest in cutting-edge
 # compiler technology, and also because LLVM is a needy little piece of software
+USER buildworker
 ## Install binutils
-ARG binutils_version=2.29
+ARG binutils_version=2.29.1
 ARG binutils_url=https://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.xz
 
 # Use download_unpack to download and unpack binutils and gcc
-USER buildworker
 WORKDIR /src
 RUN download_unpack.sh "${binutils_url}"
 
@@ -101,6 +110,7 @@ RUN ${L32} make install
 # Cleanup
 WORKDIR /src
 RUN rm -rf binutils-${binutils_version}
+USER buildworker
 ## Install GCC
 ARG gcc_version=7.2.0
 ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
@@ -117,7 +127,8 @@ RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
 RUN ${L32} /src/gcc-${gcc_version}/configure \
     --prefix=/usr/local --enable-host-shared --enable-threads=posix \
-    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
+    --with-system-zlib --enable-multilib \
+    --enable-languages=c,c++,fortran,objc,obj-c++ ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc
@@ -144,6 +155,7 @@ WORKDIR /src
 RUN rm -rf gcc-${gcc_version}*
 
 # Download and install `libtool` based off of our GCC version
+USER buildworker
 ## Install libtool
 ARG libtool_version=2.4.6
 ARG libtool_url=http://ftpmirror.gnu.org/libtool/libtool-${libtool_version}.tar.gz
@@ -167,6 +179,7 @@ RUN rm -rf libtool-${libtool_version}
 
 # Download and install `git` because some of the distributions we build on are
 # old enough that `git` isn't even installable from the default distributions
+USER buildworker
 ## Install git
 ARG git_version=2.11.0
 ARG git_url=https://github.com/git/git/archive/v${git_version}.tar.gz
@@ -188,11 +201,11 @@ WORKDIR /src
 RUN rm -rf git-${git_version}
 
 # Download and install `cmake` because LLVM again.  Whiner.
+USER buildworker
 ## Install cmake into /usr/local
 ARG cmake_version=3.6.3
 ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Unfortunately, we have to pass `-k` to `curl` because cmake.org has weird SSL
@@ -213,6 +226,7 @@ WORKDIR /src
 RUN rm -rf cmake-${cmake_version}
 
 # Download and install `python` because buildbot doesn't like ancient versions
+USER buildworker
 ## Install python
 ARG python_version=2.7.13
 ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz
@@ -244,6 +258,7 @@ RUN rm -rf Python-${python_version}
 RUN rm -f get-pip.py
 
 # Download and install `ccache` to speed up compilation
+USER buildworker
 ## Install ccache
 ARG ccache_version=3.3.4
 ARG ccache_url=https://www.samba.org/ftp/ccache/ccache-${ccache_version}.tar.xz

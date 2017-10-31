@@ -65,7 +65,7 @@ mingw_version=${mingw_version:-5.0.2}
 
 # By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
 nproc_cmd='nproc'
-if type nproc 2> /dev/null ; then
+if type nproc >/dev/null 2>/dev/null ; then
     nproc_cmd='nproc'
 else
     nproc_cmd="cat /proc/cpuinfo | grep 'processor' | wc -l"
@@ -179,7 +179,7 @@ install_gcc_bootstrap()
         --with-sysroot=/opt/${target}/${target}/sys-root
 
     ${L32} make -j${nproc}
-    sudo ${L32} make install
+    sudo -E ${L32} make install
 
     # This is needed for any glibc older than 2.14, which includes the following commit
     # https://sourceware.org/git/?p=glibc.git;a=commit;h=95f5a9a866695da4e038aa4e6ccbbfd5d9cf63b7
@@ -268,13 +268,12 @@ install_gcc()
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
     fi
 
-    #patch -p1 < /downloads/patches/gcc_libmpx_limits.patch
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-	GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=/opt/${target}/${target}/sys-root" 
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=/opt/${target}/${target}/sys-root" 
     fi
 
-    # Build gcc (stage 1)
+    # Build gcc
     mkdir -p ${system_root}/src/gcc-${gcc_version}_build
     cd ${system_root}/src/gcc-${gcc_version}_build
     ${L32} ${system_root}/src/gcc-${gcc_version}/configure \
@@ -290,7 +289,7 @@ install_gcc()
 
     ${L32} make -j${nproc}
 
-    # Install gcc (stage 1)
+    # Install gcc
     sudo -E ${L32} make install
 
     # Because this always writes out .texi files, we have to chown them back.  >:(
@@ -305,8 +304,8 @@ install_gcc()
     for f in ${system_root}/opt/${target}/bin/${target}-*; do
         fbase=$(basename $f)
         # We don't worry about failure to create these symlinks, as sometimes there are files
-        # name ridiculous things like ${target}-${target}-foo, which screws this up
-        sudo ln -s $f ${system_root}/opt/${target}/bin/${fbase#${target}-} || true
+        # named ridiculous things like ${target}-${target}-foo, which screws this up
+        sudo -E ln -s $f ${system_root}/opt/${target}/bin/${fbase#${target}-} || true
     done
 }
 
@@ -337,186 +336,18 @@ install_binutils()
     sudo -E rm -rf binutils-${binutils_version}
 }
 
-## Helper to install stage1 of GCC (e.g. the C/C++ compilers, without libc)
-install_gcc_stage1()
-{
-    # First argument is the version
-    gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
-
-    # Download and unpack gcc
-    cd $system_root/src
-    download_unpack.sh "${gcc_url}"
-    cd $system_root/src/gcc-${gcc_version}
-
-    # target-specific GCC configuration flags
-    GCC_CONF_ARGS=""
-
-    # If we're building for Darwin, add on some extra configure arguments
-    if [[ "${target}" == *apple* ]]; then
-        sdk_version="$(target_to_darwin_sdk ${target})"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=/opt/${target}/MacOSX${sdk_version}.sdk"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=/opt/${target}/bin/${target}-ld"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=/opt/${target}/bin/${target}-as"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
-    fi
-
-    patch -p1 < $system_root/downloads/patches/gcc_libmpx_limits.patch
-    if [[ "${target}" == *linux* ]]; then
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-    fi
-
-    # Build gcc (stage 1)
-    ${L32} contrib/download_prerequisites
-    mkdir -p $system_root/src/gcc-${gcc_version}_build
-    cd $system_root/src/gcc-${gcc_version}_build
-    ${L32} $system_root/src/gcc-${gcc_version}/configure \
-        --prefix=/opt/${target} \
-        --target=${target} \
-        --host=${MACHTYPE} \
-        --build=${MACHTYPE} \
-        --enable-threads=posix \
-        --enable-host-shared \
-        --disable-multilib \
-        --disable-werror \
-        ${GCC_CONF_ARGS}
-
-    ${L32} make -j${nproc} all-gcc
-
-    # Install gcc (stage 1)
-    sudo -E ${L32} make install-gcc
-
-    # Because this always writes out .texi files, we have to chown them back.  >:(
-    sudo -E ${L32} chown $(id -u):$(id -g) -R .
-}
-
-
-# Helper to install libgcc
-install_gcc_stage2()
-{
-    # Install libgcc (stage 2)
-    cd $system_root/src/gcc-${gcc_version}_build
-    ${L32} make -j${nproc} all-target-libgcc
-    sudo -E ${L32} make install-target-libgcc
-}
-
-# Helper to install the rest of GCC like gfortran, etc..., now that we've got
-# an actual libc and compiler chain to compile with
-install_gcc_stage3()
-{
-    # Install everything else like gfortran (stage 3)
-    cd $system_root/src/gcc-${gcc_version}_build
-    ${L32} make -j${nproc}
-    sudo -E ${L32} make install
-
-    # Cleanup
-    cd $system_root/src
-    sudo -E rm -rf gcc-${gcc_version}*
-
-    # Finally, create a bunch of symlinks stripping out the target so that
-    # things like `gcc` "just work", as long as we've got our path set properly
-    for f in /opt/${target}/bin/${target}-*; do
-        fbase=$(basename $f)
-        # We don't worry about failure to create these symlinks, as sometimes there are files
-        # name ridiculous things like ${target}-${target}-foo, which screws this up
-        sudo ln -s $f /opt/${target}/bin/${fbase#${target}-} || true
-    done
-}
-
-## Helper to install stage1 of glibc, e.g. the headers and crt1.o and friends
-install_glibc_stage1()
-{
-    # First argument is the version
-    glibc_url="http://mirrors.peers.community/mirrors/gnu/glibc/glibc-${glibc_version}.tar.xz"
-    cd $system_root/src
-    download_unpack.sh "${glibc_url}"
-
-    # patch glibc for ARM
-    cd $system_root/src/glibc-${glibc_version}
-    
-    # patch glibc to keep around libgcc_s_resume on arm
-    # ref: https://sourceware.org/ml/libc-alpha/2014-05/msg00573.html
-    if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then 
-        patch -p1 < $system_root/downloads/patches/glibc_arm_gcc_fix.patch
-    fi
-
-    # Patch glibc's sunrpc cross generator to work with musl
-    # See https://sourceware.org/bugzilla/show_bug.cgi?id=21604
-    patch -p0 < $system_root/downloads/patches/glibc-sunrpc.patch
-
-    # patch glibc's stupid gcc version check (we don't require this one, as if
-    # it doesn't apply cleanly, it's probably fine)
-    patch -p0 < $system_root/downloads/patches/glibc_gcc_version.patch || true
-
-    # patch glibc's 32-bit assembly to withstand __i686 definition of newer GCC's
-    # ref: http://comments.gmane.org/gmane.comp.lib.glibc.user/758
-    if [[ "${target}" == i686* ]]; then
-        patch -p1 < $system_root/downloads/patches/glibc_i686_asm.patch
-    fi
-
-    # patch for building old glibc on newer binutils
-    # These patches don't apply on those versions of glibc where they
-    # are not needed, but that's ok.
-    patch -p0 < $system_root/downloads/patches/glibc_nocommon.patch || true
-    patch -p0 < $system_root/downloads/patches/glibc_regexp_nocommon.patch || true
-
-    # build glibc
-    mkdir -p $system_root/src/glibc-${glibc_version}_build
-    cd $system_root/src/glibc-${glibc_version}_build
-    CFLAGS="-O2 -U_FORTIFY_SOURCE -D__i686=__i686 -fno-stack-protector" ${L32} $system_root/src/glibc-${glibc_version}/configure \
-        --prefix=/opt/${target}/${target} \
-        --host=${target} \
-        --target=${target} \
-        --with-headers=/opt/${target}/${target}/include \
-        --with-binutils=/opt/${target}/bin \
-        --enable-mulilib \
-        --disable-werror \
-        libc_cv_forced_unwind=yes \
-        libc_cv_c_cleanup=yes
-
-    ${L32} make -j${nproc} csu/subdir_lib
-    sudo -E ${L32} make install-bootstrap-headers=yes install-headers
-
-    sudo -E mkdir -p $system_root/opt/${target}/${target}/include/bits
-    sudo -E mkdir -p $system_root/opt/${target}/${target}/include/gnu
-    sudo -E mkdir -p $system_root/opt/${target}/${target}/lib
-
-    # Manually copy over bits/stdio_lim.h
-    sudo -E install bits/stdio_lim.h $system_root/opt/${target}/${target}/include/bits/
-
-    # Manually copy over c runtime library object files
-    sudo -E install csu/crt1.o csu/crti.o csu/crtn.o $system_root/opt/${target}/${target}/lib/
-
-    # Create "stub" libc.so which is just empty
-    sudo -E ${L32} ${target}-gcc -nostdlib -nostartfiles -shared -x c /dev/null -o $system_root/opt/${target}/${target}/lib/libc.so
-    sudo -E touch $system_root/opt/${target}/${target}/include/gnu/stubs.h
-}
-
-# Helper to install the rest of glibc
-install_glibc_stage2()
-{
-    cd $system_root/src/glibc-${glibc_version}_build
-    sudo -E chown $(id -u):$(id -g) -R $system_root/src/glibc-${glibc_version}_build
-    ${L32} make -j${nproc}
-    sudo -E ${L32} make install
-
-    # Cleanup
-    cd $system_root/src
-    sudo -E rm -rf glibc-${glibc_version}*
-}
-
-
 install_osx_sdk()
 {
     # Download OSX SDK
     sdk_version="$(target_to_darwin_sdk ${target})"
     sdk_url="https://davinci.cs.washington.edu/MacOSX${sdk_version}.sdk.tar.xz"
-    sudo mkdir -p $system_root/opt/${target}
+    sudo -E mkdir -p $system_root/opt/${target}
     cd $system_root/opt/${target}
     sudo -E download_unpack.sh "${sdk_url}"
 
     # Fix weird permissions on the SDK folder
-    sudo chmod 755 .
-    sudo chmod 755 MacOSX*.sdk
+    sudo -E chmod 755 .
+    sudo -E chmod 755 MacOSX*.sdk
 }
 
 install_libtapi()
@@ -644,7 +475,7 @@ install_mingw_stage2()
         ${MINGW_CONF_ARGS}
 
     ${L32} make -j${nproc}
-    sudo ${L32} make install
+    sudo -E ${L32} make install
 
     # Install winpthreads
     mkdir -p $system_root/src/mingw-w64-v${mingw_version}-winpthreads_build
@@ -656,7 +487,7 @@ install_mingw_stage2()
         --enable-shared
 
     ${L32} make -j${nproc}
-    sudo ${L32} make install
+    sudo -E ${L32} make install
 
     # Cleanup
     cd $system_root/src

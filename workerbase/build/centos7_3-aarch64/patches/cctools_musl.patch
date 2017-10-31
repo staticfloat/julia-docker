@@ -1,0 +1,213 @@
+diff --git a/cctools/ar/ar.c b/cctools/ar/ar.c
+index b95e9ec..d8ec180 100644
+--- a/cctools/ar/ar.c
++++ b/cctools/ar/ar.c
+@@ -88,8 +88,8 @@ static char rcsid[] = "$OpenBSD: ar.c,v 1.3 1997/01/15 23:42:11 millert Exp $";
+ CHDR chdr;
+ u_int options;
+ char *archive, *envtmp, *posarg, *posname;
+-static void badoptions __P((char *));
+-static void usage __P((void));
++static void badoptions(char *);
++static void usage(void);
+ char *progname;
+ 
+ /*
+@@ -105,7 +105,7 @@ main(argc, argv)
+ {
+ 	int c, retval, verbose, run_ranlib, toc64;
+ 	char *p;
+-	int (*fcall) __P((char **));
++	int (*fcall)(char **);
+ 
+ 	fcall = 0;
+ 	verbose = 0;
+diff --git a/cctools/ar/archive.c b/cctools/ar/archive.c
+index 0f41fe9..00573a0 100644
+--- a/cctools/ar/archive.c
++++ b/cctools/ar/archive.c
+@@ -100,7 +100,7 @@ open_archive(mode)
+ 	created = 0;
+ 	if (mode & O_CREAT) {
+ 		mode |= O_EXCL;
+-		if ((fd = open(archive, mode, DEFFILEMODE)) >= 0) {
++		if ((fd = open(archive, mode, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) >= 0) {
+ 			/* POSIX.2 puts create message on stderr. */
+ 			if (!(options & AR_C))
+ 				warnx("creating archive %s", archive);
+@@ -111,7 +111,7 @@ open_archive(mode)
+ 			error(archive);
+ 		mode &= ~O_EXCL;
+ 	}
+-	if ((fd = open(archive, mode, DEFFILEMODE)) < 0)
++	if ((fd = open(archive, mode, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
+ 		error(archive);
+ 
+ 	if((mode & O_ACCMODE) == O_RDONLY)
+diff --git a/cctools/ar/archive.h b/cctools/ar/archive.h
+index 4b83a11..d46dd73 100644
+--- a/cctools/ar/archive.h
++++ b/cctools/ar/archive.h
+@@ -61,6 +61,8 @@
+  *	@(#)archive.h	8.3 (Berkeley) 4/2/94
+  */
+ 
++#include <sys/types.h>
++
+ /* Ar(1) options. */
+ #define	AR_A	0x0001
+ #define	AR_B	0x0002
+@@ -123,11 +125,11 @@ typedef struct {
+ 
+ struct stat;
+ 
+-void	close_archive __P((int));
+-void	copy_ar __P((CF *, off_t));
+-int	get_arobj __P((int));
+-int	open_archive __P((int));
+-void	put_arobj __P((CF *, struct stat *));
+-void	skip_arobj __P((int));
++void	close_archive(int);
++void	copy_ar(CF *, off_t);
++int	get_arobj(int);
++int	open_archive(int);
++void	put_arobj(CF *, struct stat *);
++void	skip_arobj(int);
+ 
+ extern int archive_opened_for_writing;
+diff --git a/cctools/ar/extern.h b/cctools/ar/extern.h
+index 036647b..d30abfe 100644
+--- a/cctools/ar/extern.h
++++ b/cctools/ar/extern.h
+@@ -58,20 +58,20 @@
+  *	@(#)extern.h	8.3 (Berkeley) 4/2/94
+  */
+ 
+-int	append __P((char **));
+-void	badfmt __P((void));
+-int	compare __P((char *));
+-int	contents __P((char **));
+-int	delete __P((char **));
+-void	error __P((char *));
+-int	extract __P((char **));
+-char   *files __P((char **argv));
+-int	move __P((char **));
+-void	orphans __P((char **argv));
+-int	print __P((char **));
+-int	replace __P((char **));
+-char   *rname __P((char *));
+-int	tmp __P((void));
++int	append(char **);
++void	badfmt(void);
++int	compare(char *);
++int	contents(char **);
++int	delete(char **);
++void	error(char *);
++int	extract(char **);
++char   *files(char **argv);
++int	move(char **);
++void	orphans(char **argv);
++int	print(char **);
++int	replace(char **);
++char   *rname(char *);
++int	tmp(void);
+ 
+ extern char *archive;
+ extern char *posarg, *posname;		/* positioning file name */
+diff --git a/cctools/include/foreign/sys/sysctl.h b/cctools/include/foreign/sys/sysctl.h
+index 30749d1..829aae3 100644
+--- a/cctools/include/foreign/sys/sysctl.h
++++ b/cctools/include/foreign/sys/sysctl.h
+@@ -1,4 +1,4 @@
+-#ifndef __CYGWIN__
++#if defined(__APPLE__) || defined(__GLIBC__)
+ #include_next <sys/sysctl.h>
+ #else
+ #ifndef __SYSCTL_H__
+diff --git a/cctools/include/sys/cdefs.h b/cctools/include/sys/cdefs.h
+index ca78da5..082e829 100644
+--- a/cctools/include/sys/cdefs.h
++++ b/cctools/include/sys/cdefs.h
+@@ -1,3 +1,5 @@
++#ifdef __GLIBC__
++
+ /*
+  * Workaround for a GLIBC bug.
+  * https://sourceware.org/bugzilla/show_bug.cgi?id=14952
+@@ -5,8 +7,6 @@
+ 
+ #include_next <sys/cdefs.h>
+ 
+-#ifdef __GLIBC__
+-
+ #ifndef __extern_inline
+ # define __extern_inline \
+   extern __inline __attribute__ ((__gnu_inline__))
+@@ -17,4 +17,14 @@
+   extern __always_inline __attribute__ ((__gnu_inline__))
+ #endif
+ 
++#else
++
++#ifdef __cplusplus
++#define __BEGIN_DECLS extern "C" {
++#define __END_DECLS }
++#else
++#define __BEGIN_DECLS
++#define __END_DECLS
++#endif
++
+ #endif /* __GLIBC__ */
+diff --git a/cctools/ld64/src/3rd/helper.c b/cctools/ld64/src/3rd/helper.c
+index 14bc11d..f08770f 100644
+--- a/cctools/ld64/src/3rd/helper.c
++++ b/cctools/ld64/src/3rd/helper.c
+@@ -36,8 +36,11 @@ void __assert_rtn(const char *func, const char *file, int line, const char *msg)
+     __assert(msg, file, line, func);
+ #elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__CYGWIN__)
+     __assert(msg, line, file);
+-#else
++#elif defined(__GLIBC__) || defined(__MINGW32__)
+     __assert(msg, file, line);
++#else
++    /* musl libc */
++    __assert_fail(msg, file, line, func);
+ #endif /* __FreeBSD__ */
+ }
+ 
+diff --git a/cctools/ld64/src/ld/parsers/textstub_dylib_file.cpp b/cctools/ld64/src/ld/parsers/textstub_dylib_file.cpp
+index b08a9d7..3da2596 100644
+--- a/cctools/ld64/src/ld/parsers/textstub_dylib_file.cpp
++++ b/cctools/ld64/src/ld/parsers/textstub_dylib_file.cpp
+@@ -124,7 +124,7 @@ template <typename A>
+ 		throw strdup(errorMessage.c_str());
+ 
+ 	// unmap file - it is no longer needed.
+-	munmap((caddr_t)fileContent, fileLength);
++	munmap((void *)fileContent, fileLength);
+ 
+ 	// write out path for -t option
+ 	if ( logAllFiles )
+diff --git a/cctools/libstuff/dylib_roots.c b/cctools/libstuff/dylib_roots.c
+index 5f1f106..f483efd 100644
+--- a/cctools/libstuff/dylib_roots.c
++++ b/cctools/libstuff/dylib_roots.c
+@@ -28,7 +28,8 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <sys/param.h>
+-#ifndef __OPENSTEP__
++#if defined(__APPLE__) || defined(__GLIBC__) || defined(__MINGW32__)
++#define HAVE_FTS
+ #include <fts.h>
+ #endif
+ #include <sys/errno.h>
+@@ -116,7 +117,7 @@ find_dylib_in_root(
+ char *install_name,
+ const char *root)
+ {
+-#ifndef __OPENSTEP__
++#ifdef HAVE_FTS
+     char *base_name, start[MAXPATHLEN + 1], *image_file_name;
+     char const *paths[2];
+     FTS *fts;

@@ -14,7 +14,8 @@ RUN mkdir -p /src/gcc-${gcc_version}_build
 WORKDIR /src/gcc-${gcc_version}_build
 RUN ${L32} /src/gcc-${gcc_version}/configure \
     --prefix=/usr/local --enable-host-shared --enable-threads=posix \
-    --enable-languages=c,c++,fortran,objc,obj-c++ --disable-multilib ${gcc_configure_flags}
+    --with-system-zlib --enable-multilib \
+    --enable-languages=c,c++,fortran,objc,obj-c++ ${gcc_configure_flags}
 RUN ${L32} make -j4
 
 # Install gcc

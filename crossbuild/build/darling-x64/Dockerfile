@@ -23,6 +23,10 @@ RUN chown buildworker:buildworker /src /downloads
 # We use the "download_unpack.sh" command a lot, throw it into /usr/bin
 COPY download_unpack.sh /usr/bin
 
+# Add ourselves to sudoers
+RUN mkdir -p /etc/sudoers.d
+RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/buildworker
+
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
 
@@ -38,7 +42,6 @@ USER buildworker
 ARG cmake_version=3.6.3
 ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Unfortunately, we have to pass `-k` to `curl` because cmake.org has weird SSL
