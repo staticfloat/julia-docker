@@ -13,9 +13,12 @@ RUN mkdir -p /src /downloads
 # We use the "download_unpack.sh" command a lot, throw it into /usr/bin
 COPY download_unpack.sh /usr/bin
 
+# We use a `tar` wrapper to insert extra command line flags on every tar command
+COPY tar_wrapper.sh /usr/local/bin/tar
+
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
 ARG TEMPORARY_DEPS="gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev"
-RUN apk add --update ${TEMPORARY_DEPS} curl make patch tar gawk autoconf automake python libtool git bison flex pkgconfig zip unzip gdb xz bash sudo file libintl
+RUN apk add --update ${TEMPORARY_DEPS} curl make patch tar gawk autoconf automake python libtool git bison flex pkgconfig zip unzip gdb xz bash sudo file libintl findutils
 
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
