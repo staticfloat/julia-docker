@@ -58,30 +58,42 @@ endef
 
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
-rootfs.tar.gz: build-crossbuild-x64
+/tmp/rootfs.tar: build-crossbuild-x64
 	@echo "Exporting build image to $@"
 	@ IMG_NAME=$(call crossbuild_tag_name,crossbuild-x64); \
 	echo "Starting docker container for $$IMG_NAME..."; \
 	CONTAINER_ID=$$(docker run -ti --rm -d $$IMG_NAME bash); \
 	echo "Running in container $$CONTAINER_ID"; \
-	echo "Beginning cleanup operations..."; \
-	docker exec -ti $$CONTAINER_ID bash -c "rm -f /dev/null"; \
-	docker exec -ti $$CONTAINER_ID bash -c "rm -rf /usr/share/terminfo"; \
-	echo "Exporting...."; \
-	docker export $$CONTAINER_ID | gzip -9 > $@; \
+	echo "Exporting..."; \
+	docker export $$CONTAINER_ID -o $@; \
 	echo "Stopping container..."; \
 	docker stop $$CONTAINER_ID
 
-rootfs.tar.gz.sha256: rootfs.tar.gz
+# We need to remove special files that we can't extract properly on
+# host platforms here
+/tmp/rootfs.tar.gz: /tmp/rootfs.tar
+	@echo "Unpacking..."; \
+	rm -rf /tmp/rootfs; \
+	mkdir -p /tmp/rootfs; \
+	tar xf $< -C /tmp/rootfs; \
+   	echo "Beginning cleanup operations..."; \
+	rm -f /tmp/rootfs/dev/null; \
+	rm -rf /tmp/rootfs/usr/share/terminfo; \
+	echo "Repackaging..."; \
+	GZIP=-9 tar zcf $@ -C /tmp/rootfs .; \
+	echo "Final cleanup..."; \
+	rm -rf /tmp/rootfs
+
+/tmp/rootfs.tar.gz.sha256: /tmp/rootfs.tar.gz
 	@shasum -a 256 $< | cut -d' ' -f1 > $@
 
-push-rootfs: #rootfs.tar.gz rootfs.tar.gz.sha256
+push-rootfs: /tmp/rootfs.tar.gz /tmp/rootfs.tar.gz.sha256
 	@echo "Uploading to S3..."
 	@ DATE_STR=$$(date +%Y-%m-%d); \
-	aws s3 cp --acl public-read ./rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz; \
-	aws s3 cp --acl public-read ./rootfs.tar.gz.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha256; \
+	aws s3 cp --acl public-read /tmp/rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz; \
+	aws s3 cp --acl public-read /tmp/rootfs.tar.gz.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha256; \
 	echo "URL: https://julialangmirror.s3.amazonaws.com/binarybuilder-rootfs-$${DATE_STR}.tar.gz"; \
-	echo "hash: $$(cat ./rootfs.tar.gz.sha256)"
+	echo "hash: $$(cat /tmp/rootfs.tar.gz.sha256)"
 
 
 
