@@ -5,7 +5,7 @@ ARG wine_version=2.0.3
 
 RUN git clone https://github.com/wine-mirror/wine.git -b wine-${wine_version}
 WORKDIR /src/wine
-RUN ./configure --without-x --without-freetype
+RUN ./configure --without-x --without-freetype --enable-win64
 RUN make -j3
 
 USER root
