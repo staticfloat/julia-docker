@@ -59,23 +59,29 @@ endef
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
 rootfs.tar.gz: build-crossbuild-x64
-	echo "Exporting build image to $@"
+	@echo "Exporting build image to $@"
 	@ IMG_NAME=$(call crossbuild_tag_name,crossbuild-x64); \
 	echo "Starting docker container for $$IMG_NAME..."; \
 	CONTAINER_ID=$$(docker run -ti --rm -d $$IMG_NAME bash); \
-	echo "Running in container $$CONTAINER_ID, exporting..."; \
-	docker exec -ti $$CONTAINER_ID "rm -f /dev/null"; \
+	echo "Running in container $$CONTAINER_ID"; \
+	echo "Beginning cleanup operations..."; \
+	docker exec -ti $$CONTAINER_ID bash -c "rm -f /dev/null"; \
+	docker exec -ti $$CONTAINER_ID bash -c "rm -rf /usr/share/terminfo"; \
+	echo "Exporting...."; \
 	docker export $$CONTAINER_ID | gzip -9 > $@; \
 	echo "Stopping container..."; \
 	docker stop $$CONTAINER_ID
 
 rootfs.tar.gz.sha256: rootfs.tar.gz
-	shasum -a 256 $< | cut -d' ' -f1 > $@
+	@shasum -a 256 $< | cut -d' ' -f1 > $@
 
-push-rootfs: rootfs.tar.gz rootfs.tar.gz.sha256
-	DATE_STR=$$(date +%Y-%m-%d); \
+push-rootfs: #rootfs.tar.gz rootfs.tar.gz.sha256
+	@echo "Uploading to S3..."
+	@ DATE_STR=$$(date +%Y-%m-%d); \
 	aws s3 cp --acl public-read ./rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz; \
-	aws s3 cp --acl public-read ./rootfs.tar.gz.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha256
+	aws s3 cp --acl public-read ./rootfs.tar.gz.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha256; \
+	echo "URL: https://julialangmirror.s3.amazonaws.com/binarybuilder-rootfs-$${DATE_STR}.tar.gz"; \
+	echo "hash: $$(cat ./rootfs.tar.gz.sha256)"
 
 
 
