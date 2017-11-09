@@ -75,6 +75,11 @@ ENV target=""
 ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32 --prefix=/opt/super_binutils"
 INCLUDE lib/binutils_install
 
+# Install CMake toolchain files
+COPY cmake_toolchains /downloads/cmake_toolchains
+RUN cp /downloads/cmake_toolchains/* /opt
+RUN patch -p0 < /downloads/patches/cmake_install.patch
+
 # Override normal uname with something that fakes out based on ${target}
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
