@@ -53,6 +53,7 @@ build/$(1)/Dockerfile: $(1).harbor lib patches Makefile
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
 	@cp lib/*.sh "build/$(1)/"
+	@cp -R cmake_toolchains/ "build/$(1)/"
 	@cp -R patches/ "build/$(1)/"
 endef
 
@@ -78,6 +79,8 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	tar xf $< -C /tmp/rootfs; \
    	echo "Beginning cleanup operations..."; \
 	rm -f /tmp/rootfs/dev/null; \
+	touch /tmp/rootfs/dev/null; \
+	touch /tmp/rootfs/dev/ptmx; \
 	rm -rf /tmp/rootfs/usr/share/terminfo; \
 	echo "Repackaging..."; \
 	GZIP=-9 tar zcf $@ -C /tmp/rootfs .; \

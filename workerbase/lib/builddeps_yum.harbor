@@ -3,7 +3,7 @@ USER root
 RUN ${L32} yum update -y
 
 # Tools that make it easy to get stuff done within the docker image
-ARG NICE_TOOLS="vim curl gdb net-tools which patchelf sudo"
+ARG NICE_TOOLS="vim curl gdb net-tools which sudo"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
 ARG TEMPORARY_DEPS="gcc gcc-c++ glibc-devel.i686 glibc-devel"

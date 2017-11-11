@@ -22,6 +22,7 @@ RUN apk add --update ${TEMPORARY_DEPS} curl make patch tar gawk autoconf automak
 
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
+ENV TERM="screen-256color"
 
 # We still need a pretty recent cmake, so just build one from scratch like usual
 ## Install cmake into /usr/local
@@ -46,6 +47,29 @@ RUN ${L32} make install
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf cmake-${cmake_version}
+## Install tar
+ARG patchelf_version=0.9
+ARG patchelf_url=https://github.com/NixOS/patchelf/archive/${patchelf_version}.tar.gz
+
+USER buildworker
+WORKDIR /src
+
+# Use download_unpack to download and unpack patchelf
+RUN download_unpack.sh "${patchelf_url}"
+
+# Build the patchelf sources!
+WORKDIR /src/patchelf-${patchelf_version}
+RUN $L32 ./bootstrap.sh
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
+
+# Install patchelf
+USER root
+RUN $L32 make install
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf patchelf-${patchelf_version}*
 
 # Get our bash script library ready
 COPY build_crosscompiler.sh /build.sh
@@ -163,6 +187,16 @@ RUN ${L32} make install
 WORKDIR /src
 RUN rm -rf binutils-${binutils_version}
 
+# Set a default working directory that we know is good
+WORKDIR /workspace
+
+# Install CMake toolchain files
+COPY cmake_toolchains /downloads/cmake_toolchains
+RUN cp /downloads/cmake_toolchains/* /opt
+
+# Patch CMake defaults
+RUN patch -p0 < /downloads/patches/cmake_install.patch
+
 # Override normal uname with something that fakes out based on ${target}
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
@@ -176,13 +210,13 @@ RUN rm -rf /downloads /build.sh
 # Remove bootstrapping compiler toolchain if we need to
 RUN apk del ${TEMPORARY_DEPS}
 
-# Set a default working directory that we know is good
-WORKDIR /
-
 # Use /entrypoint.sh to conditionally apply ${L32} since we cna't use ARG
 # values within an actual ENTRYPOINT command.  :(
 RUN echo "#!/bin/bash" > /entrypoint.sh; \
     echo "${L32} \"\$@\"" >> /entrypoint.sh; \
     chmod +x /entrypoint.sh
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf; \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf; \
+    echo "nameserver 4.4.4.4" >> /etc/resolv.conf
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
