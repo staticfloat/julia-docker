@@ -12,7 +12,7 @@ ARG TEMPORARY_DEPS="gcc g++"
 # build ourselves
 ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
                libcurl4-openssl-dev libexpat1-dev gettext wget zlib1g-dev \ 
-               libbz2-dev autoconf"
+               libbz2-dev autoconf automake"
 
 # Install all these packages
 RUN ${L32} apt-get install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}

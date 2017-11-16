@@ -12,7 +12,7 @@ ARG TEMPORARY_DEPS="gcc gcc-c++ glibc-devel.i686 glibc-devel"
 # build ourselves
 ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
                expat-devel gettext-devel perl-devel wget bzip2 tar \ 
-               zlib-devel bzip2-devel xz rpmdevtools"
+               zlib-devel bzip2-devel xz rpmdevtools autoconf automake"
 
 # Install all these packages
 RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
