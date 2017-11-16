@@ -42,7 +42,7 @@ ARG TEMPORARY_DEPS="gcc g++"
 # build ourselves
 ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
                libcurl4-openssl-dev libexpat1-dev gettext wget zlib1g-dev \ 
-               libbz2-dev"
+               libbz2-dev autoconf"
 
 # Install all these packages
 RUN ${L32} apt-get install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
@@ -172,6 +172,32 @@ RUN ${L32} make install
 # cleanup /src
 WORKDIR /src
 RUN rm -rf libtool-${libtool_version}
+
+# Download and install `patchelf` because he's a really standup guy
+USER buildworker
+## Install tar
+ARG patchelf_version=0.9
+ARG patchelf_url=https://github.com/NixOS/patchelf/archive/${patchelf_version}.tar.gz
+
+USER buildworker
+WORKDIR /src
+
+# Use download_unpack to download and unpack patchelf
+RUN download_unpack.sh "${patchelf_url}"
+
+# Build the patchelf sources!
+WORKDIR /src/patchelf-${patchelf_version}
+RUN $L32 ./bootstrap.sh
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
+
+# Install patchelf
+USER root
+RUN $L32 make install
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf patchelf-${patchelf_version}*
 
 # Download and install `git` because some of the distributions we build on are
 # old enough that `git` isn't even installable from the default distributions

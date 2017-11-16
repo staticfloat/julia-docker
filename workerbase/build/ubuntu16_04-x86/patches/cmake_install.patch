@@ -1,0 +1,12 @@
+--- ./usr/local/share/cmake-3.6/Modules/GNUInstallDirs.cmake.orig	2017-11-08 21:58:03.829928387 -0500
++++ ./usr/local/share/cmake-3.6/Modules/GNUInstallDirs.cmake	2017-11-08 21:59:13.097569355 -0500
+@@ -328,9 +328,6 @@
+       if("${dir}" STREQUAL "SYSCONFDIR" OR "${dir}" STREQUAL "LOCALSTATEDIR")
+         set(CMAKE_INSTALL_FULL_${dir} "/${CMAKE_INSTALL_${dir}}")
+       else()
+-        if (NOT "${CMAKE_INSTALL_${dir}}" MATCHES "^usr/")
+-          set(CMAKE_INSTALL_${dir} "usr/${CMAKE_INSTALL_${dir}}")
+-        endif()
+         set(CMAKE_INSTALL_FULL_${dir} "/${CMAKE_INSTALL_${dir}}")
+       endif()
+     elseif("${CMAKE_INSTALL_PREFIX}" MATCHES "^/usr/?$")

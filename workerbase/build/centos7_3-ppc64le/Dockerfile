@@ -33,7 +33,7 @@ USER root
 RUN ${L32} yum update -y
 
 # Tools that make it easy to get stuff done within the docker image
-ARG NICE_TOOLS="vim curl gdb net-tools which patchelf sudo"
+ARG NICE_TOOLS="vim curl gdb net-tools which sudo"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
 ARG TEMPORARY_DEPS="gcc gcc-c++ glibc-devel.i686 glibc-devel"
@@ -176,6 +176,32 @@ RUN ${L32} make install
 # cleanup /src
 WORKDIR /src
 RUN rm -rf libtool-${libtool_version}
+
+# Download and install `patchelf` because he's a really standup guy
+USER buildworker
+## Install tar
+ARG patchelf_version=0.9
+ARG patchelf_url=https://github.com/NixOS/patchelf/archive/${patchelf_version}.tar.gz
+
+USER buildworker
+WORKDIR /src
+
+# Use download_unpack to download and unpack patchelf
+RUN download_unpack.sh "${patchelf_url}"
+
+# Build the patchelf sources!
+WORKDIR /src/patchelf-${patchelf_version}
+RUN $L32 ./bootstrap.sh
+RUN $L32 ./configure --prefix=/usr/local
+RUN $L32 make -j4
+
+# Install patchelf
+USER root
+RUN $L32 make install
+
+# Now cleanup /src
+WORKDIR /src
+RUN rm -rf patchelf-${patchelf_version}*
 
 # Download and install `git` because some of the distributions we build on are
 # old enough that `git` isn't even installable from the default distributions
