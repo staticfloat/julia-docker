@@ -6,13 +6,13 @@ RUN ${L32} yum update -y
 ARG NICE_TOOLS="vim curl gdb net-tools which sudo"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
-ARG TEMPORARY_DEPS="gcc gcc-c++ glibc-devel.i686 glibc-devel"
+ARG TEMPORARY_DEPS="gcc gcc-c++"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
 ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
                expat-devel gettext-devel perl-devel wget bzip2 tar \ 
-               zlib-devel bzip2-devel xz rpmdevtools autoconf automake"
+               zlib-devel bzip2-devel xz rpmdevtools autoconf automake glibc_devel"
 
 # Install all these packages
 RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
