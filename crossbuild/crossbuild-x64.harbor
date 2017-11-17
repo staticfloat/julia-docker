@@ -32,18 +32,18 @@ COPY fake_sha512sum.sh /usr/bin/sha512sum
 RUN /bin/busybox chmod +x /usr/bin/sha512sum
 
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
-ENV target="x86_64-linux-gnu"
-ENV glibc_version=2.12.2
-INCLUDE lib/linux_crosscompiler_install
-ENV glibc_version=""
+#ENV target="x86_64-linux-gnu"
+#ENV glibc_version=2.12.2
+#INCLUDE lib/linux_crosscompiler_install
+#ENV glibc_version=""
 
 # build gcc for i686.  Again use an especially old glibc version to maximize compatibility
-ENV target="i686-linux-gnu"
-ENV L32="linux32"
-ENV glibc_version=2.12.2
-INCLUDE lib/linux_crosscompiler_install
-ENV L32=""
-ENV glibc_version=""
+#ENV target="i686-linux-gnu"
+#ENV L32="linux32"
+#ENV glibc_version=2.12.2
+#INCLUDE lib/linux_crosscompiler_install
+#ENV L32=""
+#ENV glibc_version=""
 
 # build for mac64
 ENV target="x86_64-apple-darwin14"

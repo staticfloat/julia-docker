@@ -31,13 +31,13 @@
 # 2) Install libtapi
 # 3) Install cctools
 # 4) Install dsymutil
-# 5) Install gcc
+# 5) Install clang
 ## These steps are given by the following bash functions:
 #   install_osx_sdk
 #   install_libtapi
 #   install_cctools
 #   install_dsymutil
-#   install_gcc
+#   install_clang
 #
 # Ensure that you have set the following environment variables:
 #   target
@@ -59,6 +59,7 @@ glibc_version=${glibc_version:-2.17}
 libtapi_version=${libtapi_version:-1.30.0}
 cctools_version=${cctools_version:-22ebe727a5cdc21059d45313cf52b4882157f6f0}
 dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
+llvm_version=release_50
 
 # windows defaults
 mingw_version=${mingw_version:-5.0.2}
@@ -433,6 +434,41 @@ install_dsymutil()
     # Cleanup
     cd $system_root/src
     sudo -E rm -rf llvm-dsymutil-${dsymutil_version}
+}
+
+install_clang()
+{
+    # List of source URLs
+    llvm_url=https://git.llvm.org/git/llvm.git
+    clang_url=https://git.llvm.org/git/clang.git
+    clang_tools_url=https://git.llvm.org/git/clang-tools-extra.git
+    compiler_rt_url=https://git.llvm.org/git/compiler-rt.git
+    libcxx_url=https://git.llvm.org/git/libcxx.git
+
+    # Clone everything down
+    cd $system_root/src
+    git clone ${llvm_url} -b ${llvm_version}
+
+    cd $system_root/src/llvm/tools
+    git clone ${clang_url} -b ${llvm_version}
+
+    cd $system_root/src/llvm/tools/clang/tools
+    git clone ${clang_tools_url} -b ${llvm_version}
+
+    cd $system_root/src/llvm/projects
+    git clone ${compiler_rt_url} -b ${llvm_version}
+
+    #cd $system_root/src/llvm/projects
+    #git clone ${libcxx_url} -b ${llvm_version}
+
+    mkdir $system_root/src/llvm-build
+    cd $system_root/src/llvm-build
+    ${L32} cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/opt/x86_64-apple-darwin14 $system_root/src/llvm
+    ${L32} make -j3
+    sudo -E ${L32} make install
+    
+    cd $system_root/src
+    rm -rf $system_root/src/llvm $system_root/src/llvm-build
 }
 
 install_mingw_stage1()
