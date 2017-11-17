@@ -40,7 +40,7 @@ ARG TEMPORARY_DEPS="gcc g++"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
-ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
+ARG BUILD_DEPS="make libc6-dev libc6-dev-i386 dpkg-dev m4 libssl-dev patch pkg-config \
                libcurl4-openssl-dev libexpat1-dev gettext wget zlib1g-dev \ 
                libbz2-dev autoconf automake"
 
