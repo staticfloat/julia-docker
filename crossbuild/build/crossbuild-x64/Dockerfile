@@ -51,7 +51,6 @@ RUN rm -rf cmake-${cmake_version}
 ARG patchelf_version=0.9
 ARG patchelf_url=https://github.com/NixOS/patchelf/archive/${patchelf_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack patchelf
@@ -187,14 +186,10 @@ RUN ${L32} make install
 WORKDIR /src
 RUN rm -rf binutils-${binutils_version}
 
-# Set a default working directory that we know is good
-WORKDIR /workspace
-
-# Install CMake toolchain files
+# Install CMake toolchain files and patch CMake defaults
+WORKDIR /
 COPY cmake_toolchains /downloads/cmake_toolchains
 RUN cp /downloads/cmake_toolchains/* /opt
-
-# Patch CMake defaults
 RUN patch -p0 < /downloads/patches/cmake_install.patch
 
 # Override normal uname with something that fakes out based on ${target}
@@ -207,10 +202,11 @@ RUN echo "/usr/local/lib64:/usr/local/lib:/lib:/usr/local/lib:/usr/lib" > /etc/l
 # Cleanup downloads and build.sh
 RUN rm -rf /downloads /build.sh
 
-# Remove bootstrapping compiler toolchain if we need to
+# Remove bootstrapping compiler toolchain but keep libstdc++ and libgcc
 RUN apk del ${TEMPORARY_DEPS}
+RUN apk add libstdc++ libgcc
 
-# Use /entrypoint.sh to conditionally apply ${L32} since we cna't use ARG
+# Use /entrypoint.sh to conditionally apply ${L32} since we can't use ARG
 # values within an actual ENTRYPOINT command.  :(
 RUN echo "#!/bin/bash" > /entrypoint.sh; \
     echo "${L32} \"\$@\"" >> /entrypoint.sh; \
@@ -218,5 +214,8 @@ RUN echo "#!/bin/bash" > /entrypoint.sh; \
 RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf; \
     echo "nameserver 8.8.4.4" >> /etc/resolv.conf; \
     echo "nameserver 4.4.4.4" >> /etc/resolv.conf
+
+# Set default workdir
+WORKDIR /workspace
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/bin/bash"]
