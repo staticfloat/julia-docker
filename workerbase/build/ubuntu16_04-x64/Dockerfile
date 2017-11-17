@@ -179,7 +179,6 @@ USER buildworker
 ARG patchelf_version=0.9
 ARG patchelf_url=https://github.com/NixOS/patchelf/archive/${patchelf_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack patchelf

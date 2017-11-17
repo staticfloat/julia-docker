@@ -42,7 +42,8 @@ ARG TEMPORARY_DEPS="gcc gcc-c++"
 # build ourselves
 ARG BUILD_DEPS="make m4 openssl openssl-devel patch pkg-config curl-devel \
                expat-devel gettext-devel perl-devel wget bzip2 tar \ 
-               zlib-devel bzip2-devel xz rpmdevtools autoconf automake glibc_devel"
+               zlib-devel bzip2-devel xz rpmdevtools autoconf automake \
+               glibc-devel.i686 glibc-devel"
 
 # Install all these packages
 RUN ${L32} yum install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
@@ -183,7 +184,6 @@ USER buildworker
 ARG patchelf_version=0.9
 ARG patchelf_url=https://github.com/NixOS/patchelf/archive/${patchelf_version}.tar.gz
 
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack patchelf
