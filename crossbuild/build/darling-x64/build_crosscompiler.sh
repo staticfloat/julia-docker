@@ -3,21 +3,17 @@
 ## To build a cross-compiler for linux targets we:
 # 1) Download kernel headers
 # 2) Install binutils
-# 3) Install a C compiler
-# 4) Get glibc headers
-# 5) Install libgcc
-# 6) Install the rest of glibc
-# 7) Build a complete gcc/gfortran
-
+# 3) Download GCC and bootstrap it to a simple C compiler
+# 4) Install glibc
+# 6) Install the rest of GCC, including GFortran
 
 # These steps are given by the following bash functions:
 #   install_kernel_headers
 #   install_binutils
-#   install_gcc_stage1
-#   install_glibc_stage1
-#   install_gcc_stage2
-#   install_glibc_stage2
-#   install_gcc_stage3
+#   download_gcc
+#   install_gcc_bootstrap
+#   install_glibc
+#   install_gcc
 #
 # Ensure that you have set the following environment variables:
 #   target
@@ -28,15 +24,18 @@
 
 ## To build a cross-compile for OSX targets we:
 # 1) Download OSX SDK
+# 2) Install LLVM/clang
 # 2) Install libtapi
 # 3) Install cctools
 # 4) Install dsymutil
-# 5) Install gcc
+# 5) Install GCC
 ## These steps are given by the following bash functions:
 #   install_osx_sdk
+#   install_clang
 #   install_libtapi
 #   install_cctools
 #   install_dsymutil
+#   download_gcc
 #   install_gcc
 #
 # Ensure that you have set the following environment variables:
@@ -45,6 +44,7 @@
 #   cctools_version (defaults to 22ebe727a5cdc21059d45313cf52b4882157f6f0)
 #   dsymutil_version (defaults to 6fe249efadf6139a7f271fee87a5a0f44e2454cf)
 #   gcc_version (defaults to 7.1.0)
+#   llvm_version (defaults to release_50)
 
 # This is useful for debugging outside the container
 system_root=${system_root:=}
@@ -59,6 +59,7 @@ glibc_version=${glibc_version:-2.17}
 libtapi_version=${libtapi_version:-1.30.0}
 cctools_version=${cctools_version:-22ebe727a5cdc21059d45313cf52b4882157f6f0}
 dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
+llvm_version=release_50
 
 # windows defaults
 mingw_version=${mingw_version:-5.0.2}
@@ -112,9 +113,22 @@ target_to_darwin_sdk()
         *darwin16*)
             echo "10.12"
             ;;
+        *darwin17*)
+            echo "10.13"
+            ;;
     esac
 }
 
+
+get_sysroot()
+{
+    if [[ "${target}" == *apple* ]]; then
+        sdk_version="$(target_to_darwin_sdk ${target})"
+        echo "${system_root}/opt/${target}/MacOSX${sdk_version}.sdk"
+    else
+        echo "${system_root}/opt/${target}/${target}/sys-root"
+    fi
+}
 
 ## Function to download and install Linux kernel headers
 install_kernel_headers()
@@ -128,7 +142,7 @@ install_kernel_headers()
     local ARCH="$(target_to_linux_arch ${target})"
     ${L32} make ARCH=${ARCH} mrproper
     ${L32} make ARCH=${ARCH} headers_check
-    sudo -E ${L32} make INSTALL_HDR_PATH=${system_root}/opt/${target}/${target}/sys-root/usr ARCH=${ARCH} V=0 headers_install
+    sudo -E ${L32} make INSTALL_HDR_PATH=$(get_sysroot)/usr ARCH=${ARCH} V=0 headers_install
 
     # Cleanup
     cd $system_root/src
@@ -140,12 +154,10 @@ download_gcc()
     # First argument is the version
     gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
 
-    # Download and unpack gcc
+    # Download and unpack gcc and prereqs
     cd ${system_root}/src
     download_unpack.sh "${gcc_url}"
     cd ${system_root}/src/gcc-${gcc_version}
-
-    # Build gcc (stage 1)
     ${L32} contrib/download_prerequisites
 }
 
@@ -176,7 +188,7 @@ install_gcc_bootstrap()
         --disable-bootstrap \
         --with-glibc-version=$(echo $glibc_version | cut -d '.' -f 1-2) \
         --enable-languages=c \
-        --with-sysroot=/opt/${target}/${target}/sys-root
+        --with-sysroot="$(get_sysroot)"
 
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
@@ -232,7 +244,7 @@ install_glibc()
     ${L32} ${system_root}/src/glibc-${glibc_version}/configure \
         --prefix=/usr \
         --host=${target} \
-        --with-headers=${system_root}/opt/${target}/${target}/sys-root/usr/include \
+        --with-headers="$(get_sysroot)/usr/include" \
         --with-binutils=${system_root}/opt/${target}/bin \
         --disable-multilib \
         --disable-werror \
@@ -241,11 +253,11 @@ install_glibc()
 
     sudo -E chown $(id -u):$(id -g) -R ${system_root}/src/glibc-${glibc_version}_build
     ${L32} make -j${nproc}
-    sudo -E ${L32} make install install_root=/opt/${target}/${target}/sys-root
+    sudo -E ${L32} make install install_root="$(get_sysroot)"
 
     # GCC won't build (crti.o: no such file or directory) unless these directories exist.
     # They can be empty though. 
-    sudo -E ${L32} mkdir /opt/${target}/${target}/sys-root/{lib,usr/lib} || true
+    sudo -E ${L32} mkdir $(get_sysroot)/{lib,usr/lib} || true
 
     # Cleanup
     cd ${system_root}/src
@@ -262,7 +274,7 @@ install_gcc()
     # If we're building for Darwin, add on some extra configure arguments
     if [[ "${target}" == *apple* ]]; then
         sdk_version="$(target_to_darwin_sdk ${target})"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=${system_root}/opt/${target}/MacOSX${sdk_version}.sdk"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=${system_root}/opt/${target}/bin/${target}-ld"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=${system_root}/opt/${target}/bin/${target}-as"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
@@ -270,7 +282,7 @@ install_gcc()
 
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=/opt/${target}/${target}/sys-root" 
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)" 
     fi
 
     # Build gcc
@@ -323,7 +335,7 @@ install_binutils()
     ${L32} ./configure \
         --prefix=/opt/${target} \
         --target=${target} \
-	--with-sysroot=/opt/${target}/${target}/sys-root \
+        --with-sysroot="$(get_sysroot)" \
         --enable-multilib \
         --disable-werror
     ${L32} make -j${nproc}
@@ -363,8 +375,8 @@ install_libtapi()
 
     # Build and install libtapi (We have to tell it to explicitly use clang)
     export MACOSX_DEPLOYMENT_TARGET=10.10
-    export CC="clang"
-    export CXX="clang++"
+    export CC="/usr/bin/clang"
+    export CXX="/usr/bin/clang++"
     INSTALLPREFIX=$system_root/opt/${target} ${L32} ./build.sh
     sudo -E INSTALLPREFIX=$system_root/opt/${target} ${L32} ./install.sh
 
@@ -433,6 +445,54 @@ install_dsymutil()
     # Cleanup
     cd $system_root/src
     sudo -E rm -rf llvm-dsymutil-${dsymutil_version}
+}
+
+download_llvm()
+{
+    # List of source URLs
+    llvm_url=https://git.llvm.org/git/llvm.git
+    clang_url=https://git.llvm.org/git/clang.git
+    clang_tools_url=https://git.llvm.org/git/clang-tools-extra.git
+    compiler_rt_url=https://git.llvm.org/git/compiler-rt.git
+    libcxx_url=https://git.llvm.org/git/libcxx.git
+
+    # Clone everything down
+    cd $system_root/src
+    git clone ${llvm_url} -b ${llvm_version}
+
+    cd $system_root/src/llvm/tools
+    git clone ${clang_url} -b ${llvm_version}
+
+    cd $system_root/src/llvm/tools/clang/tools
+    git clone ${clang_tools_url} -b ${llvm_version}
+
+    #cd $system_root/src/llvm/projects
+    #git clone ${compiler_rt_url} -b ${llvm_version}
+
+    #cd $system_root/src/llvm/projects
+    #git clone ${libcxx_url} -b ${llvm_version}
+}
+
+install_clang()
+{
+    # Build LLVM, defaulting to our given target
+    mkdir $system_root/src/llvm-build
+    cd $system_root/src/llvm-build
+
+    ${L32} cmake -G "Unix Makefiles" \
+        -DLLVM_PARALLEL_COMPILE_JOBS=3 \
+        -DLLVM_DEFAULT_TARGET_TRIPLE=${target} \
+        -DDEFAULT_SYSROOT="$(get_sysroot)" \
+        -DCMAKE_BUILD_TYPE=Release\
+        -DLLVM_ENABLE_ASSERTIONS=Off \
+        -DCMAKE_INSTALL_PREFIX="/opt/${target}" \
+        "$system_root/src/llvm"
+    ${L32} make -j3
+    sudo -E ${L32} make install
+
+    # Cleanup    
+    cd $system_root/src
+    rm -rf $system_root/src/llvm $system_root/src/llvm-build
 }
 
 install_mingw_stage1()

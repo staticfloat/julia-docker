@@ -79,6 +79,17 @@ RUN rm /usr/bin/sha512sum
 COPY fake_sha512sum.sh /usr/bin/sha512sum
 RUN /bin/busybox chmod +x /usr/bin/sha512sum
 
+# build for mac64
+ENV target="x86_64-apple-darwin14"
+RUN source /build.sh; set -e; install_osx_sdk
+RUN source /build.sh; set -e; install_libtapi
+RUN source /build.sh; set -e; install_cctools
+RUN source /build.sh; set -e; install_dsymutil
+RUN source /build.sh; set -e; download_gcc
+RUN source /build.sh; set -e; install_gcc
+RUN source /build.sh; set -e; download_llvm
+RUN source /build.sh; set -e; install_clang
+
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 ENV target="x86_64-linux-gnu"
 ENV glibc_version=2.12.2
@@ -102,16 +113,6 @@ RUN source /build.sh; set -e; install_glibc
 RUN source /build.sh; set -e; install_gcc
 ENV L32=""
 ENV glibc_version=""
-
-# build for mac64
-ENV target="x86_64-apple-darwin14"
-RUN source /build.sh; set -e; install_osx_sdk
-RUN source /build.sh; set -e; install_libtapi
-RUN source /build.sh; set -e; install_cctools
-RUN source /build.sh; set -e; install_dsymutil
-RUN source /build.sh; set -e; download_gcc
-RUN source /build.sh; set -e; install_gcc
-
 
 # build for win64/win32
 ENV target="x86_64-w64-mingw32"

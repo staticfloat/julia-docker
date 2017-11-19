@@ -4,3 +4,5 @@ RUN source /build.sh; set -e; install_cctools
 RUN source /build.sh; set -e; install_dsymutil
 RUN source /build.sh; set -e; download_gcc
 RUN source /build.sh; set -e; install_gcc
+RUN source /build.sh; set -e; download_llvm
+RUN source /build.sh; set -e; install_clang

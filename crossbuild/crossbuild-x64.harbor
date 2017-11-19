@@ -31,6 +31,10 @@ RUN rm /usr/bin/sha512sum
 COPY fake_sha512sum.sh /usr/bin/sha512sum
 RUN /bin/busybox chmod +x /usr/bin/sha512sum
 
+# build for mac64
+ENV target="x86_64-apple-darwin14"
+INCLUDE lib/osx_crosscompiler_install
+
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 ENV target="x86_64-linux-gnu"
 ENV glibc_version=2.12.2
@@ -44,11 +48,6 @@ ENV glibc_version=2.12.2
 INCLUDE lib/linux_crosscompiler_install
 ENV L32=""
 ENV glibc_version=""
-
-# build for mac64
-ENV target="x86_64-apple-darwin14"
-INCLUDE lib/osx_crosscompiler_install
-
 
 # build for win64/win32
 ENV target="x86_64-w64-mingw32"
