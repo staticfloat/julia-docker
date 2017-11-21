@@ -15,5 +15,9 @@ COPY download_unpack.sh /usr/bin
 RUN mkdir -p /etc/sudoers.d
 RUN echo "buildworker ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/buildworker
 
+# Vim needs to work with arrow keys
+RUN echo "set nocompatible" > /home/buildworker/.vimrc && chown buildworker:buildworker /home/buildworker/.vimrc
+ENV TERM=screen
+
 # We want to be able to do things like "source"
 SHELL ["/bin/bash", "-c"]
