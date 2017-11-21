@@ -33,19 +33,24 @@ USER root
 RUN ${L32} apt-get update
 
 # Tools that make it easy to get stuff done within the docker image
-ARG NICE_TOOLS="vim curl gdb procps"
+ARG NICE_TOOLS="vim curl gdb procps sudo"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
 ARG TEMPORARY_DEPS="gcc g++"
 
 # Tools that we need to build Julia and other deps that we are not going to
 # build ourselves
-ARG BUILD_DEPS="make libc6-dev libc6-dev-i386 dpkg-dev m4 libssl-dev patch pkg-config \
+ARG BUILD_DEPS="make libc6-dev dpkg-dev m4 libssl-dev patch pkg-config \
                libcurl4-openssl-dev libexpat1-dev gettext wget zlib1g-dev \ 
                libbz2-dev autoconf automake"
 
 # Install all these packages
 RUN ${L32} apt-get install -y ${NICE_TOOLS} ${TEMPORARY_DEPS} ${BUILD_DEPS}
+
+# I hate that on 32-bit ubuntu, libc6-dev is i386 and libc6-dev-i386 doesn't
+# exist. Consistency Conshmistency, amirite?  It's too much work to properly
+# identify which version we're running on, so instead just allow this to fail.
+RUN ${L32} apt-get install -y libc6-dev-i386 || echo "Stupid Ubuntu".
 # Download and install `tar` because some machines have it too old and don't
 # know what `.xz` files are.  Build it first so that we can use it to extract
 # our other tools.  Yes, this means this is the only tool that's not built with
@@ -315,6 +320,9 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 
 # Cleanup downloads
 RUN rm -rf /downloads
+
+# Cleanup build.sh if it exists
+RUN rm -f /build.sh
 
 # Remove bootstrapping compiler toolchain if we need to
 RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \

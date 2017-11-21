@@ -22,6 +22,4 @@ USER buildworker
 INCLUDE lib/wine_install
 ENV WINEARCH=win64
 
-USER root
-RUN rm -f /build.sh
 INCLUDE lib/omega

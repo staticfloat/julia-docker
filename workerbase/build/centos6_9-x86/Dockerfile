@@ -322,6 +322,7 @@ RUN source /build.sh; install_gcc_bootstrap
 RUN source /build.sh; install_mingw_stage1
 RUN source /build.sh; install_mingw_stage2
 RUN source /build.sh; install_gcc
+ENV target=
 
 # Install Wine
 USER root
@@ -344,8 +345,6 @@ RUN rm -rf wine
 ENV WINEARCH=win32
 
 USER root
-RUN rm -f /build.sh
-USER root
 
 # We need to override ld.so.conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
@@ -356,6 +355,9 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
 
 # Cleanup downloads
 RUN rm -rf /downloads
+
+# Cleanup build.sh if it exists
+RUN rm -f /build.sh
 
 # Remove bootstrapping compiler toolchain if we need to
 RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \

@@ -1,10 +1,10 @@
-FROM staticfloat/centos-i386:centos6
+FROM i386/debian:8.9
 
 # This enables putting `linux32` before commands like `./configure` and `make`
 ARG L32=linux32
 
 INCLUDE lib/alpha
-INCLUDE lib/builddeps_yum
+INCLUDE lib/builddeps_apt
 INCLUDE lib/build_tools
 
 COPY build_crosscompiler.sh /build.sh
@@ -18,9 +18,10 @@ ENV target=
 
 # Install Wine
 USER root
-RUN yum install -y libstdc++ flex bison
+RUN apt-get install -y flex bison libstdc++-4.9-dev
 USER buildworker
 INCLUDE lib/wine_install
 ENV WINEARCH=win32
 
 INCLUDE lib/omega
+
