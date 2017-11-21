@@ -236,8 +236,6 @@ install_glibc()
     patch -p0 < $system_root/downloads/patches/glibc_nocommon.patch || true
     patch -p0 < $system_root/downloads/patches/glibc_regexp_nocommon.patch || true
 
-    cd ${system_root}/src/glibc-${glibc_version}
-
     # build glibc
     mkdir -p ${system_root}/src/glibc-${glibc_version}_build
     cd ${system_root}/src/glibc-${glibc_version}_build
@@ -248,7 +246,7 @@ install_glibc()
         --with-binutils=${system_root}/opt/${target}/bin \
         --disable-multilib \
         --disable-werror \
-	libc_cv_forced_unwind=yes \
+        libc_cv_forced_unwind=yes \
         libc_cv_c_cleanup=yes
 
     sudo -E chown $(id -u):$(id -g) -R ${system_root}/src/glibc-${glibc_version}_build
