@@ -8,5 +8,8 @@ tabularasa/lib
 crossbuild/lib
 crossbuild/patches
 
+# I've walked back on this decision
+build
+
 # None of that vscode nonsense
 .vscode
