@@ -8,6 +8,9 @@ tabularasa/lib
 crossbuild/lib
 crossbuild/patches
 
+# Site-specific overrides
+buildworker/override.env
+
 # I've walked back on this decision
 build
 

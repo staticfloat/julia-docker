@@ -6,6 +6,8 @@ WORKDIR /buildbot
 ARG buildbot_branch
 ARG db_user
 ARG db_password
+ARG GITHUB_OAUTH_CLIENT_ID
+ARG GITHUB_OAUTH_CLIENT_SECRET
 
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
@@ -29,6 +31,8 @@ RUN buildbot create-master master
 COPY buildbot_secret.py /buildbot/master
 RUN echo "db_user=\"${db_user}\"" >> /buildbot/master/buildbot_secret.py
 RUN echo "db_password=\"${db_password}\"" >> /buildbot/master/buildbot_secret.py
+RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
 COPY julia.gpg /root/
 COPY awssecret /root/.awssecret
 RUN mkdir -p /root/.gnupg

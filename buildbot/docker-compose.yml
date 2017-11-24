@@ -22,6 +22,8 @@ services:
                 - buildbot_branch=${BUILDBOT_BRANCH}
                 - db_user=${DB_USER}
                 - db_password=${DB_PASSWORD}
+                - GITHUB_OAUTH_CLIENT_ID=${GITHUB_OAUTH_CLIENT_ID}
+                - GITHUB_OAUTH_CLIENT_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
         container_name: buildbot
         expose:
             - 8010
