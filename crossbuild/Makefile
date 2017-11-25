@@ -133,7 +133,6 @@ push-rootfs: shards
 print-hashes:
 	@# Print out the squashfs hashes first
 	@echo "    squashfs_hashes = Dict("
-	@echo "        \"base\" => \"$$(cat /tmp/rootfs.squashfs.sha256)\""
 	@for f in /tmp/rootfs-*.squashfs; do \
 		f_prefix=$$(basename $${f%.*}); \
 		triplet=$${f_prefix:7}; \
@@ -142,7 +141,6 @@ print-hashes:
 	@echo "    )"
 	@# Then print out the tarball hashes:
 	@echo "    tarball_hashes = Dict("
-	@echo "        \"base\" => \"$$(cat /tmp/rootfs.tar.gz.sha256)\""
 	@for f in /tmp/rootfs-*.tar.gz; do \
 		f_prefix=$$(basename $${f%.*.*}); \
 		triplet=$${f_prefix:7}; \
