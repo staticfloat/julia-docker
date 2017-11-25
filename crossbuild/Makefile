@@ -106,19 +106,19 @@ shards: /tmp/rootfs
 		rm -rf $${f}; \
 	done; \
 	echo "Packaging tar.gz rootfs base..."; \
-	GZIP=-9 tar zcf /tmp/rootfs.tar.gz -C $< .; \
+	GZIP=-9 tar zcf /tmp/rootfs-base.tar.gz -C $< .; \
 	echo "Packaging squashfs rootfs base..."; \
-	mksquashfs $< /tmp/rootfs.squashfs $(SQUASHFS_OPTS); \
+	mksquashfs $< /tmp/rootfs-base.squashfs $(SQUASHFS_OPTS); \
 	echo "Checksumming..."; \
-	shasum -a 256 /tmp/rootfs.tar.gz | cut -d' ' -f1 > /tmp/rootfs.tar.gz.sha256; \
-	shasum -a 256 /tmp/rootfs.squashfs | cut -d' ' -f1 > /tmp/rootfs.squashfs.sha256; \
+	shasum -a 256 /tmp/rootfs-base.tar.gz | cut -d' ' -f1 > /tmp/rootfs-base.tar.gz.sha256; \
+	shasum -a 256 /tmp/rootfs-base.squashfs | cut -d' ' -f1 > /tmp/rootfs-base.squashfs.sha256; \
 	echo "Final cleanup..."; \
 	rm -rf /tmp/rootfs
 
 push-rootfs: shards
 	@echo "Uploading to S3..."
 	@ DATE_STR=$$(date +%Y-%m-%d); \
-	for f in /tmp/rootfs*.tar.gz; do \
+	for f in /tmp/rootfs-*.tar.gz; do \
 		f_tarball=$${f}; \
 		f_squashfs=$${f%.*.*}.squashfs; \
 		f_prefix=$$(basename $${f%.*.*}); \
