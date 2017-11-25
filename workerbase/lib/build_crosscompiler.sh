@@ -485,7 +485,7 @@ install_clang()
         -DLLVM_ENABLE_ASSERTIONS=Off \
         -DCMAKE_INSTALL_PREFIX="/opt/${target}" \
         "$system_root/src/llvm"
-    ${L32} make -j3
+    ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
     # Cleanup    
