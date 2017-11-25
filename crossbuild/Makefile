@@ -72,7 +72,7 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
 # We need to remove special files that we can't extract properly on
 # host platforms here
-/tmp/rootfs.tar.gz: /tmp/rootfs.tar
+/tmp/rootfs.tar.gz /tmp/rootfs.squash: /tmp/rootfs.tar
 	@echo "Unpacking..."; \
 	rm -rf /tmp/rootfs; \
 	mkdir -p /tmp/rootfs; \
@@ -84,19 +84,27 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	rm -rf /tmp/rootfs/usr/share/terminfo; \
 	echo "Repackaging..."; \
 	GZIP=-9 tar zcf $@ -C /tmp/rootfs .; \
+	mksquashfs /tmp/rootfs /tmp/rootfs.squash -force-uid 1000 -force-gid 1000 -noappend; \
 	echo "Final cleanup..."; \
 	rm -rf /tmp/rootfs
 
 /tmp/rootfs.tar.gz.sha256: /tmp/rootfs.tar.gz
 	@shasum -a 256 $< | cut -d' ' -f1 > $@
 
-push-rootfs: /tmp/rootfs.tar.gz /tmp/rootfs.tar.gz.sha256
+/tmp/rootfs.squash.sha256: /tmp/rootfs.squash
+	@shasum -a 256 $< | cut -d' ' -f1 > $@
+
+push-rootfs: /tmp/rootfs.tar.gz /tmp/rootfs.tar.gz.sha256 /tmp/rootfs.squash /tmp/rootfs.squash.sha256
 	@echo "Uploading to S3..."
 	@ DATE_STR=$$(date +%Y-%m-%d); \
 	aws s3 cp --acl public-read /tmp/rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz; \
 	aws s3 cp --acl public-read /tmp/rootfs.tar.gz.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha256; \
-	echo "URL: https://julialangmirror.s3.amazonaws.com/binarybuilder-rootfs-$${DATE_STR}.tar.gz"; \
-	echo "hash: $$(cat /tmp/rootfs.tar.gz.sha256)"
+	aws s3 cp --acl public-read /tmp/rootfs.squash s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.squash; \
+	aws s3 cp --acl public-read /tmp/rootfs.squash.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.squash.sha256; \
+	echo "URL (.tar.gz): https://julialangmirror.s3.amazonaws.com/binarybuilder-rootfs-$${DATE_STR}.tar.gz"; \
+	echo "hash: $$(cat /tmp/rootfs.tar.gz.sha256)" \
+	echo "URL (.tar.gz): https://julialangmirror.s3.amazonaws.com/binarybuilder-rootfs-$${DATE_STR}.squash"; \
+	echo "hash: $$(cat /tmp/rootfs.squash.sha256)"
 
 
 
