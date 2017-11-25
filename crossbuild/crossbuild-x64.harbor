@@ -79,7 +79,9 @@ INCLUDE lib/binutils_install
 # Install CMake toolchain files and patch CMake defaults
 WORKDIR /
 COPY cmake_toolchains /downloads/cmake_toolchains
-RUN cp /downloads/cmake_toolchains/* /opt
+RUN for f in /downloads/cmake_toolchains/*; do \
+        cp -v $f /opt/$(basename ${f%.*})/; \
+    done
 RUN patch -p0 < /downloads/patches/cmake_install.patch
 
 # Override normal uname with something that fakes out based on ${target}
