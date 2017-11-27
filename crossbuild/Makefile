@@ -85,7 +85,11 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	touch $@/dev/ptmx; \
 	rm -rf $@/usr/share/terminfo; \
 	echo "Removing OSX SDK..."; \
-	rm -rf $@/opt/x86_64-apple-darwin14/MacOSX*.sdk
+	rm -rf $@/opt/x86_64-apple-darwin14/MacOSX*.sdk; \
+	echo "Overwriting resolv.conf..."; \
+	echo "nameserver 8.8.8.8"  > $@/etc/resolv.conf; \
+	echo "nameserver 8.8.4.4" >> $@/etc/resolv.conf; \
+	echo "nameserver 4.4.4.4" >> $@/etc/resolv.conf
 
 # Package 'em all up
 SQUASHFS_OPTS=-force-uid 1000 -force-gid 1000 -comp xz -b 1048576 -Xdict-size 100%
