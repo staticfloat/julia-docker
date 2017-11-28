@@ -92,7 +92,7 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	echo "nameserver 4.4.4.4" >> $@/etc/resolv.conf
 
 # Package 'em all up
-SQUASHFS_OPTS=-force-uid 1000 -force-gid 1000 -comp xz -b 1048576 -Xdict-size 100%
+SQUASHFS_OPTS=-force-uid 0 -force-gid 0 -comp xz -b 1048576 -Xdict-size 100%
 shards: /tmp/rootfs
 	@ echo "Repackaging..."; \
 	for f in $</opt/*-*-*; do \
