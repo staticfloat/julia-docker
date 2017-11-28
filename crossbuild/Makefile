@@ -23,13 +23,16 @@ patches:
 define build_dockerfile
 # Running just `make build-crossbuild-x64` will build that image
 build-$(1): build/$(1)/Dockerfile
+	docker build --pull -t $(call crossbuild_tag_name,$(1)) "build/$(1)"
+
+buildsquash-$(1): build/$(1)/Dockerfile
 	$(DOCKER_BUILD) --pull -t $(call crossbuild_tag_name,$(1)) "build/$(1)"
 
 shell-$(1):
 	docker run -ti $(call crossbuild_tag_name,$(1))
 
 # Running `make push-ubuntu16_04-x86` will upload that image to
-push-$(1):
+push-$(1): buildsquash-$(1)
 	docker push $(call crossbuild_tag_name,$(1))
 
 # This is how we build the actual Dockerfile
@@ -68,36 +71,86 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	echo "Exporting..."; \
 	docker export $$CONTAINER_ID -o $@; \
 	echo "Stopping container..."; \
-	docker stop $$CONTAINER_ID
+	docker stop $$CONTAINER_ID >/dev/null
 
-# We need to remove special files that we can't extract properly on
-# host platforms here
-/tmp/rootfs.tar.gz: /tmp/rootfs.tar
+# Extract and cleanup the rootfs
+/tmp/rootfs: /tmp/rootfs.tar
 	@echo "Unpacking..."; \
-	rm -rf /tmp/rootfs; \
-	mkdir -p /tmp/rootfs; \
-	tar xf $< -C /tmp/rootfs; \
-   	echo "Beginning cleanup operations..."; \
-	rm -f /tmp/rootfs/dev/null; \
-	touch /tmp/rootfs/dev/null; \
-	touch /tmp/rootfs/dev/ptmx; \
-	rm -rf /tmp/rootfs/usr/share/terminfo; \
-	echo "Repackaging..."; \
-	GZIP=-9 tar zcf $@ -C /tmp/rootfs .; \
+	rm -rf $@; \
+	mkdir -p $@; \
+	tar xf $< -C $@; \
+	echo "Cleaning up $@..."; \
+	rm -f $@/dev/null; \
+	touch $@/dev/null; \
+	touch $@/dev/ptmx; \
+	rm -rf $@/usr/share/terminfo; \
+	echo "Removing OSX SDK..."; \
+	rm -rf $@/opt/x86_64-apple-darwin14/MacOSX*.sdk; \
+	echo "Overwriting resolv.conf..."; \
+	echo "nameserver 8.8.8.8"  > $@/etc/resolv.conf; \
+	echo "nameserver 8.8.4.4" >> $@/etc/resolv.conf; \
+	echo "nameserver 4.4.4.4" >> $@/etc/resolv.conf
+
+# Package 'em all up
+SQUASHFS_OPTS=-force-uid 0 -force-gid 0 -comp xz -b 1048576 -Xdict-size 100%
+shards: /tmp/rootfs
+	@ echo "Repackaging..."; \
+	for f in $</opt/*-*-*; do \
+		f_target=$$(basename $${f}); \
+		f_out=/tmp/rootfs-$${f_target}; \
+		rm -f $${f_out}.tar.gz $${f_out}.squashfs; \
+		echo "  Packaging tar.gz $${f_target} shard from $${f}..."; \
+		GZIP=-9 tar zcf $${f_out}.tar.gz -C $${f}  .; \
+		echo "  Packaging squashfs $${f_target} shard from $${f}..."; \
+		mksquashfs $${f} $${f_out}.squashfs $(SQUASHFS_OPTS); \
+		echo "  Checksumming..."; \
+		shasum -a 256 $${f_out}.tar.gz | cut -d' ' -f1 > $${f_out}.tar.gz.sha256; \
+		shasum -a 256 $${f_out}.squashfs | cut -d' ' -f1 > $${f_out}.squashfs.sha256; \
+		echo "  Removing $${f_target} from unpacked directory..."; \
+		rm -rf $${f}; \
+	done; \
+	echo "Packaging tar.gz rootfs base..."; \
+	GZIP=-9 tar zcf /tmp/rootfs-base.tar.gz -C $< .; \
+	echo "Packaging squashfs rootfs base..."; \
+	mksquashfs $< /tmp/rootfs-base.squashfs $(SQUASHFS_OPTS); \
+	echo "Checksumming..."; \
+	shasum -a 256 /tmp/rootfs-base.tar.gz | cut -d' ' -f1 > /tmp/rootfs-base.tar.gz.sha256; \
+	shasum -a 256 /tmp/rootfs-base.squashfs | cut -d' ' -f1 > /tmp/rootfs-base.squashfs.sha256; \
 	echo "Final cleanup..."; \
 	rm -rf /tmp/rootfs
 
-/tmp/rootfs.tar.gz.sha256: /tmp/rootfs.tar.gz
-	@shasum -a 256 $< | cut -d' ' -f1 > $@
-
-push-rootfs: /tmp/rootfs.tar.gz /tmp/rootfs.tar.gz.sha256
+push-rootfs: shards
 	@echo "Uploading to S3..."
 	@ DATE_STR=$$(date +%Y-%m-%d); \
-	aws s3 cp --acl public-read /tmp/rootfs.tar.gz s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz; \
-	aws s3 cp --acl public-read /tmp/rootfs.tar.gz.sha256 s3://julialangmirror/binarybuilder-rootfs-$${DATE_STR}.tar.gz.sha256; \
-	echo "URL: https://julialangmirror.s3.amazonaws.com/binarybuilder-rootfs-$${DATE_STR}.tar.gz"; \
-	echo "hash: $$(cat /tmp/rootfs.tar.gz.sha256)"
+	for f in /tmp/rootfs-*.tar.gz; do \
+		f_tarball=$${f}; \
+		f_squashfs=$${f%.*.*}.squashfs; \
+		f_prefix=$$(basename $${f%.*.*}); \
+		s3_prefix="s3://julialangmirror/binarybuilder"; \
+		url_prefix="https://julialangmirror.s3.amazonaws.com/binarybuilder"; \
+		aws s3 cp --acl public-read $${f_tarball} $${s3_prefix}-$${f_prefix}-$${DATE_STR}.tar.gz; \
+		aws s3 cp --acl public-read $${f_squashfs} $${s3_prefix}-$${f_prefix}-$${DATE_STR}.squashfs; \
+		aws s3 cp --acl public-read $${f_tarball}.sha256 $${s3_prefix}-$${f_prefix}-$${DATE_STR}.tar.gz.sha256; \
+		aws s3 cp --acl public-read $${f_squashfs}.sha256 $${s3_prefix}-$${f_prefix}-$${DATE_STR}.squashfs.sha256; \
+	done
 
+print-hashes:
+	@# Print out the squashfs hashes first
+	@echo "    squashfs_hashes = Dict("
+	@for f in /tmp/rootfs-*.squashfs; do \
+		f_prefix=$$(basename $${f%.*}); \
+		triplet=$${f_prefix:7}; \
+		echo "        \"$${triplet}\" => \"$$(cat $${f}.sha256)\","; \
+	done
+	@echo "    )"
+	@# Then print out the tarball hashes:
+	@echo "    tarball_hashes = Dict("
+	@for f in /tmp/rootfs-*.tar.gz; do \
+		f_prefix=$$(basename $${f%.*.*}); \
+		triplet=$${f_prefix:7}; \
+		echo "        \"$${triplet}\" => \"$$(cat $${f}.sha256)\","; \
+	done
+	@echo "    )"
 
 
 clean:

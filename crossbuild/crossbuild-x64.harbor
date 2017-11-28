@@ -79,7 +79,9 @@ INCLUDE lib/binutils_install
 # Install CMake toolchain files and patch CMake defaults
 WORKDIR /
 COPY cmake_toolchains /downloads/cmake_toolchains
-RUN cp /downloads/cmake_toolchains/* /opt
+RUN for f in /downloads/cmake_toolchains/*; do \
+        cp -v $f /opt/$(basename ${f%.*})/; \
+    done
 RUN patch -p0 < /downloads/patches/cmake_install.patch
 
 # Override normal uname with something that fakes out based on ${target}
@@ -96,14 +98,17 @@ RUN rm -rf /downloads /build.sh
 RUN apk del ${TEMPORARY_DEPS}
 RUN apk add libstdc++ libgcc
 
+# Also install glibc, to do so we need to first import a packaging key
+RUN curl -q -# -L https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub
+RUN curl -q -# -L https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.26-r0/glibc-2.26-r0.apk -o /tmp/glibc.apk
+RUN apk add /tmp/glibc.apk
+RUN rm -f /tmp/glibc.apk
+
 # Use /entrypoint.sh to conditionally apply ${L32} since we can't use ARG
 # values within an actual ENTRYPOINT command.  :(
 RUN echo "#!/bin/bash" > /entrypoint.sh; \
     echo "${L32} \"\$@\"" >> /entrypoint.sh; \
     chmod +x /entrypoint.sh
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf; \
-    echo "nameserver 8.8.4.4" >> /etc/resolv.conf; \
-    echo "nameserver 4.4.4.4" >> /etc/resolv.conf
 
 # Set default workdir
 WORKDIR /workspace
