@@ -119,6 +119,24 @@ target_to_darwin_sdk()
     esac
 }
 
+target_to_clang_target()
+{
+    case "$1" in
+        x86_64-apple-darwin14)
+            echo "x86_64-apple-macosx10.10"
+            ;;
+        x86_64-apple-darwin15)
+            echo "x86_64-apple-macosx10.11"
+            ;;
+        x86_64-apple-darwin16)
+            echo "x86_64-apple-macosx10.12"
+            ;;
+        x86_64-apple-darwin17)
+            echo "x86_64-apple-macosx10.13"
+            ;;
+    esac
+}
+
 
 get_sysroot()
 {
@@ -490,7 +508,7 @@ install_clang()
 
     ${L32} cmake -G "Unix Makefiles" \
         -DLLVM_PARALLEL_COMPILE_JOBS=3 \
-        -DLLVM_DEFAULT_TARGET_TRIPLE=${target} \
+        -DLLVM_DEFAULT_TARGET_TRIPLE=$(target_to_clang_target ${target}) \
         -DDEFAULT_SYSROOT="$(get_sysroot)" \
         -DCMAKE_BUILD_TYPE=Release\
         -DLLVM_ENABLE_ASSERTIONS=Off \
