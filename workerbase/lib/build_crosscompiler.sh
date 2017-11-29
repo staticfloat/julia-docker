@@ -163,6 +163,12 @@ download_gcc()
 
 install_gcc_bootstrap()
 {
+    GCC_CONF_ARGS=""
+
+    if [[ "${target}" == arm*hf ]]; then
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"
+    fi
+
     mkdir -p ${system_root}/src/gcc-${gcc_version}_bootstrap_build
     cd ${system_root}/src/gcc-${gcc_version}_bootstrap_build
     ${L32} ${system_root}/src/gcc-${gcc_version}/configure \
@@ -188,7 +194,8 @@ install_gcc_bootstrap()
         --disable-bootstrap \
         --with-glibc-version=$(echo $glibc_version | cut -d '.' -f 1-2) \
         --enable-languages=c \
-        --with-sysroot="$(get_sysroot)"
+        --with-sysroot="$(get_sysroot)" \
+        ${GCC_CONF_ARGS}
 
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
@@ -281,6 +288,10 @@ install_gcc()
     if [[ "${target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)" 
+    fi
+
+    if [[ "${target}" == arm*hf ]]; then
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"
     fi
 
     # Build gcc
