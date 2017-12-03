@@ -76,6 +76,9 @@ ENV target=""
 ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32 --prefix=/opt/super_binutils"
 INCLUDE lib/binutils_install
 
+# We also occasionally use objconv
+INCLUDE lib/objconv_install
+
 # Install CMake toolchain files and patch CMake defaults
 WORKDIR /
 COPY cmake_toolchains /downloads/cmake_toolchains

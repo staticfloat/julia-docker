@@ -92,7 +92,7 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	echo "nameserver 4.4.4.4" >> $@/etc/resolv.conf
 
 # Package 'em all up
-SQUASHFS_OPTS=-force-uid 0 -force-gid 0 -comp xz -b 1048576 -Xdict-size 100%
+SQUASHFS_OPTS=-force-uid 0 -force-gid 0 -comp xz -b 1048576 -Xdict-size 100% -noappend
 shards: /tmp/rootfs
 	@ echo "Repackaging..."; \
 	for f in $</opt/*-*-*; do \
@@ -109,6 +109,7 @@ shards: /tmp/rootfs
 		echo "  Removing $${f_target} from unpacked directory..."; \
 		rm -rf $${f}; \
 	done; \
+	rm -f /tmp/rootfs-base.tar.gz /tmp/rootfs-base.squashfs; \
 	echo "Packaging tar.gz rootfs base..."; \
 	GZIP=-9 tar zcf /tmp/rootfs-base.tar.gz -C $< .; \
 	echo "Packaging squashfs rootfs base..."; \
@@ -136,6 +137,7 @@ push-rootfs: shards
 
 print-hashes:
 	@# Print out the squashfs hashes first
+	@echo "    rootfs_version = \"$$(date +%Y-%m-%d)\""
 	@echo "    squashfs_hashes = Dict("
 	@for f in /tmp/rootfs-*.squashfs; do \
 		f_prefix=$$(basename $${f%.*}); \

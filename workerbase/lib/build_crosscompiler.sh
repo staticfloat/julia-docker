@@ -432,7 +432,6 @@ install_cctools()
     ${L32} autoreconf
     ${L32} ./autogen.sh
 
-    # cctools doesn't like 'x86_64h' target, so we strip out the 'h':
     ${L32} ./configure \
         --target=${target} \
         --prefix=/opt/${target} \
@@ -455,6 +454,8 @@ install_dsymutil()
     cd $system_root/src/llvm-dsymutil-${dsymutil_version}
     # Backport of https://reviews.llvm.org/D39297 to fix build on musl
     patch -p1 < $system_root/downloads/patches/dsymutil_llvm_dynlib.patch
+    # Make this `ar` able to use `-rcu`
+    patch -p1 < $system_root/downloads/patches/llvm_ar_options.patch
 
     # Install dsymutil
     mkdir -p $system_root/src/llvm-dsymutil-${dsymutil_version}/build
@@ -498,6 +499,10 @@ download_llvm()
 
     #cd $system_root/src/llvm/projects
     #git clone ${libcxx_url} -b ${llvm_version}
+
+    # Apply patch to LLVM for ar's `-rcu` abilities
+    cd $system_root/src/llvm
+    patch -p1 < /downloads/patches/llvm_ar_options.patch
 }
 
 install_clang()

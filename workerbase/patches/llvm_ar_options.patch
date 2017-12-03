@@ -1,0 +1,70 @@
+From af481e4f940025c84ce601e68fdedbc1bd22cdd2 Mon Sep 17 00:00:00 2001
+From: Martin Storsjo <martin@martin.st>
+Date: Fri, 3 Nov 2017 20:09:10 +0000
+Subject: [PATCH] [llvm-ar] Support an options string that start with a dash
+
+Some projects call $AR like "$AR -crs output input1 input2".
+
+Differential Revision: https://reviews.llvm.org/D39538
+
+git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@317358 91177308-0d34-0410-b5e6-96231b3b80d8
+---
+ test/tools/llvm-ar/default-add.test |  3 ++-
+ tools/llvm-ar/llvm-ar.cpp           | 20 ++++++++++++++++++++
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/test/tools/llvm-ar/default-add.test b/test/tools/llvm-ar/default-add.test
+index 88719e4..68e41c2 100644
+--- a/test/tools/llvm-ar/default-add.test
++++ b/test/tools/llvm-ar/default-add.test
+@@ -4,7 +4,8 @@ RUN: yaml2obj %S/Inputs/coff.yaml -o %t-coff.o
+ RUN: rm -f %t.ar
+ RUN: llvm-ar crs %t.ar %t-macho.o
+ RUN: grep -q __.SYMDEF %t.ar
+-RUN: llvm-ar crs %t.ar %t-coff.o
++Test that an option string prefixed by a dash works.
++RUN: llvm-ar -crs %t.ar %t-coff.o
+ RUN: grep -q __.SYMDEF %t.ar
+ 
+ RUN: rm -f %t.ar
+diff --git a/tools/llvm-ar/llvm-ar.cpp b/tools/llvm-ar/llvm-ar.cpp
+index 576265c..8c19f6b 100644
+--- a/tools/llvm-ar/llvm-ar.cpp
++++ b/tools/llvm-ar/llvm-ar.cpp
+@@ -127,6 +127,8 @@ static cl::extrahelp MoreHelp(
+   "  [v] - be verbose about actions taken\n"
+ );
+ 
++static const char OptionChars[] = "dmpqrtxabiosSTucv";
++
+ // This enumeration delineates the kinds of operations on an archive
+ // that are permitted.
+ enum ArchiveOperation {
+@@ -864,6 +866,24 @@ int main(int argc, char **argv) {
+       Stem.find("lib") != StringRef::npos)
+     return libDriverMain(makeArrayRef(argv, argc));
+ 
++  for (int i = 1; i < argc; i++) {
++    // If an argument starts with a dash and only contains chars
++    // that belong to the options chars set, remove the dash.
++    // We can't handle it after the command line options parsing
++    // is done, since it will error out on an unrecognized string
++    // starting with a dash.
++    // Make sure this doesn't match the actual llvm-ar specific options
++    // that start with a dash.
++    StringRef S = argv[i];
++    if (S.startswith("-") &&
++        S.find_first_not_of(OptionChars, 1) == StringRef::npos) {
++      argv[i]++;
++      break;
++    }
++    if (S == "--")
++      break;
++  }
++
+   // Have the command line options parsed and handle things
+   // like --help and --version.
+   cl::ParseCommandLineOptions(argc, argv,
+-- 
+2.7.4
+
