@@ -9,6 +9,7 @@ COPY download_unpack.sh /usr/bin
 
 # We use a `tar` wrapper to insert extra command line flags on every tar command
 COPY tar_wrapper.sh /usr/local/bin/tar
+RUN chmod +x /usr/local/bin/tar
 
 # Install build tools (BUILD_TOOLS are things needed during the build, but not at runtime)
 ARG TEMPORARY_DEPS="gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev"
