@@ -134,6 +134,7 @@ push-rootfs: shards
 		aws s3 cp --acl public-read $${f_tarball}.sha256 $${s3_prefix}-$${f_prefix}-$${DATE_STR}.tar.gz.sha256; \
 		aws s3 cp --acl public-read $${f_squashfs}.sha256 $${s3_prefix}-$${f_prefix}-$${DATE_STR}.squashfs.sha256; \
 	done
+	$(MAKE) print-hashes
 
 print-hashes:
 	@# Print out the squashfs hashes first
