@@ -88,6 +88,12 @@ RUN for f in /downloads/cmake_toolchains/*; do \
     done
 RUN patch -p0 < /downloads/patches/cmake_install.patch
 
+# Install sandbox
+ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/master/deps/sandbox.c /sandbox.c
+#COPY sandbox.c sandbox.c
+RUN /opt/x86_64-linux-gnu/bin/gcc -std=c99 -o /sandbox /sandbox.c
+RUN rm -f /sandbox.c
+
 # Override normal uname with something that fakes out based on ${target}
 COPY fake_uname.sh /usr/local/bin/uname
 RUN chmod +x /usr/local/bin/uname
@@ -113,6 +119,9 @@ RUN rm -f /tmp/glibc.apk
 RUN echo "#!/bin/bash" > /entrypoint.sh; \
     echo "${L32} \"\$@\"" >> /entrypoint.sh; \
     chmod +x /entrypoint.sh
+
+# Create /overlay_workdir so that we know we can always mount an overlay there
+RUN mkdir /overlay_workdir
 
 # Set default workdir
 WORKDIR /workspace
