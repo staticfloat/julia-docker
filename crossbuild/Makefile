@@ -155,6 +155,20 @@ print-hashes:
 	done
 	@echo "    )"
 
+rootfs-fast: /tmp/rootfs
+	@ echo "Fast-Repackaging base rootfs..."; \
+	rm -rf $</opt/*-*-*; \
+	rm -f /tmp/rootfs-base.tar.gz /tmp/rootfs-base.squashfs; \
+	echo "Packaging tar.gz rootfs base..."; \
+	GZIP=-9 tar zcf /tmp/rootfs-base.tar.gz -C $< .; \
+	echo "Packaging squashfs rootfs base..."; \
+	mksquashfs $< /tmp/rootfs-base.squashfs $(SQUASHFS_OPTS); \
+	echo "Checksumming..."; \
+	shasum -a 256 /tmp/rootfs-base.tar.gz | cut -d' ' -f1 > /tmp/rootfs-base.tar.gz.sha256; \
+	shasum -a 256 /tmp/rootfs-base.squashfs | cut -d' ' -f1 > /tmp/rootfs-base.squashfs.sha256; \
+	echo "Final cleanup..."; \
+	rm -rf /tmp/rootfs
+	$(MAKE) print-hashes
 
 clean:
 	rm -rf build lib patches
