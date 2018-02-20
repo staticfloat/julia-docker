@@ -1,5 +1,5 @@
 ## Install GCC
-ARG gcc_version=7.2.0
+ARG gcc_version=7.3.0
 ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
 
 # Download and unpack gcc
