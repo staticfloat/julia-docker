@@ -19,7 +19,7 @@
 #   target
 #   linux_version (defaults to 4.12)
 #   binutils_version (defaults to 2.28)
-#   gcc_version (defaults to 7.2.0)
+#   gcc_version (defaults to 7.3.0)
 #   glibc_version (defaults to 2.17)
 
 ## To build a cross-compile for OSX targets we:
@@ -43,7 +43,7 @@
 #   libtapi_version (defaults to 1.30.0)
 #   cctools_version (defaults to 22ebe727a5cdc21059d45313cf52b4882157f6f0)
 #   dsymutil_version (defaults to 6fe249efadf6139a7f271fee87a5a0f44e2454cf)
-#   gcc_version (defaults to 7.1.0)
+#   gcc_version (defaults to 7.3.0)
 #   llvm_version (defaults to release_50)
 
 # This is useful for debugging outside the container
@@ -52,8 +52,9 @@ system_root=${system_root:=}
 # Set defaults of envvars
 linux_version=${linux_version:-4.12}
 binutils_version=${binutils_version:-2.29.1}
-gcc_version=${gcc_version:-7.2.0}
+gcc_version=${gcc_version:-7.3.0}
 glibc_version=${glibc_version:-2.17}
+musl_version=${musl_version:-1.1.16}
 
 # osx defaults
 libtapi_version=${libtapi_version:-1.30.0}
@@ -62,7 +63,7 @@ dsymutil_version=${dsymutil_version:-6fe249efadf6139a7f271fee87a5a0f44e2454cf}
 llvm_version=release_50
 
 # windows defaults
-mingw_version=${mingw_version:-5.0.2}
+mingw_version=${mingw_version:-5.0.3}
 
 # By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
 nproc_cmd='nproc'
@@ -177,6 +178,17 @@ download_gcc()
     download_unpack.sh "${gcc_url}"
     cd ${system_root}/src/gcc-${gcc_version}
     ${L32} contrib/download_prerequisites
+
+    # Update config.{guess,sub} for all subprojects, as they often are out of date
+    curl -L 'http://git.savannah.gnu.org/cgit/config.git/plain/config.guess' > config.guess
+    curl -L 'http://git.savannah.gnu.org/cgit/config.git/plain/config.sub' > config.sub
+
+    for f in *-*; do
+        if [ -f ${f}/config.guess ]; then
+            cp config.guess ${f}/
+            cp config.sub ${f}/
+        fi
+    done
 }
 
 install_gcc_bootstrap()
@@ -225,9 +237,36 @@ install_gcc_bootstrap()
 
 }
 
+install_musl()
+{
+    musl_url="https://www.musl-libc.org/releases/musl-${musl_version}.tar.gz"
+    cd ${system_root}/src
+    download_unpack.sh "${musl_url}"
+
+    # build musl
+    mkdir -p ${system_root}/src/musl-${musl_version}_build
+    cd ${system_root}/src/musl-${musl_version}_build
+    ${L32} ${system_root}/src/musl-${musl_version}/configure \
+        --prefix=/usr \
+        --host=${target} \
+        --with-headers="$(get_sysroot)/usr/include" \
+        --with-binutils=${system_root}/opt/${target}/bin \
+        --disable-multilib \
+        --disable-werror \
+        CROSS_COMPILE="${target}-"
+
+    ${L32} make -j${nproc}
+
+    # install musl
+    sudo -E ${L32} make install DESTDIR="$(get_sysroot)"
+
+    # Cleanup
+    cd ${system_root}/src
+    sudo -E rm -rf musl-${musl_version}*    
+}
+
 install_glibc()
 {
-    # First argument is the version
     glibc_url="http://mirrors.peers.community/mirrors/gnu/glibc/glibc-${glibc_version}.tar.xz"
     cd ${system_root}/src
     download_unpack.sh "${glibc_url}"
@@ -310,6 +349,17 @@ install_gcc()
 
     if [[ "${target}" == arm*hf ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"
+    fi
+
+    # musl does not support mudflap, or libsanitizer
+    # libmpx uses secure_getenv and struct _libc_fpstate not present in musl
+    # alpine musl provides libssp_nonshared.a, so we don't need libssp either
+    if [[ "${target}" == *musl* ]]; then
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libssp --disable-libmpx"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libmudflap --disable-libsanitizer"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-symvers"
+
+        export libat_cv_have_ifunc=no
     fi
 
     # Build gcc
