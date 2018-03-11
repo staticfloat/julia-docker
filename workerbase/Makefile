@@ -13,7 +13,7 @@ $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,pushall,push-$(f))))
 
 # Search Dockerfiles for INCLUDE statements and add them to the make dependency
 # tree, so that changing a dependency will rebuild the Dockerfile.
-$(foreach f,$(HFS),$(eval $(call add_dep,build/$(f)/Dockerfile,../dockerdeps $(f).Dockerfile)))
+$(foreach f,$(HFS),$(eval $(call add_dep,build/$(f)/Dockerfile,$(shell ../dockerdeps ./$(f).Dockerfile))))
 
 define build_dockerfile
 # Running just `make build-ubuntu16_04-x86` will build that image
