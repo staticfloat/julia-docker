@@ -12,9 +12,9 @@ BUILD_ARCHS=aarch64 armv7l
 endif
 ARCH_FILTER=$(addprefix %-,$(BUILD_ARCHS))
 
-# Begin by listing all the Harborfiles in the `workerbase/` directory, and
+# Begin by listing all the Dockerfiles in the `workerbase/` directory, and
 # storing those into $(HFS). Many of our rules will be built from these names
-HFS=$(notdir $(basename $(wildcard $(dir $(MAKEFILE_LIST))/workerbase/*.harbor)))
+HFS=$(notdir $(basename $(wildcard $(dir $(MAKEFILE_LIST))/workerbase/*.Dockerfile)))
 
 # Build a second list that is filtered by our build architecture and OS, because
 # win can't build for non-win (and vice versa) and x86 can't build for ppc64le.
@@ -44,15 +44,6 @@ endef
 define crossbuild_tag_name
 $(strip staticfloat/julia_$(firstword $(subst -, ,$(1)))):$(lastword $(subst -, ,$(1)))
 endef
-
-
-# Helper function that takes in a Harborfile path and spits out all the
-# harborfiles it has as a dependency.  This is nonrecursive, because that would
-# just be ridiculous, and I can't be bothered to do it.
-define harborfile_deps
-$(shell cat $(1) | grep '^INCLUDE' | awk '{print $$2 ".harbor";}')
-endef
-
 
 # If we have `--squash` support, then use it!
 ifneq ($(shell docker build --help 2>/dev/null | grep squash),)

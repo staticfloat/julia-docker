@@ -1,7 +1,7 @@
 worker base docker images
 =========================
 
-To build Julia worker base docker images, first install [harbor](https://github.com/leethomas/harbor) with `gem install harbordock`, then run `make` in this directory.  The result will be docker images named things like `julia_workerbase_centos5_11:x64` and `julia_workerbase_ubuntu16_04:x86`.  These images are what are deployed onto in order to create buildworkers, as these images contain things like very recent versions of `gcc`, `python`, `cmake`, etc...
+To build Julia worker base docker images, run `make` in this directory to generate `Dockerfile` directories within `build`, then run `make <image name>`.  The result will be docker images named things like `julia_workerbase_centos5_11:x64` and `julia_workerbase_ubuntu16_04:x86`.  These images are what are deployed onto in order to create buildworkers, as these images contain things like very recent versions of `gcc`, `python`, `cmake`, etc...
 
 To generate all the `Dockerfile`s without actually building the docker images, run `make`, or `make dockerfiles`, if you like to be verbose.  This is the default behavior.
 

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# spits out a Dockerfile, inlining any `INCLUDE` statements it finds
+
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 path/to/Dockerfile"
+    exit 1
+fi
+
+if [[ ! -f "$1" ]]; then
+    echo "$1 does not exist!" 1>&2
+    exit 1
+fi
+
+function cat_inlined()
+{
+    cd "$(dirname "$1")"
+    while read line || [[ -n "$line" ]]; do
+        INC_FILE=$(echo $line | sed -n 's_^INCLUDE \(.*\)_\1_p')
+        if [[ -n "$INC_FILE" ]]; then
+            if [[ ! -f "$INC_FILE" ]]; then
+                # Check to see if it's just missing the .Dockerfile at the end
+                if [[ -f "$INC_FILE.Dockerfile" ]]; then
+                    INC_FILE="$INC_FILE.Dockerfile"
+                else
+                    echo "ERROR: Could not INCLUDE $INC_FILE"
+                    exit 1
+                fi
+            fi
+            (cat_inlined "$INC_FILE")
+        else
+            echo $line
+        fi
+    done < "$(basename "$1")"
+}
+
+(cat_inlined "$1")
