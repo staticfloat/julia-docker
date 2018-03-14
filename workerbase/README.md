@@ -15,3 +15,6 @@ To push the resulting docker images to the Docker Hub, run `make pushall`, or `m
 
 ## Multiarch support
 Experimental multiarch support is being added for all non-`x86` architectures. All non-`x86` images have a `qemu-*-static` binary in `/usr/bin` that can be used as the entrypoint on an `x86_64` machine.  This allows normal usage of the docker image as if it were being used on a native hardware stack of whatever exotic architecture you desire.
+
+To run e.g. the `armv7l` buildbot image on your `x86_64` system using QEMU for emulation, first run the `qemu_register.sh` script with `sudo` to register the `qemu` paths within docker containers as a valid interpreter for foreign `armv7l`, `aarch64` and `ppc64le` binaries.
+
