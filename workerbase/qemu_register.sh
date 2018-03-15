@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+if [ $(id -u) != "0" ]; then
+    echo "Warning: not running as root, this probably won't work..."
+fi
+
 # Mount if neccessary
 if [ ! -d /proc/sys/fs/binfmt_misc ]; then
   	echo "No binfmt support in the kernel."
