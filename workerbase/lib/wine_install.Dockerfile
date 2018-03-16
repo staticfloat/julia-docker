@@ -1,23 +1,39 @@
 USER root
-# Install libpng
-RUN [[ -n "$(which yum 2>/dev/null)" ]] && yum install -y libpng-devel || true
-RUN [[ -n "$(which apt-get 2>/dev/null)" ]] && apt-get install -y libpng-dev || true
-
-USER buildworker
 WORKDIR /src
 
-ARG wine_version=2.0.3
+ARG wine_version=3.1
 
 RUN git clone https://github.com/wine-mirror/wine.git -b wine-${wine_version}
 WORKDIR /src/wine
-RUN ${L32} ./configure --without-x --without-freetype --enable-win64 --with-png
+
+# Install some dependencies
+RUN [[ -n "$(which yum 2>/dev/null)" ]] && yum install -y libpng-devel libjpeg-dev libxslt-dev libgnutls-dev || true
+RUN [[ -n "$(which apt-get 2>/dev/null)" ]] && apt-get install -y libpng-dev libjpeg-dev libxslt-dev libgnutls-dev || true
+RUN [[ -n "$(which apk 2>/dev/null)" ]] && apk add libpng-dev libjpeg-turbo-dev libxslt-dev gnutls-dev || true
+
+# Patch -no-pie into LDFLAGS 
+RUN patch -p1 < /downloads/patches/wine_nopie.patch
+
+# First, build wine64
+RUN mkdir /src/wine64_build
+WORKDIR /src/wine64_build
+RUN ${L32} /src/wine/configure --without-x --without-freetype --enable-win64
 RUN ${L32} make -j3
 
-USER root
-RUN ${L32} make install
-WORKDIR /src
-RUN rm -rf wine
+# Next, build wine32
+RUN mkdir /src/wine32_build
+WORKDIR /src/wine32_build
+RUN ${L32} /src/wine/configure --without-x --without-freetype --with-wine64=/src/wine64_build
+RUN ${L32} make -j3
 
-# Wine installs under `wine64`, but we still want it available via `wine`
-RUN [[ -f /usr/local/bin/wine64 ]] && ln -s /usr/local/bin/wine64 /usr/local/bin/wine
+# Now install wine32, and THEN wine64... le sigh...
+USER root
+WORKDIR /src/wine32_build
+RUN ${L32} make install
+WORKDIR /src/wine64_build
+RUN ${L32} make install
+
+# cleanup
+WORKDIR /src
+RUN rm -rf wine*
 
