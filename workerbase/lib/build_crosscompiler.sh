@@ -46,6 +46,17 @@
 #   gcc_version (defaults to 7.3.0)
 #   llvm_version (defaults to release_50)
 
+## To build a cross-compile for FreeBSD targets we:
+# 1) Install LLVM/clang
+# 2) ...
+## These steps are given by the following bash functions
+#   install_clang
+#   ...
+#
+# Ensure that you have set the following environment variables:
+#   target
+#   ...
+
 # This is useful for debugging outside the container
 system_root=${system_root:=}
 
@@ -64,6 +75,9 @@ llvm_version=release_50
 
 # windows defaults
 mingw_version=${mingw_version:-5.0.3}
+
+# freebsd defaults
+freebsd_version=${freebsd_version:-11.1}
 
 # By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
 nproc_cmd='nproc'
@@ -166,6 +180,20 @@ install_kernel_headers()
     # Cleanup
     cd $system_root/src
     sudo -E rm -rf linux-${linux_version}
+}
+
+## Function to download and install FreeBSD headers
+install_freebsd_headers() {
+    freebsd_url="https://download.freebsd.org/ftp/releases/amd64/11.1-RELEASE/base.txz"
+
+    # Download and install FreeBSD headers
+    cd $system_root/src
+    download_unpack.sh "${freebsd_url}"
+    cd $system_root/src/freebsd-${freebsd_version}
+
+    # Cleanup
+    cd $system_root/src
+    sudo -E rm -rf freebsd-${freebsd_version}
 }
 
 download_gcc()
