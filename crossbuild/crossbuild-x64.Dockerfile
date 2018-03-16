@@ -77,10 +77,17 @@ INCLUDE lib/win_crosscompiler_install
 ENV gcc_version=""
 
 # Build gcc for musl linux.
-ENV target="x86_64-alpine-linux-musl"
+ENV target="x86_64-linux-musl"
 INCLUDE lib/linux_crosscompiler_install
-ENV target="i686-alpine-linux-musl"
+ENV target="i686-linux-musl"
 INCLUDE lib/linux_crosscompiler_install
+ENV target="arm-linux-musleabihf"
+INCLUDE lib/linux_crosscompiler_install
+ENV target="aarch64-linux-musl"
+INCLUDE lib/linux_crosscompiler_install
+# This doesn't work yet, fails with "error: unsupported long double type"
+#ENV target="powerpc64le-linux-musl"
+#INCLUDE lib/linux_crosscompiler_install
 ENV target=""
 
 # We want a super binutils, so build it up

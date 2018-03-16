@@ -5,7 +5,7 @@ RUN source /build.sh; set -e; install_gcc_bootstrap
 
 # If we're targeting a *-musl platform, install `musl` isntead of `glibc`
 RUN source /build.sh; set -e; \
-    if [[ ${target} == *-musl ]]; then \
+    if [[ ${target} == *-musl* ]]; then \
         install_musl; \
     else \
         install_glibc; \
