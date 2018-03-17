@@ -3,6 +3,6 @@ USER root
 RUN [ -z $(which apt-get 2>/dev/null) ] || apt-get install -y binfmt-support
 
 # Download latest qemu-user-static releases
-ARG QEMU_VER=2.11
-RUN curl -L https://github.com/multiarch/qemu-user-static/releases/download/v${QEMU_VER}/qemu-${QEMU_ARCH}-static -o /usr/bin/qemu-${QEMU_ARCH}-static
-RUN chmod +x /usr/bin/qemu-${QEMU_ARCH}-static
+ARG qemu_version=2.11.0
+RUN curl -L https://github.com/multiarch/qemu-user-static/releases/download/v${qemu_version}/qemu-${qemu_arch}-static -o /usr/bin/qemu-${qemu_arch}-static
+RUN chmod +x /usr/bin/qemu-${qemu_arch}-static

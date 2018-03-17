@@ -13,7 +13,7 @@ INCLUDE lib/builddeps_apt
 INCLUDE lib/build_tools
 
 # This enables qemu-*-static emulation on x86_64
-ARG QEMU_ARCH=arm
+ARG qemu_arch=arm
 INCLUDE lib/multiarch
 
 INCLUDE lib/omega
