@@ -13,7 +13,7 @@ fi
 function cat_deps()
 {
     # Print out this file
-    abspath "$1"
+    (cd $(dirname "$1"); echo $(pwd)/$(basename "$1"))
     
     # See if we need to recurse
     cd "$(dirname "$1")"
