@@ -1,8 +1,6 @@
 ## Install git
 ARG git_version=2.11.0
 ARG git_url=https://github.com/git/git/archive/v${git_version}.tar.gz
-
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack git

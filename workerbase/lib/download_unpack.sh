@@ -14,7 +14,7 @@ if [[ ! -f ${TARBALL} ]]; then
 fi
 
 # Extract it into the current directory
-if [[ "${TARBALL}" == *.tar.gz ]]; then
+if [[ "${TARBALL}" == *.tar.gz ]] || [[ "${TARBALL}" == *.tgz ]]; then
     tar zxf "${TARBALL}"
 elif [[ "${TARBALL}" == *.tar.bz2 ]]; then
     tar jxf "${TARBALL}"

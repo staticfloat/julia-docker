@@ -3,7 +3,6 @@ ARG gcc_version=7.3.0
 ARG gcc_url=https://mirrors.kernel.org/gnu/gcc/gcc-${gcc_version}/gcc-${gcc_version}.tar.xz
 
 # Download and unpack gcc
-USER buildworker
 WORKDIR /src
 RUN download_unpack.sh "${gcc_url}"
 

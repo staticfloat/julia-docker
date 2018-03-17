@@ -1,8 +1,6 @@
 ## Install libtool
 ARG libtool_version=2.4.6
 ARG libtool_url=http://ftpmirror.gnu.org/libtool/libtool-${libtool_version}.tar.gz
-
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack libtool
