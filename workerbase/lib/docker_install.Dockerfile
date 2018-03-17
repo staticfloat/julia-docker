@@ -17,3 +17,5 @@ RUN mv docker/docker bin/
 # Remove docker executables we don't need
 RUN rm -rf docker
 
+# Install docker-compose
+RUN pip install docker-compose
