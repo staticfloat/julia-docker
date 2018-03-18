@@ -9,7 +9,7 @@ RUN M="$(uname -m)"; \
     if [[ "$M" == "armv7l" ]]; then \
         M="armhf"; \
     fi; \
-    download_unpack "https://download.docker.com/linux/static/stable/${M}/docker-${docker_version}.tgz"
+    download_unpack.sh "https://download.docker.com/linux/static/stable/${M}/docker-${docker_version}.tgz"
 
 # Copy across docker executables we need
 RUN mv docker/docker bin/
