@@ -54,6 +54,8 @@ pull-$(1):
 	docker pull $(call worker_tag_name,$(1))
 
 deploy-$(1): build-$(1) ipv6_internal
+	@# chmod /var/run/docker.sock so that our docker guests can create images too
+	@sudo chmod o+rw /var/run/docker.sock
 	@# Build our new worker, take down the old one and bring the new one up
 	@cd build/$(1); \
 	docker-compose build --pull; \
