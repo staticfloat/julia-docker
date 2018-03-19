@@ -1,6 +1,6 @@
 # Install docker static binary
 USER root
-WORKDIR /usr/local
+WORKDIR /tmp/docker
 ARG docker_version="17.12.1-ce"
 RUN M="$(uname -m)"; \
     if [[ "$M" == "i686" ]]; then \
@@ -12,7 +12,7 @@ RUN M="$(uname -m)"; \
     download_unpack.sh "https://download.docker.com/linux/static/stable/${M}/docker-${docker_version}.tgz"
 
 # Copy across docker executables we need
-RUN mv docker/docker bin/
+RUN mv docker/docker /usr/local/bin/
 
 # Remove docker executables we don't need
 RUN rm -rf docker
