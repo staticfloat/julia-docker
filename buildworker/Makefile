@@ -43,6 +43,7 @@ build/$(1)/docker-compose.yml: docker-compose.template.yml override.env secret.e
 	@cat secret.env >> "build/$(1)/.env"
 	@[ ! -f override.env ] || cat override.env >> "build/$(1)/.env"
 	@sed -e "s/{service_name}/$(1)/g" docker-compose.template.yml > "build/$(1)/docker-compose.yml"
+	@sed -i.bak -e "s&{home}&$(HOME)&g" "build/$(1)/docker-compose.yml"
 	@case $(call worker_tag_name,$(1)) in \
 		*x86) sed -i.bak -e "s/{linux32}/linux32/g" "build/$(1)/docker-compose.yml";; \
 		*)    sed -i.bak -e "s/{linux32}/       /g" "build/$(1)/docker-compose.yml";; \
