@@ -97,7 +97,7 @@ INCLUDE lib/freebsd_crosscompiler_install
 ENV target=""
 
 # We want a super binutils, so build it up
-ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32 --prefix=/opt/super_binutils"
+ARG binutils_configure_flags="--enable-targets=x86_64-linux-gnu,i686-linux-gnu,aarch64-linux-gnu,arm-linux-gnueabihf,powerpc64le-linux-gnu,x86_64-w64-mingw32,i686-w64-mingw32,x86_64-unknown-freebsd --prefix=/opt/super_binutils"
 INCLUDE lib/binutils_install
 
 # We also occasionally use objconv
