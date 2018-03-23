@@ -17,7 +17,7 @@ RUN pip install --upgrade pip
 # without caching in case there's a new version of buildbot out
 ADD https://pypi.python.org/pypi?:action=doap&name=buildbot /buildbot_doap.xml
 RUN pip install psycopg2 buildbot[tls,bundle] urllib3[secure] requests ipython \
-                buildbot_profiler docker
+                buildbot_profiler docker awscli
 
 # Clone/configure buildbot configuration
 # the ADD command is to rebuild the rest of the image from here on out
@@ -34,12 +34,12 @@ RUN echo "db_password=\"${db_password}\"" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
 COPY julia.gpg /root/
-COPY awssecret /root/.awssecret
+RUN mkdir -p /root/.aws
+COPY aws_credentials /root/.aws/credentials
+RUN chmod 0600 /root/.aws/credentials
 RUN mkdir -p /root/.gnupg
 RUN gpg --import /root/julia.gpg
 COPY try_thrice /root/bin/try_thrice
-ADD https://raw.githubusercontent.com/timkay/aws/master/aws /root/bin/aws
-RUN chmod +x /root/bin/aws
 
 # Install entrypoint and run it!
 COPY entrypoint.sh /entrypoint.sh
