@@ -42,6 +42,9 @@ m_flag()
         x86_64*)
             echo "x86_64"
             ;;
+        i686*)
+            echo "i686"
+            ;;
         aarch64*)
             echo "aarch64"
             ;;
