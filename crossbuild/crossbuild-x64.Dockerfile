@@ -108,12 +108,15 @@ RUN patch -p0 < /downloads/patches/cmake_install.patch
 # Install sandbox
 ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/master/deps/sandbox.c /sandbox.c
 #COPY sandbox.c sandbox.c
-RUN /opt/x86_64-linux-gnu/bin/gcc -std=c99 -o /sandbox /sandbox.c
-RUN rm -f /sandbox.c
+RUN /opt/x86_64-linux-gnu/bin/gcc -std=c99 -o /sandbox /sandbox.c; rm -f /sandbox.c
 
 # Override normal uname with something that fakes out based on ${target}
 COPY fake_uname.sh /usr/local/bin/uname
-RUN chmod +x /usr/local/bin/uname
+# Copy in our update_configure_scripts script
+COPY update_configure_scripts.sh /usr/local/bin/update_configure_scripts
+
+# Make sure everything in /usr/local/bin is executable
+RUN chmod +x /usr/local/bin/*
 
 # We need to override the ld conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64:/usr/local/lib:/lib:/usr/local/lib:/usr/lib" > /etc/ld-musl-x86_64.path
@@ -128,8 +131,7 @@ RUN apk add libstdc++ libgcc
 # Also install glibc, to do so we need to first import a packaging key
 RUN curl -q -# -L https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub
 RUN curl -q -# -L https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.26-r0/glibc-2.26-r0.apk -o /tmp/glibc.apk
-RUN apk add /tmp/glibc.apk
-RUN rm -f /tmp/glibc.apk
+RUN apk add /tmp/glibc.apk; rm -f /tmp/glibc.apk
 
 # Use /entrypoint.sh to conditionally apply ${L32} since we can't use ARG
 # values within an actual ENTRYPOINT command.  :(
