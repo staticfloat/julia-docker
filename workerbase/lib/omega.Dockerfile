@@ -7,11 +7,8 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     mv /etc/ld.so.conf.new /etc/ld.so.conf; \
     ldconfig
 
-# Cleanup downloads
-RUN rm -rf /downloads
-
-# Cleanup build.sh if it exists
-RUN rm -f /build.sh
+# Cleanup downloads and build.sh
+RUN rm -rf /downloads /build.sh
 
 # Remove bootstrapping compiler toolchain if we need to
 RUN if [[ -n "${TEMPORARY_DEPS}" ]]; then \

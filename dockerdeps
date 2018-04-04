@@ -13,11 +13,11 @@ fi
 function cat_deps()
 {
     # Print out this file
-    abspath "$1"
+    (cd $(dirname "$1"); echo $(pwd)/$(basename "$1"))
     
     # See if we need to recurse
     cd "$(dirname "$1")"
-    while read line || [[ -n "$line" ]]; do
+    while read -r line || [[ -n "$line" ]]; do
         INC_FILE=$(echo $line | sed -n 's_^INCLUDE \(.*\)_\1_p')
 		if [[ -n "$INC_FILE" ]]; then
 			if [[ ! -f "$INC_FILE" ]]; then
@@ -31,7 +31,7 @@ function cat_deps()
             fi
             (cat_deps "$INC_FILE")
         fi
-    done <<< $(grep INCLUDE "$(basename "$1")")
+    done <<< "$(grep INCLUDE "$(basename "$1")")"
 }
 
 (cat_deps "$1" | sort | uniq)

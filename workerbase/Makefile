@@ -23,7 +23,7 @@ build-$(1): build/$(1)/Dockerfile
 shell-$(1):
 	docker run -ti $(call worker_tag_name,$(1))
 
-# Running `make push-ubuntu16_04-x86` will upload that image to
+# Running `make push-ubuntu16_04-x86` will upload that image to docker hub
 push-$(1):
 	docker push $(call worker_tag_name,$(1))
 

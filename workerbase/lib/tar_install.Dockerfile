@@ -1,8 +1,6 @@
 ## Install tar
 ARG tar_version=1.29
 ARG tar_url=https://ftp.gnu.org/gnu/tar/tar-${tar_version}.tar.gz
-
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack tar

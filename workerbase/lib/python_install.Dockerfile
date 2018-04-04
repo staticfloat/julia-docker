@@ -1,9 +1,7 @@
 ## Install python
-ARG python_version=2.7.13
+ARG python_version=2.7.14
 ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz
 ARG pip_url=https://bootstrap.pypa.io/get-pip.py
-
-USER buildworker
 WORKDIR /src
 
 # Use download_unpack to download and unpack python

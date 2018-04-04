@@ -36,3 +36,7 @@ INCLUDE python_install
 # Download and install `ccache` to speed up compilation
 USER buildworker
 INCLUDE ccache_install
+
+# Download and install `docker`, because we often want to build our own images again
+USER buildworker
+INCLUDE docker_install

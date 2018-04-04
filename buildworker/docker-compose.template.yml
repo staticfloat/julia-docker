@@ -28,6 +28,8 @@ services:
             - ipv6_internal
         volumes:
             - ccache:/home/buildworker/.ccache
+            - /var/run/docker.sock:/var/run/docker.sock
+            - {home}/.docker:/home/buildworker/.docker
     # Copy of above, but we don't build julia within this worker.  This is a
     # second buildworker instance that is used to test the output of the first
     # but without the benefit of the build tree; to ensure it works cleanly.
@@ -47,6 +49,8 @@ services:
         networks:
             - default
             - ipv6_internal
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
 networks:
     ipv6_internal:
         external:

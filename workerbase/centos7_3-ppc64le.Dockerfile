@@ -8,7 +8,7 @@ INCLUDE lib/builddeps_yum
 INCLUDE lib/build_tools
 
 # This enables qemu-*-static emulation on x86_64
-ARG QEMU_ARCH=ppc64le
+ARG qemu_arch=ppc64le
 INCLUDE lib/multiarch
 
 INCLUDE lib/omega
