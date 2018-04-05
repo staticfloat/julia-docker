@@ -1,5 +1,8 @@
 include ../common.mk
 
+# temporary folder for keeping output
+TMPDIR=/tmp
+
 # Make our own HFS off of the files in this directory
 HFS:=$(subst .Dockerfile,,$(wildcard *.Dockerfile))
 BUILD_HFS=$(call BUILD_FILT,$(HFS))
@@ -62,7 +65,7 @@ endef
 
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
-/tmp/rootfs.tar: build-crossbuild-x64
+${TMPDIR}/rootfs.tar: build-crossbuild-x64
 	@echo "Exporting build image to $@"
 	@ IMG_NAME=$(call crossbuild_tag_name,crossbuild-x64); \
 	echo "Starting docker container for $$IMG_NAME..."; \
@@ -74,7 +77,7 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 	docker stop $$CONTAINER_ID >/dev/null
 
 # Extract and cleanup the rootfs
-/tmp/rootfs: /tmp/rootfs.tar
+${TMPDIR}/rootfs: ${TMPDIR}/rootfs.tar
 	@echo "Unpacking..."; \
 	rm -rf $@; \
 	mkdir -p $@; \
@@ -93,11 +96,11 @@ $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
 # Package 'em all up
 SQUASHFS_OPTS=-force-uid 0 -force-gid 0 -comp xz -b 1048576 -Xdict-size 100% -noappend
-shards: /tmp/rootfs
+shards: ${TMPDIR}/rootfs
 	@ echo "Repackaging..."; \
 	for f in $</opt/*-*-*; do \
 		f_target=$$(basename $${f}); \
-		f_out=/tmp/rootfs-$${f_target}; \
+		f_out=${TMPDIR}/rootfs-$${f_target}; \
 		rm -f $${f_out}.tar.gz $${f_out}.squashfs; \
 		echo "  Packaging tar.gz $${f_target} shard from $${f}..."; \
 		GZIP=-9 tar zcf $${f_out}.tar.gz -C $${f}  .; \
@@ -109,21 +112,21 @@ shards: /tmp/rootfs
 		echo "  Removing $${f_target} from unpacked directory..."; \
 		rm -rf $${f}; \
 	done; \
-	rm -f /tmp/rootfs-base.tar.gz /tmp/rootfs-base.squashfs; \
+	rm -f ${TMPDIR}/rootfs-base.tar.gz ${TMPDIR}/rootfs-base.squashfs; \
 	echo "Packaging tar.gz rootfs base..."; \
-	GZIP=-9 tar zcf /tmp/rootfs-base.tar.gz -C $< .; \
+	GZIP=-9 tar zcf ${TMPDIR}/rootfs-base.tar.gz -C $< .; \
 	echo "Packaging squashfs rootfs base..."; \
-	mksquashfs $< /tmp/rootfs-base.squashfs $(SQUASHFS_OPTS); \
+	mksquashfs $< ${TMPDIR}/rootfs-base.squashfs $(SQUASHFS_OPTS); \
 	echo "Checksumming..."; \
-	shasum -a 256 /tmp/rootfs-base.tar.gz | cut -d' ' -f1 > /tmp/rootfs-base.tar.gz.sha256; \
-	shasum -a 256 /tmp/rootfs-base.squashfs | cut -d' ' -f1 > /tmp/rootfs-base.squashfs.sha256; \
+	shasum -a 256 ${TMPDIR}/rootfs-base.tar.gz | cut -d' ' -f1 > ${TMPDIR}/rootfs-base.tar.gz.sha256; \
+	shasum -a 256 ${TMPDIR}/rootfs-base.squashfs | cut -d' ' -f1 > ${TMPDIR}/rootfs-base.squashfs.sha256; \
 	echo "Final cleanup..."; \
-	rm -rf /tmp/rootfs
+	rm -rf ${TMPDIR}/rootfs
 
 push-rootfs: shards
 	@echo "Uploading to S3..."
 	@ DATE_STR=$$(date +%Y-%m-%d); \
-	for f in /tmp/rootfs-*.tar.gz; do \
+	for f in ${TMPDIR}/rootfs-*.tar.gz; do \
 		f_tarball=$${f}; \
 		f_squashfs=$${f%.*.*}.squashfs; \
 		f_prefix=$$(basename $${f%.*.*}); \
@@ -140,7 +143,7 @@ print-hashes:
 	@# Print out the squashfs hashes first
 	@echo "    rootfs_version = \"$$(date +%Y-%m-%d)\""
 	@echo "    squashfs_hashes = Dict("
-	@for f in /tmp/rootfs-*.squashfs; do \
+	@for f in ${TMPDIR}/rootfs-*.squashfs; do \
 		f_prefix=$$(basename $${f%.*}); \
 		triplet=$${f_prefix:7}; \
 		echo "        \"$${triplet}\" => \"$$(cat $${f}.sha256)\","; \
@@ -148,26 +151,26 @@ print-hashes:
 	@echo "    )"
 	@# Then print out the tarball hashes:
 	@echo "    tarball_hashes = Dict("
-	@for f in /tmp/rootfs-*.tar.gz; do \
+	@for f in ${TMPDIR}/rootfs-*.tar.gz; do \
 		f_prefix=$$(basename $${f%.*.*}); \
 		triplet=$${f_prefix:7}; \
 		echo "        \"$${triplet}\" => \"$$(cat $${f}.sha256)\","; \
 	done
 	@echo "    )"
 
-rootfs-fast: /tmp/rootfs
+rootfs-fast: ${TMPDIR}/rootfs
 	@ echo "Fast-Repackaging base rootfs..."; \
 	rm -rf $</opt/*-*-*; \
-	rm -f /tmp/rootfs-base.tar.gz /tmp/rootfs-base.squashfs; \
+	rm -f ${TMPDIR}/rootfs-base.tar.gz ${TMPDIR}/rootfs-base.squashfs; \
 	echo "Packaging tar.gz rootfs base..."; \
-	GZIP=-9 tar zcf /tmp/rootfs-base.tar.gz -C $< .; \
+	GZIP=-9 tar zcf ${TMPDIR}/rootfs-base.tar.gz -C $< .; \
 	echo "Packaging squashfs rootfs base..."; \
-	mksquashfs $< /tmp/rootfs-base.squashfs $(SQUASHFS_OPTS); \
+	mksquashfs $< ${TMPDIR}/rootfs-base.squashfs $(SQUASHFS_OPTS); \
 	echo "Checksumming..."; \
-	shasum -a 256 /tmp/rootfs-base.tar.gz | cut -d' ' -f1 > /tmp/rootfs-base.tar.gz.sha256; \
-	shasum -a 256 /tmp/rootfs-base.squashfs | cut -d' ' -f1 > /tmp/rootfs-base.squashfs.sha256; \
+	shasum -a 256 ${TMPDIR}/rootfs-base.tar.gz | cut -d' ' -f1 > ${TMPDIR}/rootfs-base.tar.gz.sha256; \
+	shasum -a 256 ${TMPDIR}/rootfs-base.squashfs | cut -d' ' -f1 > ${TMPDIR}/rootfs-base.squashfs.sha256; \
 	echo "Final cleanup..."; \
-	rm -rf /tmp/rootfs
+	rm -rf ${TMPDIR}/rootfs
 	$(MAKE) print-hashes
 
 clean:
