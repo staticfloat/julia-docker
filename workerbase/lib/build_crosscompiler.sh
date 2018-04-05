@@ -186,12 +186,12 @@ install_kernel_headers()
 install_freebsd_components() {
     freebsd_url="https://download.freebsd.org/ftp/releases/amd64/11.1-RELEASE/base.txz"
 
-    mkdir $system_root/src/freebsd-${freebsd_version}
+    mkdir -p $system_root/src/freebsd-${freebsd_version}
     cd $system_root/src/freebsd-${freebsd_version}
     download_unpack.sh "${freebsd_url}"
 
     local bsdroot="$(get_sysroot)"
-    mkdir ${bsdroot}/lib
+    mkdir -p ${bsdroot}/lib
     sudo -E mv usr/include ${bsdroot}
     sudo -E mv usr/lib ${bsdroot}
     sudo -E mv lib/* ${bsdroot}/lib
@@ -295,7 +295,7 @@ install_musl()
 
     # Cleanup
     cd ${system_root}/src
-    sudo -E rm -rf musl-${musl_version}*    
+    sudo -E rm -rf musl-${musl_version}*
 }
 
 install_glibc()
@@ -306,10 +306,10 @@ install_glibc()
 
     # patch glibc for ARM
     cd ${system_root}/src/glibc-${glibc_version}
-    
+
     # patch glibc to keep around libgcc_s_resume on arm
     # ref: https://sourceware.org/ml/libc-alpha/2014-05/msg00573.html
-    if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then 
+    if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then
         patch -p1 < ${system_root}/downloads/patches/glibc_arm_gcc_fix.patch
     fi
 
@@ -351,7 +351,7 @@ install_glibc()
     sudo -E ${L32} make install install_root="$(get_sysroot)"
 
     # GCC won't build (crti.o: no such file or directory) unless these directories exist.
-    # They can be empty though. 
+    # They can be empty though.
     sudo -E ${L32} mkdir $(get_sysroot)/{lib,usr/lib} || true
 
     # Cleanup
@@ -522,7 +522,7 @@ install_cctools()
     cd $system_root/src/cctools-port-${cctools_version}/cctools
     rm -f aclocal.m4
     ${L32} aclocal
-    ${L32} libtoolize --force 
+    ${L32} libtoolize --force
     ${L32} automake --add-missing --force
     ${L32} autoreconf
     ${L32} ./autogen.sh
@@ -617,7 +617,7 @@ install_clang()
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
-    # Cleanup    
+    # Cleanup
     cd $system_root/src
     rm -rf $system_root/src/llvm $system_root/src/llvm-build
 }
@@ -639,7 +639,7 @@ install_mingw_stage1()
         --enable-sdk=all \
         --enable-secure-api \
         --host=${target}
-    
+
     sudo -E ${L32} make install
 }
 
