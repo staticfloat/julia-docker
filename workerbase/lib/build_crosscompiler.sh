@@ -153,6 +153,9 @@ target_to_clang_target()
         x86_64-apple-darwin17)
             echo "x86_64-apple-macosx10.13"
             ;;
+        x86_64-unknown-freebsd)
+            echo "x86_64-unknown-freebsd${freebsd_version}"
+            ;;
     esac
 }
 
