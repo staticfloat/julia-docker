@@ -195,6 +195,11 @@ install_freebsd_components() {
     sudo -E mv usr/include ${bsdroot}
     sudo -E mv usr/lib ${bsdroot}
     sudo -E mv lib/* ${bsdroot}/lib
+    # quick hack for recognition problem
+    mkdir -p ${bsdroot}/usr
+    ln -sf ${bsdroot}/lib ${bsdroot}/usr/
+    ln -sf ${bsdroot}/lib/libgcc_s.so.1 ${bsdroot}/lib/libgcc_s.so
+    ln -sf ${bsdroot}/lib/libcxxrt.so.1 ${bsdroot}/lib/libcxxrt.so
 
     # Cleanup
     cd $system_root/src
