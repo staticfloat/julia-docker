@@ -6,6 +6,12 @@ set(CMAKE_INSTALL_PREFIX /)
 
 set(CMAKE_C_COMPILER /opt/x86_64-unknown-freebsd/bin/clang)
 set(CMAKE_CXX_COMPILER /opt/x86_64-unknown-freebsd/bin/clang++)
+set(CMAKE_LINKER /opt/super_binutils/bin/ld)
+set(SHARED_FLAGS "--target=x86_64-unknown-freebsd11.1 -fuse-ld=${CMAKE_LINKER} --sysroot=${CMAKE_SYSROOT} -I${CMAKE_SYSROOT}/include/")
+set(CMAKE_C_FLAGS ${SHARED_FLAGS})
+set(CMAKE_CXX_FLAGS ${SHARED_FLAGS})
+set(CMAKE_C_COMPILER ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS})
+set(CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS})
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
