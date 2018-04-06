@@ -47,15 +47,19 @@
 #   llvm_version (defaults to release_50)
 
 ## To build a cross-compile for FreeBSD targets we:
-# 1) Install LLVM/clang
-# 2) ...
+# 1) Download LLVM
+# 2) Install Clang
+# 2) Install FreeBSD sysroot from base.txz
 ## These steps are given by the following bash functions
+#   download_llvm
 #   install_clang
-#   ...
+#   install_freebsd_components
 #
 # Ensure that you have set the following environment variables:
 #   target
-#   ...
+#   binutils_version (defaults to 2.28)
+#   llvm_version (defaults to release_50)
+#   freebsd_version (defaults to 11.1)
 
 # This is useful for debugging outside the container
 system_root=${system_root:=}
