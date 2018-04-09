@@ -392,18 +392,6 @@ install_gcc()
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"
     fi
 
-    # Some more FreeBSD-specific settings
-    if [[ "${target}" == *freebsd* ]]; then
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --without-headers"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-gnu-as"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-gnu-ld"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-nls"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-libssp"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-ld"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libitm"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libgomp"
-    fi
-
     if [[ "${target}" == arm*hf ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"
     fi
