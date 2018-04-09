@@ -46,6 +46,17 @@
 #   gcc_version (defaults to 7.3.0)
 #   llvm_version (defaults to release_50)
 
+## To build a cross-compile for FreeBSD targets we:
+# 1) Install LLVM/clang
+# 2) ...
+## These steps are given by the following bash functions
+#   install_clang
+#   ...
+#
+# Ensure that you have set the following environment variables:
+#   target
+#   ...
+
 # This is useful for debugging outside the container
 system_root=${system_root:=}
 
@@ -64,6 +75,9 @@ llvm_version=release_50
 
 # windows defaults
 mingw_version=${mingw_version:-5.0.3}
+
+# freebsd defaults
+freebsd_version=${freebsd_version:-11.1}
 
 # By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
 nproc_cmd='nproc'
@@ -166,6 +180,25 @@ install_kernel_headers()
     # Cleanup
     cd $system_root/src
     sudo -E rm -rf linux-${linux_version}
+}
+
+## Function to download and install FreeBSD components
+install_freebsd_components() {
+    freebsd_url="https://download.freebsd.org/ftp/releases/amd64/11.1-RELEASE/base.txz"
+
+    mkdir $system_root/src/freebsd-${freebsd_version}
+    cd $system_root/src/freebsd-${freebsd_version}
+    download_unpack.sh "${freebsd_url}"
+
+    local bsdroot="$(get_sysroot)"
+    mkdir ${bsdroot}/lib
+    sudo -E mv usr/include ${bsdroot}
+    sudo -E mv usr/lib ${bsdroot}
+    sudo -E mv lib/* ${bsdroot}/lib
+
+    # Cleanup
+    cd $system_root/src
+    sudo -E rm -rf freebsd-${freebsd_version}
 }
 
 download_gcc()
@@ -342,9 +375,21 @@ install_gcc()
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
     fi
 
-    if [[ "${target}" == *linux* ]]; then
+    if [[ "${target}" == *linux* || "${target}" == *freebsd* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)" 
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"
+    fi
+
+    # Some more FreeBSD-specific settings
+    if [[ "${target}" == *freebsd* ]]; then
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --without-headers"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-gnu-as"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-gnu-ld"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-nls"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-libssp"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-ld"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libitm"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libgomp"
     fi
 
     if [[ "${target}" == arm*hf ]]; then
