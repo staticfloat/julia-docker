@@ -22,7 +22,7 @@ function cat_inlined()
                 if [[ -f "$INC_FILE.Dockerfile" ]]; then
                     INC_FILE="$INC_FILE.Dockerfile"
                 else
-                    echo "ERROR: Could not INCLUDE $INC_FILE"
+                    echo "ERROR: Could not INCLUDE $INC_FILE" >&2
                     exit 1
                 fi
             fi
