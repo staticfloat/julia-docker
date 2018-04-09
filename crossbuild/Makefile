@@ -36,7 +36,7 @@ push-$(1): buildsquash-$(1)
 	docker push $(call crossbuild_tag_name,$(1))
 
 # This is how we build the actual Dockerfile
-build/$(1)/Dockerfile: $(shell ../dockerdeps $(1).Dockerfile) lib patches Makefile
+build/$(1)/Dockerfile: Makefile lib patches $(shell ../dockerdeps $(1).Dockerfile)
 	@if [ ! -f "$(1).Dockerfile" ]; then \
 		echo "Target \"$(1)\" is invalid, recheck your spelling good sir."; \
 		exit 1; \
