@@ -30,7 +30,7 @@ RUN source /build.sh; \
         --with-sysroot="$(get_sysroot)" \
         ${GCC_CONF_ARGS}
 
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN make install
 
 # This is needed for any glibc older than 2.14, which includes the following commit

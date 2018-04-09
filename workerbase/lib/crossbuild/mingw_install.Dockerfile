@@ -32,7 +32,7 @@ RUN MINGW_CONF_ARGS=""; \
         ${MINGW_CONF_ARGS}
 
 # Install crt
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN make install
 
 # Install winpthreads
@@ -42,7 +42,7 @@ RUN /src/mingw-w64-v${mingw_version}/mingw-w64-libraries/winpthreads/configure \
         --host=${compiler_target} \
         --enable-static \
         --enable-shared
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN make install
 
 # Cleanup

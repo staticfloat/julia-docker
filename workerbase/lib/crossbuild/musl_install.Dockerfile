@@ -13,7 +13,7 @@ RUN source /build.sh; \
         --disable-multilib \
         --disable-werror \
         CROSS_COMPILE="${compiler_target}-"
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN make install DESTDIR="$(get_sysroot)"
 
 # Cleanup

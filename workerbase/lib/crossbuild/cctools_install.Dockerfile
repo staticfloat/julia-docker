@@ -22,7 +22,7 @@ RUN ./configure \
         --prefix=/opt/${compiler_target} \
         --disable-clang-as \
         --with-libtapi=/opt/${compiler_target}
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN make install
 
 # Cleanup

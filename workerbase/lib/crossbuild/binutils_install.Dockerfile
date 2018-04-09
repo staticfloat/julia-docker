@@ -12,7 +12,7 @@ RUN source /build.sh; \
         --with-sysroot="$(get_sysroot)" \
         --enable-multilib \
         --disable-werror
-RUN  make -j${nproc}
+RUN  make -j$(nproc)
 
 # Install binutils
 RUN make install

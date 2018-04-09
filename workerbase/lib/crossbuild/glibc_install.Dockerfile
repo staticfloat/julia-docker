@@ -57,7 +57,7 @@ RUN source /build.sh; \
         libc_cv_forced_unwind=yes \
         libc_cv_c_cleanup=yes
 RUN chown $(id -u):$(id -g) -R /src/glibc-${glibc_version}_build
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN source /build.sh; make install install_root="$(get_sysroot)"
 
 # GCC won't build (crti.o: no such file or directory) unless these directories exist.

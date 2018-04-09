@@ -21,9 +21,9 @@ RUN cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_TARGETS_TO_BUILD="X86" \
         -DLLVM_ENABLE_ASSERTIONS=Off
-RUN make -f tools/dsymutil/Makefile -j${nproc}
+RUN make -f tools/dsymutil/Makefile -j$(nproc)
 RUN cp bin/llvm-dsymutil /opt/${compiler_target}/bin/dsymutil
-RUN make -f tools/llvm-ar/Makefile -j${nproc}
+RUN make -f tools/llvm-ar/Makefile -j$(nproc)
 RUN cp bin/llvm-ar /opt/${compiler_target}/bin/${compiler_target}-ar
 RUN cp bin/llvm-ranlib /opt/${compiler_target}/bin/${compiler_target}-ranlib
 

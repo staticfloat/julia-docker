@@ -36,7 +36,7 @@ RUN source /build.sh; \
         --disable-werror \
         ${GCC_CONF_ARGS}
 
-RUN make -j${nproc}
+RUN make -j$(nproc)
 RUN make install
 
 # Because this always writes out .texi files, we have to chown them back.  >:(
