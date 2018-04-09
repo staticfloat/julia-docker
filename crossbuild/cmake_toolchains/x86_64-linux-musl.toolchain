@@ -1,11 +1,11 @@
-# Toolchain file for i686-linux-gnu
+# Toolchain file for x86_64-linux-musl
 set(CMAKE_SYSTEM_NAME Linux)
 
-set(CMAKE_SYSROOT /opt/i686-linux-gnu/i686-linux-gnu/sys-root/)
+set(CMAKE_SYSROOT /opt/x86_64-linux-musl/x86_64-linux-musl/sys-root/)
 set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
 
-set(CMAKE_C_COMPILER /opt/i686-linux-gnu/bin/i686-linux-gnu-gcc)
-set(CMAKE_CXX_COMPILER /opt/i686-linux-gnu/bin/i686-linux-gnu-g++)
+set(CMAKE_C_COMPILER /opt/x86_64-linux-musl/bin/x86_64-linux-musl-gcc)
+set(CMAKE_CXX_COMPILER /opt/x86_64-linux-musl/bin/x86_64-linux-musl-g++)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

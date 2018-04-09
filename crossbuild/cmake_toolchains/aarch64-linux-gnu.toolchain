@@ -2,7 +2,7 @@
 set(CMAKE_SYSTEM_NAME Linux)
 
 set(CMAKE_SYSROOT /opt/aarch64-linux-gnu/aarch64-linux-gnu/sys-root/)
-set(CMAKE_INSTALL_PREFIX /)
+set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
 
 set(CMAKE_C_COMPILER /opt/aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc)
 set(CMAKE_CXX_COMPILER /opt/aarch64-linux-gnu/bin/aarch64-linux-gnu-g++)

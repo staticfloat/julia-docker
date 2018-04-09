@@ -6,3 +6,6 @@ RUN source /build.sh; set -e; download_llvm
 RUN source /build.sh; set -e; install_clang
 RUN source /build.sh; set -e; download_gcc
 RUN source /build.sh; set -e; install_gcc
+
+# Install cmake toolchain
+COPY cmake_toolchains/${compiler_target}.toolchain /opt/${compiler_target}/

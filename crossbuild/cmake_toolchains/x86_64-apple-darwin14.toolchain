@@ -2,7 +2,7 @@
 set(CMAKE_SYSTEM_NAME Darwin)
 
 set(CMAKE_SYSROOT /opt/x86_64-apple-darwin14/MacOSX10.10.sdk/)
-set(CMAKE_INSTALL_PREFIX /)
+set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
 
 set(CMAKE_C_COMPILER /opt/x86_64-apple-darwin14/bin/clang)
 set(CMAKE_CXX_COMPILER /opt/x86_64-apple-darwin14/bin/clang++)

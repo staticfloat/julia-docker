@@ -2,7 +2,7 @@
 set(CMAKE_SYSTEM_NAME Linux)
 
 set(CMAKE_SYSROOT /opt/powerpc64le-linux-gnu/powerpc64le-linux-gnu/sys-root/)
-set(CMAKE_INSTALL_PREFIX /)
+set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
 
 set(CMAKE_C_COMPILER /opt/powerpc64le-linux-gnu/bin/powerpc64le-linux-gnu-gcc)
 set(CMAKE_CXX_COMPILER /opt/powerpc64le-linux-gnu/bin/powerpc64le-linux-gnu-g++)

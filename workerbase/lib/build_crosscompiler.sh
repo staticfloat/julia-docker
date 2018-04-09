@@ -16,7 +16,7 @@
 #   install_gcc
 #
 # Ensure that you have set the following environment variables:
-#   target
+#   compiler_target
 #   linux_version (defaults to 4.12)
 #   binutils_version (defaults to 2.28)
 #   gcc_version (defaults to 7.3.0)
@@ -28,18 +28,21 @@
 # 2) Install libtapi
 # 3) Install cctools
 # 4) Install dsymutil
-# 5) Install GCC
+# 5) Install clang
+# 6) Install GCC
 ## These steps are given by the following bash functions:
 #   install_osx_sdk
 #   install_clang
 #   install_libtapi
 #   install_cctools
 #   install_dsymutil
+#   download_llvm
+#   install_clang
 #   download_gcc
 #   install_gcc
 #
 # Ensure that you have set the following environment variables:
-#   target
+#   compiler_target
 #   libtapi_version (defaults to 1.30.0)
 #   cctools_version (defaults to 22ebe727a5cdc21059d45313cf52b4882157f6f0)
 #   dsymutil_version (defaults to 6fe249efadf6139a7f271fee87a5a0f44e2454cf)
@@ -141,11 +144,11 @@ target_to_clang_target()
 
 get_sysroot()
 {
-    if [[ "${target}" == *apple* ]]; then
-        sdk_version="$(target_to_darwin_sdk ${target})"
-        echo "${system_root}/opt/${target}/MacOSX${sdk_version}.sdk"
+    if [[ "${compiler_target}" == *apple* ]]; then
+        sdk_version="$(target_to_darwin_sdk ${compiler_target})"
+        echo "${system_root}/opt/${compiler_target}/MacOSX${sdk_version}.sdk"
     else
-        echo "${system_root}/opt/${target}/${target}/sys-root"
+        echo "${system_root}/opt/${compiler_target}/${compiler_target}/sys-root"
     fi
 }
 
@@ -158,7 +161,7 @@ install_kernel_headers()
     cd $system_root/src
     download_unpack.sh "${linux_url}"
     cd $system_root/src/linux-${linux_version}
-    local ARCH="$(target_to_linux_arch ${target})"
+    local ARCH="$(target_to_linux_arch ${compiler_target})"
     ${L32} make ARCH=${ARCH} mrproper
     ${L32} make ARCH=${ARCH} headers_check
     sudo -E ${L32} make INSTALL_HDR_PATH=$(get_sysroot)/usr ARCH=${ARCH} V=0 headers_install
@@ -195,15 +198,15 @@ install_gcc_bootstrap()
 {
     GCC_CONF_ARGS=""
 
-    if [[ "${target}" == arm*hf ]]; then
+    if [[ "${compiler_target}" == arm*hf ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"
     fi
 
     mkdir -p ${system_root}/src/gcc-${gcc_version}_bootstrap_build
     cd ${system_root}/src/gcc-${gcc_version}_bootstrap_build
     ${L32} ${system_root}/src/gcc-${gcc_version}/configure \
-        --prefix=${system_root}/opt/${target} \
-        --target=${target} \
+        --prefix=${system_root}/opt/${compiler_target} \
+        --target=${compiler_target} \
         --host=${MACHTYPE} \
         --build=${MACHTYPE} \
         --disable-multilib \
@@ -232,7 +235,7 @@ install_gcc_bootstrap()
 
     # This is needed for any glibc older than 2.14, which includes the following commit
     # https://sourceware.org/git/?p=glibc.git;a=commit;h=95f5a9a866695da4e038aa4e6ccbbfd5d9cf63b7
-    ln -vs libgcc.a `${target}-gcc -print-libgcc-file-name | \
+    ln -vs libgcc.a `${compiler_target}-gcc -print-libgcc-file-name | \
     	sed 's/libgcc/&_eh/'`
 
 }
@@ -248,12 +251,12 @@ install_musl()
     cd ${system_root}/src/musl-${musl_version}_build
     ${L32} ${system_root}/src/musl-${musl_version}/configure \
         --prefix=/usr \
-        --host=${target} \
+        --host=${compiler_target} \
         --with-headers="$(get_sysroot)/usr/include" \
-        --with-binutils=${system_root}/opt/${target}/bin \
+        --with-binutils=${system_root}/opt/${compiler_target}/bin \
         --disable-multilib \
         --disable-werror \
-        CROSS_COMPILE="${target}-"
+        CROSS_COMPILE="${compiler_target}-"
 
     ${L32} make -j${nproc}
 
@@ -276,7 +279,7 @@ install_glibc()
     
     # patch glibc to keep around libgcc_s_resume on arm
     # ref: https://sourceware.org/ml/libc-alpha/2014-05/msg00573.html
-    if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then 
+    if [[ "${compiler_target}" == arm* ]] || [[ "${compiler_target}" == aarch* ]]; then 
         patch -p1 < ${system_root}/downloads/patches/glibc_arm_gcc_fix.patch
     fi
 
@@ -286,7 +289,7 @@ install_glibc()
 
     # patch glibc's 32-bit assembly to withstand __i686 definition of newer GCC's
     # ref: http://comments.gmane.org/gmane.comp.lib.glibc.user/758
-    if [[ "${target}" == i686* ]]; then
+    if [[ "${compiler_target}" == i686* ]]; then
         patch -p1 < ${system_root}/downloads/patches/glibc_i686_asm.patch
     fi
 
@@ -305,9 +308,9 @@ install_glibc()
     cd ${system_root}/src/glibc-${glibc_version}_build
     ${L32} ${system_root}/src/glibc-${glibc_version}/configure \
         --prefix=/usr \
-        --host=${target} \
+        --host=${compiler_target} \
         --with-headers="$(get_sysroot)/usr/include" \
-        --with-binutils=${system_root}/opt/${target}/bin \
+        --with-binutils=${system_root}/opt/${compiler_target}/bin \
         --disable-multilib \
         --disable-werror \
         libc_cv_forced_unwind=yes \
@@ -334,27 +337,27 @@ install_gcc()
     GCC_CONF_ARGS=""
 
     # If we're building for Darwin, add on some extra configure arguments
-    if [[ "${target}" == *apple* ]]; then
-        sdk_version="$(target_to_darwin_sdk ${target})"
+    if [[ "${compiler_target}" == *apple* ]]; then
+        sdk_version="$(target_to_darwin_sdk ${compiler_target})"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=${system_root}/opt/${target}/bin/${target}-ld"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=${system_root}/opt/${target}/bin/${target}-as"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=${system_root}/opt/${compiler_target}/bin/${compiler_target}-ld"
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=${system_root}/opt/${compiler_target}/bin/${compiler_target}-as"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
     fi
 
-    if [[ "${target}" == *linux* ]]; then
+    if [[ "${compiler_target}" == *linux* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)" 
     fi
 
-    if [[ "${target}" == arm*hf ]]; then
+    if [[ "${compiler_target}" == arm*hf ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"
     fi
 
     # musl does not support mudflap, or libsanitizer
     # libmpx uses secure_getenv and struct _libc_fpstate not present in musl
     # alpine musl provides libssp_nonshared.a, so we don't need libssp either
-    if [[ "${target}" == *musl* ]]; then
+    if [[ "${compiler_target}" == *musl* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libssp --disable-libmpx"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libmudflap --disable-libsanitizer"
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-symvers"
@@ -366,8 +369,8 @@ install_gcc()
     mkdir -p ${system_root}/src/gcc-${gcc_version}_build
     cd ${system_root}/src/gcc-${gcc_version}_build
     ${L32} ${system_root}/src/gcc-${gcc_version}/configure \
-        --prefix=${system_root}/opt/${target} \
-        --target=${target} \
+        --prefix=${system_root}/opt/${compiler_target} \
+        --target=${compiler_target} \
         --host=${MACHTYPE} \
         --build=${MACHTYPE} \
         --enable-threads=posix \
@@ -390,11 +393,11 @@ install_gcc()
 
     # Finally, create a bunch of symlinks stripping out the target so that
     # things like `gcc` "just work", as long as we've got our path set properly
-    for f in ${system_root}/opt/${target}/bin/${target}-*; do
+    for f in ${system_root}/opt/${compiler_target}/bin/${compiler_target}-*; do
         fbase=$(basename $f)
         # We don't worry about failure to create these symlinks, as sometimes there are files
-        # named ridiculous things like ${target}-${target}-foo, which screws this up
-        sudo -E ln -s $f ${system_root}/opt/${target}/bin/${fbase#${target}-} || true
+        # named ridiculous things like ${compiler_target}-${compiler_target}-foo, which screws this up
+        sudo -E ln -s $f ${system_root}/opt/${compiler_target}/bin/${fbase#${compiler_target}-} || true
     done
 }
 
@@ -410,8 +413,8 @@ install_binutils()
     # Build binutils!
     cd $system_root/src/binutils-${binutils_version}
     ${L32} ./configure \
-        --prefix=/opt/${target} \
-        --target=${target} \
+        --prefix=/opt/${compiler_target} \
+        --target=${compiler_target} \
         --with-sysroot="$(get_sysroot)" \
         --enable-multilib \
         --disable-werror
@@ -428,10 +431,10 @@ install_binutils()
 install_osx_sdk()
 {
     # Download OSX SDK
-    sdk_version="$(target_to_darwin_sdk ${target})"
+    sdk_version="$(target_to_darwin_sdk ${compiler_target})"
     sdk_url="https://davinci.cs.washington.edu/MacOSX${sdk_version}.sdk.tar.xz"
-    sudo -E mkdir -p $system_root/opt/${target}
-    cd $system_root/opt/${target}
+    sudo -E mkdir -p $system_root/opt/${compiler_target}
+    cd $system_root/opt/${compiler_target}
     sudo -E download_unpack.sh "${sdk_url}"
 
     # Fix weird permissions on the SDK folder
@@ -454,8 +457,8 @@ install_libtapi()
     export MACOSX_DEPLOYMENT_TARGET=10.10
     export CC="/usr/bin/clang"
     export CXX="/usr/bin/clang++"
-    INSTALLPREFIX=$system_root/opt/${target} ${L32} ./build.sh
-    sudo -E INSTALLPREFIX=$system_root/opt/${target} ${L32} ./install.sh
+    INSTALLPREFIX=$system_root/opt/${compiler_target} ${L32} ./build.sh
+    sudo -E INSTALLPREFIX=$system_root/opt/${compiler_target} ${L32} ./install.sh
 
     # Cleanup
     cd $system_root/src
@@ -483,10 +486,10 @@ install_cctools()
     ${L32} ./autogen.sh
 
     ${L32} ./configure \
-        --target=${target} \
-        --prefix=/opt/${target} \
+        --target=${compiler_target} \
+        --prefix=/opt/${compiler_target} \
         --disable-clang-as \
-        --with-libtapi=/opt/${target}
+        --with-libtapi=/opt/${compiler_target}
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
@@ -515,10 +518,10 @@ install_dsymutil()
         -DLLVM_TARGETS_TO_BUILD="X86" \
         -DLLVM_ENABLE_ASSERTIONS=Off
     ${L32} make -f tools/dsymutil/Makefile -j${nproc}
-    sudo -E cp bin/llvm-dsymutil /opt/${target}/bin/dsymutil
+    sudo -E cp bin/llvm-dsymutil /opt/${compiler_target}/bin/dsymutil
     ${L32} make -f tools/llvm-ar/Makefile -j${nproc}
-    sudo -E cp bin/llvm-ar /opt/${target}/bin/${target}-ar
-    sudo -E cp bin/llvm-ranlib /opt/${target}/bin/${target}-ranlib
+    sudo -E cp bin/llvm-ar /opt/${compiler_target}/bin/${compiler_target}-ar
+    sudo -E cp bin/llvm-ranlib /opt/${compiler_target}/bin/${compiler_target}-ranlib
 
     # Cleanup
     cd $system_root/src
@@ -533,22 +536,22 @@ download_llvm()
     clang_tools_url=https://git.llvm.org/git/clang-tools-extra.git
     compiler_rt_url=https://git.llvm.org/git/compiler-rt.git
     libcxx_url=https://git.llvm.org/git/libcxx.git
+    libcxxabi_url=https://git.llvm.org/git/libcxxabi.git
 
     # Clone everything down
     cd $system_root/src
     git clone ${llvm_url} -b ${llvm_version}
 
-    cd $system_root/src/llvm/tools
+    cd $system_root/src/llvm/projects
     git clone ${clang_url} -b ${llvm_version}
+    git clone ${libcxx_url} -b ${llvm_version}
+    git clone ${libcxxabi_url} -b ${llvm_version}
 
-    cd $system_root/src/llvm/tools/clang/tools
+    cd $system_root/src/llvm/projects/clang/tools
     git clone ${clang_tools_url} -b ${llvm_version}
 
     #cd $system_root/src/llvm/projects
     #git clone ${compiler_rt_url} -b ${llvm_version}
-
-    #cd $system_root/src/llvm/projects
-    #git clone ${libcxx_url} -b ${llvm_version}
 
     # Apply patch to LLVM for ar's `-rcu` abilities
     cd $system_root/src/llvm
@@ -562,12 +565,16 @@ install_clang()
     cd $system_root/src/llvm-build
 
     ${L32} cmake -G "Unix Makefiles" \
-        -DLLVM_PARALLEL_COMPILE_JOBS=3 \
-        -DLLVM_DEFAULT_TARGET_TRIPLE=$(target_to_clang_target ${target}) \
+        -DLLVM_TARGETS_TO_BUILD:STRING=host \
+        -DLLVM_PARALLEL_COMPILE_JOBS=${nproc} \
+        -DLLVM_BINDINGS_LIST="" \
+        -DLLVM_DEFAULT_TARGET_TRIPLE=$(target_to_clang_target ${compiler_target}) \
         -DDEFAULT_SYSROOT="$(get_sysroot)" \
-        -DCMAKE_BUILD_TYPE=Release\
+        -DGCC_INSTALL_PREFIX="${system_root}/opt/${compiler_target}" \
+        -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_ENABLE_ASSERTIONS=Off \
-        -DCMAKE_INSTALL_PREFIX="/opt/${target}" \
+        -DCMAKE_INSTALL_PREFIX="${system_root}/opt/${compiler_target}" \
+        -DLIBCXX_HAS_MUSL_LIBC=On \
         "$system_root/src/llvm"
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
@@ -590,10 +597,10 @@ install_mingw_stage1()
     # Install mingw headers
     cd $system_root/src/mingw-w64-v${mingw_version}/mingw-w64-headers
     ${L32} ./configure \
-        --prefix=/opt/${target}/${target} \
+        --prefix=/opt/${compiler_target}/${compiler_target} \
         --enable-sdk=all \
         --enable-secure-api \
-        --host=${target}
+        --host=${compiler_target}
     
     sudo -E ${L32} make install
 }
@@ -601,7 +608,7 @@ install_mingw_stage1()
 install_mingw_stage2()
 {
     MINGW_CONF_ARGS=""
-    if [[ "${target}" == i686-* ]]; then
+    if [[ "${compiler_target}" == i686-* ]]; then
         # If we're building a 32-bit build of mingw, add `--disable-lib64`
         MINGW_CONF_ARGS="${MINGW_CONF_ARGS} --disable-lib64"
     else
@@ -612,8 +619,8 @@ install_mingw_stage2()
     mkdir -p $system_root/src/mingw-w64-v${mingw_version}-crt_build
     cd $system_root/src/mingw-w64-v${mingw_version}-crt_build
     ${L32} $system_root/src/mingw-w64-v${mingw_version}/mingw-w64-crt/configure \
-        --prefix=/opt/${target}/${target} \
-        --host=${target} \
+        --prefix=/opt/${compiler_target}/${compiler_target} \
+        --host=${compiler_target} \
         ${MINGW_CONF_ARGS}
 
     ${L32} make -j${nproc}
@@ -623,8 +630,8 @@ install_mingw_stage2()
     mkdir -p $system_root/src/mingw-w64-v${mingw_version}-winpthreads_build
     cd $system_root/src/mingw-w64-v${mingw_version}-winpthreads_build
     ${L32} $system_root/src/mingw-w64-v${mingw_version}/mingw-w64-libraries/winpthreads/configure \
-        --prefix=/opt/${target}/${target} \
-        --host=${target} \
+        --prefix=/opt/${compiler_target}/${compiler_target} \
+        --host=${compiler_target} \
         --enable-static \
         --enable-shared
 
@@ -639,5 +646,5 @@ install_mingw_stage2()
 
 
 # Ensure that PATH is setup properly
-export PATH=$system_root/opt/${target}/bin:$PATH
+export PATH=$system_root/opt/${compiler_target}/bin:$PATH
 

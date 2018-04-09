@@ -17,6 +17,10 @@ RUN ${L32} make -j4
 USER root
 RUN ${L32} make install
 
+# Patch cmake defaults
+WORKDIR /
+RUN patch -p0 < /downloads/patches/cmake_install.patch
+
 # Now cleanup /src
 WORKDIR /src
 RUN rm -rf cmake-${cmake_version}
