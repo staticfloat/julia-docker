@@ -5,8 +5,7 @@ FROM alpine:latest as base
 RUN mkdir -p /src /downloads
 
 # Get our bash script library ready
-COPY build_crosscompiler.sh /build.sh
-COPY patches /downloads/patches
+COPY crossbuild/build.sh /build.sh
 
 # We use the "download_unpack.sh" command a lot, we need a `tar` wrapper to insert
 # extra command line flags on every `tar` command, we have an `update_configure_scripts`
@@ -49,32 +48,33 @@ RUN apk add gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev
 
 # build gcc for x86_64.  Use an especially old glibc version to maximize compatibility
 FROM shard_builder as shard_x86_64-linux-gnu
-ENV compiler_target="x86_64-linux-gnu"
-ENV glibc_version=2.12.2
-INCLUDE lib/linux_crosscompiler_install
-ENV glibc_version=""
+INCLUDE lib/crossbuild/version_defaults
+ARG glibc_version=2.12.2
+ARG compiler_target="x86_64-linux-gnu"
+INCLUDE lib/linux_glibc_crosscompiler_install
 
 # build gcc for i686.  Again use an especially old glibc version to maximize compatibility
 FROM shard_builder as shard_i686-linux-gnu
-ENV compiler_target="i686-linux-gnu"
-ENV L32="linux32"
-ENV glibc_version=2.12.2
-INCLUDE lib/linux_crosscompiler_install
-ENV L32=""
-ENV glibc_version=""
+INCLUDE lib/crossbuild/version_defaults
+ARG glibc_version=2.12.2
+ARG compiler_target="i686-linux-gnu"
+INCLUDE lib/linux_glibc_crosscompiler_install
 
 # build for mac64
 FROM shard_builder as shard_x86_64-apple-darwin14
-ENV compiler_target="x86_64-apple-darwin14"
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="x86_64-apple-darwin14"
 INCLUDE lib/osx_crosscompiler_install
 
 # build for arm7/arm8
 FROM shard_builder as shard_aarch64-linux-gnu
-ENV compiler_target="aarch64-linux-gnu"
-INCLUDE lib/linux_crosscompiler_install
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="aarch64-linux-gnu"
+INCLUDE lib/linux_glibc_crosscompiler_install
 FROM shard_builder as shard_arm-linux-gnueabihf
-ENV compiler_target="arm-linux-gnueabihf"
-INCLUDE lib/linux_crosscompiler_install
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="arm-linux-gnueabihf"
+INCLUDE lib/linux_glibc_crosscompiler_install
 
 # build gcc for ppc64le (we need a more recent glibc here as well)
 # We require at least version 2.22 for the fixes to assembler problems:
@@ -82,35 +82,41 @@ INCLUDE lib/linux_crosscompiler_install
 # We require at least version 2.24 for the fixes to memset.S:
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
 FROM shard_builder as shard_powerpc64le-linux-gnu
-ENV compiler_target="powerpc64le-linux-gnu"
-ENV glibc_version=2.25
-INCLUDE lib/linux_crosscompiler_install
-ENV glibc_version=""
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="powerpc64le-linux-gnu"
+ARG glibc_version=2.25
+INCLUDE lib/linux_glibc_crosscompiler_install
 
 # build for win64/win32.  We use gcc 6.X, so that we stay with the old
 # gfortran.3 ABI, not gfortran.4, as that doesn't work with our Julia builds.
 FROM shard_builder as shard_x86_64-w64-mingw32
-ENV compiler_target="x86_64-w64-mingw32"
-ENV gcc_version="6.4.0"
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="x86_64-w64-mingw32"
+ARG gcc_version="6.4.0"
 INCLUDE lib/win_crosscompiler_install
 FROM shard_builder as shard_i686-w64-mingw32
-ENV compiler_target="i686-w64-mingw32"
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="i686-w64-mingw32"
+ARG gcc_version="6.4.0"
 INCLUDE lib/win_crosscompiler_install
-ENV gcc_version=""
 
 # Build gcc for musl linux.
 FROM shard_builder as shard_x86_64-linux-musl
-ENV compiler_target="x86_64-linux-musl"
-INCLUDE lib/linux_crosscompiler_install
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="x86_64-linux-musl"
+INCLUDE lib/linux_musl_crosscompiler_install
 FROM shard_builder as shard_i686-linux-musl
-ENV compiler_target="i686-linux-musl"
-INCLUDE lib/linux_crosscompiler_install
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="i686-linux-musl"
+INCLUDE lib/linux_musl_crosscompiler_install
 FROM shard_builder as shard_arm-linux-musleabihf
-ENV compiler_target="arm-linux-musleabihf"
-INCLUDE lib/linux_crosscompiler_install
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="arm-linux-musleabihf"
+INCLUDE lib/linux_musl_crosscompiler_install
 FROM shard_builder as shard_aarch64-linux-musl
-ENV compiler_target="aarch64-linux-musl"
-INCLUDE lib/linux_crosscompiler_install
+INCLUDE lib/crossbuild/version_defaults
+ARG compiler_target="aarch64-linux-musl"
+INCLUDE lib/linux_musl_crosscompiler_install
 
 
 

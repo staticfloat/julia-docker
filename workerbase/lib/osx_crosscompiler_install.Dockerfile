@@ -1,11 +1,11 @@
-RUN source /build.sh; set -e; install_osx_sdk
-RUN source /build.sh; set -e; install_libtapi
-RUN source /build.sh; set -e; install_cctools
-RUN source /build.sh; set -e; install_dsymutil
-RUN source /build.sh; set -e; download_llvm
-RUN source /build.sh; set -e; install_clang
-RUN source /build.sh; set -e; download_gcc
-RUN source /build.sh; set -e; install_gcc
+ENV PATH="/opt/${compiler_target}/bin:$PATH"
+INCLUDE crossbuild/osx_sdk_install
+INCLUDE crossbuild/libtapi_install
+INCLUDE crossbuild/cctools_install
+INCLUDE crossbuild/llvm_download
+INCLUDE crossbuild/llvm_clang_install
+INCLUDE crossbuild/gcc_download
+INCLUDE crossbuild/gcc_install
 
 # Install cmake toolchain
 COPY cmake_toolchains/${compiler_target}.toolchain /opt/${compiler_target}/

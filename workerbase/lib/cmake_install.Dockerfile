@@ -19,7 +19,9 @@ RUN ${L32} make install
 
 # Patch cmake defaults
 WORKDIR /
-RUN patch -p0 < /downloads/patches/cmake_install.patch
+COPY patches/cmake_install.patch /tmp/
+RUN patch -p0 < /tmp/cmake_install.patch; \
+    rm -f /tmp/cmake_install.patch
 
 # Now cleanup /src
 WORKDIR /src

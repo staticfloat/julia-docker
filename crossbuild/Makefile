@@ -56,6 +56,8 @@ build/$(1)/Dockerfile: Makefile lib patches $(shell ../dockerdeps $(1).Dockerfil
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
 	@cp lib/*.sh "build/$(1)/"
+	@mkdir -p "build/$(1)/crossbuild"
+	@cp lib/crossbuild/*.sh "build/$(1)/crossbuild/"
 	@cp -R cmake_toolchains/ "build/$(1)/"
 	@cp -R patches/ "build/$(1)/"
 endef
