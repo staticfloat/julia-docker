@@ -1,0 +1,13 @@
+# Toolchain file for x86_64-unknown-freebsd
+set(CMAKE_SYSTEM_NAME FreeBSD)
+
+set(CMAKE_SYSROOT /opt/x86_64-unknown-freebsd/x86_64-unknown-freebsd/sys-root)
+set(CMAKE_INSTALL_PREFIX /)
+
+set(CMAKE_C_COMPILER /opt/x86_64-unknown-freebsd/bin/clang)
+set(CMAKE_CXX_COMPILER /opt/x86_64-unknown-freebsd/bin/clang++)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)

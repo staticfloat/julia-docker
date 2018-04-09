@@ -46,6 +46,21 @@
 #   gcc_version (defaults to 7.3.0)
 #   llvm_version (defaults to release_50)
 
+## To build a cross-compile for FreeBSD targets we:
+# 1) Download LLVM
+# 2) Install Clang
+# 2) Install FreeBSD sysroot from base.txz
+## These steps are given by the following bash functions
+#   download_llvm
+#   install_clang
+#   install_freebsd_components
+#
+# Ensure that you have set the following environment variables:
+#   target
+#   binutils_version (defaults to 2.28)
+#   llvm_version (defaults to release_50)
+#   freebsd_version (defaults to 11.1)
+
 # This is useful for debugging outside the container
 system_root=${system_root:=}
 
@@ -64,6 +79,9 @@ llvm_version=release_50
 
 # windows defaults
 mingw_version=${mingw_version:-5.0.3}
+
+# freebsd defaults
+freebsd_version=${freebsd_version:-11.1}
 
 # By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
 nproc_cmd='nproc'
@@ -135,6 +153,9 @@ target_to_clang_target()
         x86_64-apple-darwin17)
             echo "x86_64-apple-macosx10.13"
             ;;
+        x86_64-unknown-freebsd)
+            echo "x86_64-unknown-freebsd${freebsd_version}"
+            ;;
     esac
 }
 
@@ -166,6 +187,30 @@ install_kernel_headers()
     # Cleanup
     cd $system_root/src
     sudo -E rm -rf linux-${linux_version}
+}
+
+## Function to download and install FreeBSD components
+install_freebsd_components() {
+    freebsd_url="https://download.freebsd.org/ftp/releases/amd64/11.1-RELEASE/base.txz"
+
+    mkdir -p $system_root/src/freebsd-${freebsd_version}
+    cd $system_root/src/freebsd-${freebsd_version}
+    download_unpack.sh "${freebsd_url}"
+
+    local bsdroot="$(get_sysroot)"
+    mkdir -p ${bsdroot}/lib
+    sudo -E mv usr/include ${bsdroot}
+    sudo -E mv usr/lib ${bsdroot}
+    sudo -E mv lib/* ${bsdroot}/lib
+    # quick hack for recognition problem
+    mkdir -p ${bsdroot}/usr
+    ln -sf ${bsdroot}/lib ${bsdroot}/usr/
+    ln -sf ${bsdroot}/lib/libgcc_s.so.1 ${bsdroot}/lib/libgcc_s.so
+    ln -sf ${bsdroot}/lib/libcxxrt.so.1 ${bsdroot}/lib/libcxxrt.so
+
+    # Cleanup
+    cd $system_root/src
+    sudo -E rm -rf freebsd-${freebsd_version}
 }
 
 download_gcc()
@@ -262,7 +307,7 @@ install_musl()
 
     # Cleanup
     cd ${system_root}/src
-    sudo -E rm -rf musl-${musl_version}*    
+    sudo -E rm -rf musl-${musl_version}*
 }
 
 install_glibc()
@@ -273,10 +318,10 @@ install_glibc()
 
     # patch glibc for ARM
     cd ${system_root}/src/glibc-${glibc_version}
-    
+
     # patch glibc to keep around libgcc_s_resume on arm
     # ref: https://sourceware.org/ml/libc-alpha/2014-05/msg00573.html
-    if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then 
+    if [[ "${target}" == arm* ]] || [[ "${target}" == aarch* ]]; then
         patch -p1 < ${system_root}/downloads/patches/glibc_arm_gcc_fix.patch
     fi
 
@@ -318,7 +363,7 @@ install_glibc()
     sudo -E ${L32} make install install_root="$(get_sysroot)"
 
     # GCC won't build (crti.o: no such file or directory) unless these directories exist.
-    # They can be empty though. 
+    # They can be empty though.
     sudo -E ${L32} mkdir $(get_sysroot)/{lib,usr/lib} || true
 
     # Cleanup
@@ -342,9 +387,9 @@ install_gcc()
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"
     fi
 
-    if [[ "${target}" == *linux* ]]; then
+    if [[ "${target}" == *linux* || "${target}" == *freebsd* ]]; then
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)" 
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"
     fi
 
     if [[ "${target}" == arm*hf ]]; then
@@ -477,7 +522,7 @@ install_cctools()
     cd $system_root/src/cctools-port-${cctools_version}/cctools
     rm -f aclocal.m4
     ${L32} aclocal
-    ${L32} libtoolize --force 
+    ${L32} libtoolize --force
     ${L32} automake --add-missing --force
     ${L32} autoreconf
     ${L32} ./autogen.sh
@@ -572,7 +617,7 @@ install_clang()
     ${L32} make -j${nproc}
     sudo -E ${L32} make install
 
-    # Cleanup    
+    # Cleanup
     cd $system_root/src
     rm -rf $system_root/src/llvm $system_root/src/llvm-build
 }
@@ -594,7 +639,7 @@ install_mingw_stage1()
         --enable-sdk=all \
         --enable-secure-api \
         --host=${target}
-    
+
     sudo -E ${L32} make install
 }
 
