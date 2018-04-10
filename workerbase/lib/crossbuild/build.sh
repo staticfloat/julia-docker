@@ -2,18 +2,6 @@
 
 # Generally useful routines for building crosscompiler stuff
 
-# By default, execute `make` commands with N + 1 jobs, where N is the number of CPUs
-nproc_cmd='nproc'
-if type nproc >/dev/null 2>/dev/null ; then
-    nproc_cmd='nproc'
-else
-    nproc_cmd="cat /proc/cpuinfo | grep 'processor' | wc -l"
-fi
-nproc=$(eval "$nproc_cmd")
-if [[ $nproc > 8 ]]; then
-    nproc=8
-fi
-
 ## Function to take in a target such as `aarch64-linux-gnu`` and spit out a
 ## linux kernel arch like "arm64".
 target_to_linux_arch()
@@ -72,6 +60,9 @@ target_to_clang_target()
         x86_64-apple-darwin17)
             echo "x86_64-apple-macosx10.13"
             ;;
+        x86_64-unknown-freebsd*)
+            echo "x86_64-unknown-freebsd11.1"
+            ;;
     esac
 }
 
@@ -79,12 +70,9 @@ get_sysroot()
 {
     if [[ "${compiler_target}" == *apple* ]]; then
         sdk_version="$(target_to_darwin_sdk ${compiler_target})"
-        echo "${system_root}/opt/${compiler_target}/MacOSX${sdk_version}.sdk"
+        echo "/opt/${compiler_target}/MacOSX${sdk_version}.sdk"
     else
-        echo "${system_root}/opt/${compiler_target}/${compiler_target}/sys-root"
+        echo "/opt/${compiler_target}/${compiler_target}/sys-root"
     fi
 }
-
-# Ensure that PATH is setup properly
-export PATH=$system_root/opt/${compiler_target}/bin:$PATH
 

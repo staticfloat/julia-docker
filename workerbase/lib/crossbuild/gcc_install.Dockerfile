@@ -9,10 +9,10 @@ RUN source /build.sh; \
     if [[ "${compiler_target}" == *apple* ]]; then \
         sdk_version="$(target_to_darwin_sdk ${compiler_target})"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=${system_root}/opt/${compiler_target}/bin/${compiler_target}-ld"; \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=${system_root}/opt/${compiler_target}/bin/${compiler_target}-as"; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=/opt/${compiler_target}/bin/${compiler_target}-ld"; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=/opt/${compiler_target}/bin/${compiler_target}-as"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"; \
-    elif [[ "${compiler_target}" == *linux* ]]; then \
+    elif [[ "${compiler_target}" == *linux* ]] || [[ "${compiler_target}" == *freebsd* ]]; then \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
     fi; \
@@ -26,7 +26,7 @@ RUN source /build.sh; \
         export libat_cv_have_ifunc=no; \
     fi; \
     /src/gcc-${gcc_version}/configure \
-        --prefix=${system_root}/opt/${compiler_target} \
+        --prefix=/opt/${compiler_target} \
         --target=${compiler_target} \
         --host=${MACHTYPE} \
         --build=${MACHTYPE} \
@@ -50,7 +50,7 @@ RUN rm -rf gcc-${gcc_version}*
 # We don't worry about failure to create these symlinks, as sometimes there are files
 # named ridiculous things like ${compiler_target}-${compiler_target}-foo, which screws this up
 RUN source /build.sh; \
-    for f in ${system_root}/opt/${compiler_target}/bin/${compiler_target}-*; do \
+    for f in /opt/${compiler_target}/bin/${compiler_target}-*; do \
         fbase=$(basename $f); \
         ln -s $f /opt/${compiler_target}/bin/${fbase#${compiler_target}-} || true; \
     done

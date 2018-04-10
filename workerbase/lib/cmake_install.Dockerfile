@@ -1,6 +1,9 @@
 ## Install cmake into /usr/local
-ARG cmake_version=3.6.3
-ARG cmake_url=https://cmake.org/files/v3.6/cmake-${cmake_version}.tar.gz
+# Note that when you change `cmake_version`, you need to change the major version
+# in the URL below, I would use ${cmake_version%.*} except that those fancy
+# substitutions don't work in docker ARG rules.  :(
+ARG cmake_version=3.11.0
+ARG cmake_url=https://cmake.org/files/v3.11/cmake-${cmake_version}.tar.gz
 
 WORKDIR /src
 

@@ -42,7 +42,7 @@ define tabularasa_tag_name
 $(strip staticfloat/julia_tabularasa:$(1))
 endef
 define crossbuild_tag_name
-$(strip staticfloat/julia_$(firstword $(subst -, ,$(1)))):$(lastword $(subst -, ,$(1)))
+$(strip staticfloat/julia_$(patsubst %-$(lastword $(subst -, ,$(1))),%, $(1)):$(lastword $(subst -, ,$(1))))
 endef
 
 # If we have `--squash` support, then use it!
