@@ -4,6 +4,6 @@ INCLUDE crossbase-x64
 FROM shard_builder as shard_i686-linux-gnu
 INCLUDE lib/crossbuild/version_defaults
 ARG glibc_version=2.12.2
-ARG compiler_target="i686-linux-gnu"
+ENV compiler_target="i686-linux-gnu"
 INCLUDE lib/linux_glibc_crosscompiler_install
 

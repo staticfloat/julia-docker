@@ -7,6 +7,6 @@ INCLUDE crossbase-x64
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843691
 FROM shard_builder as shard_powerpc64le-linux-gnu
 INCLUDE lib/crossbuild/version_defaults
-ARG compiler_target="powerpc64le-linux-gnu"
+ENV compiler_target="powerpc64le-linux-gnu"
 ARG glibc_version=2.25
 INCLUDE lib/linux_glibc_crosscompiler_install
