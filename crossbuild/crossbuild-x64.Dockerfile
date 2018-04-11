@@ -1,7 +1,6 @@
-INCLUDE crossbase-x64
+FROM staticfloat/julia_crossbase:x64
 
 # Copy all our built shards into one ginormous image
-FROM base as crossbuild
 COPY --from=staticfloat/julia_crossshard-x86_64-linux-gnu:x64 /opt/x86_64-linux-gnu /opt/x86_64-linux-gnu
 COPY --from=staticfloat/julia_crossshard-i686-linux-gnu:x64 /opt/i686-linux-gnu /opt/i686-linux-gnu
 COPY --from=staticfloat/julia_crossshard-aarch64-linux-gnu:x64 /opt/aarch64-linux-gnu /opt/aarch64-linux-gnu

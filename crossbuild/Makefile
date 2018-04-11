@@ -26,7 +26,7 @@ TMPDIR=/tmp
 define build_dockerfile
 # Running just `make build-crossbuild-x64` will build that image
 build-$(1): build/$(1)/Dockerfile
-	docker build --pull -t $(call crossbuild_tag_name,$(1)) "build/$(1)"
+	docker build -t $(call crossbuild_tag_name,$(1)) "build/$(1)"
 
 buildsquash-$(1): build/$(1)/Dockerfile
 	$(DOCKER_BUILD) --pull -t $(call crossbuild_tag_name,$(1)) "build/$(1)"
@@ -65,9 +65,12 @@ build/$(1)/Dockerfile: Makefile lib patches $(shell ../dockerdeps $(1).Dockerfil
 	@cp -R patches/ "build/$(1)/"
 endef
 
-# Special dependency to ensure all the individual shards are built
-build-crossbuild-x64: $(patsubst %.Dockerfile,build-%,$(wildcard crossshard-*-x64.Dockerfile))
+# Special dependency rules to ensure that the shards are built in the right orders
+SHARDS=$(patsubst %.Dockerfile,build-%,$(wildcard crossshard-*-x64.Dockerfile))
+$(foreach f,$(SHARDS),$(eval $(f): crossbase-x64.Dockerfile))
+build-crossbuild-x64: $(SHARDS)
 
+# Generate build- rules for each dockerfile in the directory
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
 
 ${TMPDIR}/rootfs.tar: build-crossbuild-x64

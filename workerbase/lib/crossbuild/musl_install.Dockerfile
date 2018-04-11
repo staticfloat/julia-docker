@@ -14,7 +14,8 @@ RUN source /build.sh; \
         --disable-werror \
         CROSS_COMPILE="${compiler_target}-"
 RUN make -j$(nproc)
-RUN make install DESTDIR="$(get_sysroot)"
+RUN source /build.sh; \
+    make install DESTDIR="$(get_sysroot)"
 
 # Cleanup
 WORKDIR /src
