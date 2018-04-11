@@ -50,8 +50,24 @@ RUN mkdir /overlay_workdir
 
 
 
-## Create "builder" image that just contains a bunch of stuff we need to build
+## Create "builder" stage that just contains a bunch of stuff we need to build
 # our cross-compilers, but aren't actually runtime requirements
 FROM base as shard_builder
 RUN apk add gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev
 
+
+# Build the sandbox toward the end, so that if we need to iterate on this we don't disturb the
+# shards (which are built off of the `shard_builder` above. 
+FROM base as sandbox_builder
+RUN apk add gcc g++ linux-headers
+ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/master/deps/sandbox.c /sandbox.c
+RUN gcc -std=c99 -o /sandbox /sandbox.c; rm -f /sandbox.c
+
+## Create "crossbuild" stage that contains "sandbox" and is slightly cleaned up
+FROM base as crossbuild
+COPY --from=sandbox_builder /sandbox /sandbox
+RUN rm -rf /downloads /build.sh
+
+# Set default workdir
+WORKDIR /workspace
+CMD ["/bin/bash"]
