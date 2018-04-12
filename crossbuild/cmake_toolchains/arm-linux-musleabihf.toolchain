@@ -1,0 +1,13 @@
+# Toolchain file for arm-linux-musleabihf
+set(CMAKE_SYSTEM_NAME Linux)
+
+set(CMAKE_SYSROOT /opt/arm-linux-musleabihf/arm-linux-musleabihf/sys-root/)
+set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
+
+set(CMAKE_C_COMPILER /opt/arm-linux-musleabihf/bin/arm-linux-musleabihf-gcc)
+set(CMAKE_CXX_COMPILER /opt/arm-linux-musleabihf/bin/arm-linux-musleabihf-g++)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)

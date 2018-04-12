@@ -18,7 +18,7 @@ if [[ "${TARBALL}" == *.tar.gz ]] || [[ "${TARBALL}" == *.tgz ]]; then
     tar zxf "${TARBALL}"
 elif [[ "${TARBALL}" == *.tar.bz2 ]]; then
     tar jxf "${TARBALL}"
-elif [[ "${TARBALL}" == *.tar.xz ]]; then
+elif [[ "${TARBALL}" == *.tar.xz ]] || [[ "${TARBALL}" == *.txz ]]; then
     tar Jxf "${TARBALL}"
 else
     echo "Unknown tarball type ${TARBALL#*.}" >&2

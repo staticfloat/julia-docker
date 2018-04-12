@@ -12,7 +12,9 @@ RUN [[ -n "$(which apt-get 2>/dev/null)" ]] && apt-get install -y libpng-dev lib
 RUN [[ -n "$(which apk 2>/dev/null)" ]] && apk add libpng-dev libjpeg-turbo-dev libxslt-dev gnutls-dev || true
 
 # Patch -no-pie into LDFLAGS 
-RUN patch -p1 < /downloads/patches/wine_nopie.patch
+COPY patches/wine_nopie.patch /tmp/
+RUN patch -p1 < /tmp/wine_nopie.patch; \
+    rm -f /tmp/wine_nopie.patch
 
 # First, build wine64
 RUN mkdir /src/wine64_build
