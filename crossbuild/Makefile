@@ -153,8 +153,9 @@ $(foreach f,$(TARGETS),$(eval $(call extract_shard,$(f))))
 # Also for the base shard
 $(eval $(call extract_shard,base))
 
-# Package 'em all up
-push-rootfs:
+# Package 'em all up (we explicitly include push-base here, and then add
+# push-$(target) below for all targets)
+push-rootfs: push-base
 	$(MAKE) print-hashes
 $(foreach f,$(TARGETS),$(eval push-rootfs: push-$(f)))
 

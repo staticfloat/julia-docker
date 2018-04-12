@@ -13,7 +13,7 @@ COPY --from=staticfloat/julia_crossshard-x86_64-linux-musl:x64 /opt/x86_64-linux
 COPY --from=staticfloat/julia_crossshard-i686-linux-musl:x64 /opt/i686-linux-musl /opt/i686-linux-musl
 COPY --from=staticfloat/julia_crossshard-arm-linux-musleabihf:x64 /opt/arm-linux-musleabihf /opt/arm-linux-musleabihf
 COPY --from=staticfloat/julia_crossshard-aarch64-linux-musl:x64 /opt/aarch64-linux-musl /opt/aarch64-linux-musl
-COPY --from=staticfloat/julia_crossshard-x86_64-unknown-freebsd:x64 /opt/x86_64-unknown-freebsd /opt/x86_64-unknown-freebsd
+COPY --from=staticfloat/julia_crossshard-x86_64-unknown-freebsd11.1:x64 /opt/x86_64-unknown-freebsd11.1 /opt/x86_64-unknown-freebsd11.1
 
 # Install sandbox, using x86_64-linux-gnu compiler.  We do this at the end so that if we need
 # to iterate on this particular piece, we don't have to rebuild the entire image.

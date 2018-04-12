@@ -6,7 +6,7 @@ RUN download_unpack.sh "${freebsd_url}"
 # Copy over the things we need for our bootstrapping
 RUN source /build.sh; \
     bsdroot="$(get_sysroot)"; \
-    mkdir -p "${bsdroot}/lib"; \
+    mkdir -p "${bsdroot}"; \
     mv usr/include "${bsdroot}"; \
     mv usr/lib "${bsdroot}"; \
     mv lib/* "${bsdroot}/lib"; \
