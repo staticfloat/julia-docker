@@ -61,7 +61,7 @@ RUN apk add gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev
 FROM base as sandbox_builder
 RUN apk add gcc g++ linux-headers
 ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/master/deps/sandbox.c /sandbox.c
-RUN gcc -std=c99 -o /sandbox /sandbox.c; rm -f /sandbox.c
+RUN gcc -static -std=c99 -o /sandbox /sandbox.c; rm -f /sandbox.c
 
 ## Create "crossbuild" stage that contains "sandbox" and is slightly cleaned up
 FROM base as crossbuild
