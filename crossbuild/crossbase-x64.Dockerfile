@@ -34,6 +34,7 @@ INCLUDE lib/cmake_install
 INCLUDE lib/patchelf_install
 INCLUDE lib/super_binutils_install
 INCLUDE lib/objconv_install
+INCLUDE lib/ccache_install
 RUN apk del gcc g++
 
 # We want to be able to do things like "source"
