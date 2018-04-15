@@ -13,6 +13,11 @@ RUN source /build.sh; \
         -DCMAKE_INSTALL_PREFIX="/opt/${compiler_target}" \
         -DLIBCXX_HAS_MUSL_LIBC=On \
         -DCLANG_DEFAULT_CXX_STDLIB=libc++ \
+        -DLLVM_TARGET_TRIPLE_ENV=target \
+        -DCOMPILER_RT_BUILD_SANITIZERS=Off \
+        -DCOMPILER_RT_BUILD_PROFILE=Off \
+        -DCOMPILER_RT_BUILD_LIBFUZZER=Off \
+        -DCOMPILER_RT_BUILD_XRAY=Off \
         "/src/llvm-${llvm_ver}"
 
 RUN make -j$(nproc)

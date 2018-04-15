@@ -25,13 +25,19 @@ RUN source /build.sh; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-symvers"; \
         export libat_cv_have_ifunc=no; \
     fi; \
+    if [[ "${compiler_target}" == *freebsd* ]]; then \
+        export CC=clang; \
+        export CXX=clang++; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-host-shared"; \
+    else \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-host-shared"; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-threads=posix"; \
+    fi; \
     /src/gcc-${gcc_version}/configure \
         --prefix=/opt/${compiler_target} \
         --target=${compiler_target} \
         --host=${MACHTYPE} \
         --build=${MACHTYPE} \
-        --enable-threads=posix \
-        --enable-host-shared \
         --disable-multilib \
         --disable-werror \
         ${GCC_CONF_ARGS}
