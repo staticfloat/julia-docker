@@ -111,9 +111,9 @@ $(TMPDIR)/rootfs-$(1): $(TMPDIR)/rootfs-$(1).tar
 	@echo "Unpacking $$<..."
 	@rm -rf $$@; mkdir -p $$@
 	@tar xf $$< -C $$@
-	@if [ "$(1)" == *-apple-* ]; then \
+	@if [ -d $$@/opt/$(1)/MacOSX*.sdk ]; then \
 		echo "Removing OSX SDK..."; \
-		rm -rf $$@/opt/x86_64-apple-darwin14/MacOSX*.sdk; \
+		rm -rf $$@/opt/$(1)/MacOSX*.sdk; \
 	fi
 	@if [ "$(1)" == "base" ]; then \
 		echo "Cleaning up base image..."; \

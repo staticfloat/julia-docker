@@ -17,7 +17,7 @@ RUN source /build.sh; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
     fi; \
     if [[ "${compiler_target}" == arm*hf ]]; then \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard"; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard --with-arch=armv7-a --with-fpu=vfpv3-d16"; \
     fi; \
     if [[ "${compiler_target}" == *musl* ]]; then \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-libssp --disable-libmpx"; \
@@ -28,7 +28,6 @@ RUN source /build.sh; \
     if [[ "${compiler_target}" == *freebsd* ]]; then \
         export CC=clang; \
         export CXX=clang++; \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-host-shared"; \
     else \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-host-shared"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-threads=posix"; \
@@ -42,7 +41,10 @@ RUN source /build.sh; \
         --disable-werror \
         ${GCC_CONF_ARGS}
 
-RUN make -j$(nproc)
+RUN if [[ "${compiler_target}" == *freebsd* ]]; then \
+        export ac_cv_have_decl___builtin_ffs=yes; \
+    fi; \
+    make -j$(nproc)
 RUN make install
 
 # Because this always writes out .texi files, we have to chown them back.  >:(

@@ -7,7 +7,9 @@ set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
 set(CMAKE_C_COMPILER /opt/x86_64-unknown-freebsd/bin/x86_64-unknown-freebsd-clang)
 set(CMAKE_CXX_COMPILER /opt/x86_64-unknown-freebsd/bin/x86_64-unknown-freebsd-clang++)
 
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+# These settings don't seem to function properly, they stop cmake from being
+# able to find anything within the workspace at all.
+#set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+#set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+#set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+#set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
