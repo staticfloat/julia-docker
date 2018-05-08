@@ -1,5 +1,6 @@
 # Toolchain file for x86_64-unknown-freebsd
 set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
 set(CMAKE_SYSROOT /opt/x86_64-unknown-freebsd/x86_64-unknown-freebsd/sys-root/)
 set(CMAKE_INSTALL_PREFIX /workspace/destdir/)

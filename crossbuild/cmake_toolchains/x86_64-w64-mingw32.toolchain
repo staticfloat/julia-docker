@@ -1,5 +1,6 @@
 # Toolchain file for x86_64-w64-mingw32
 set(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
 set(CMAKE_SYSROOT /opt/x86_64-w64-mingw32/x86_64-w64-mingw32/sys-root/)
 set(CMAKE_INSTALL_PREFIX /workspace/destdir/)
