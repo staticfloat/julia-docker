@@ -83,7 +83,7 @@ SQUASHFS_OPTS=-force-uid 0 -force-gid 0 -comp xz -b 1048576 -Xdict-size 100% -no
 # This is where the shards get uploaded
 S3_PREFIX=s3://julialangmirror/binarybuilder
 
-define extract_shard
+define shard_build_recipe
 # Rule to extract a shard out into a .tar file (what docker natively exports)
 $(TMPDIR)/rootfs-$(1).tar:
 	@echo "Exporting $(1) shard to $$@"
@@ -146,18 +146,31 @@ push-$(1): $(TMPDIR)/rootfs-$(1).tar.gz.sha256 $(TMPDIR)/rootfs-$(1).squashfs.sh
 		aws s3 cp --acl public-read $(TMPDIR)/rootfs-$(1).$$$${s} $(S3_PREFIX)-rootfs-$(1)-$$$${DATE_STR}.$$$${s}; \
 		aws s3 cp --acl public-read $(TMPDIR)/rootfs-$(1).$$$${s}.sha256 $(S3_PREFIX)-rootfs-$(1)-$$$${DATE_STR}.$$$${s}.sha256; \
 	done
+
+clean-$(1):
+	@rm -rf $(TMPDIR)/rootfs-$(1)
+	@rm -f $(TMPDIR)/rootfs-$(1).tar
+	@rm -f $(TMPDIR)/rootfs-$(1).tar.gz
+	@rm -f $(TMPDIR)/rootfs-$(1).tar.gz.sha256
+	@rm -f $(TMPDIR)/rootfs-$(1).squashfs
+	@rm -f $(TMPDIR)/rootfs-$(1).squashfs.sha256
 endef
 
 # Generate a packaging routine for every triplet that we've got
-$(foreach f,$(TARGETS),$(eval $(call extract_shard,$(f))))
+$(foreach f,$(TARGETS),$(eval $(call shard_build_recipe,$(f))))
 # Also for the base shard
-$(eval $(call extract_shard,base))
+$(eval $(call shard_build_recipe,base))
 
 # Package 'em all up (we explicitly include push-base here, and then add
 # push-$(target) below for all targets)
 push-rootfs: push-base
 	$(MAKE) print-hashes
 $(foreach f,$(TARGETS),$(eval push-rootfs: push-$(f)))
+
+# clean-rootfs deletes all intermediate products
+clean-rootfs: clean-base
+$(foreach f,$(TARGETS),$(eval clean-rootfs: clean-$(f)))
+
 
 print-hashes:
 	@# Print out the squashfs hashes first
