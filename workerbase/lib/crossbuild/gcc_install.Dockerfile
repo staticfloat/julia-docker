@@ -8,12 +8,15 @@ RUN source /build.sh; \
     GCC_CONF_ARGS=""; \
     if [[ "${compiler_target}" == *apple* ]]; then \
         sdk_version="$(target_to_darwin_sdk ${compiler_target})"; \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-ld=/opt/${compiler_target}/bin/${compiler_target}-ld"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-as=/opt/${compiler_target}/bin/${compiler_target}-as"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran,objc,obj-c++"; \
-    elif [[ "${compiler_target}" == *linux* ]] || [[ "${compiler_target}" == *freebsd* ]]; then \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
+    elif [[ "${compiler_target}" == *linux* ]]; then \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=c,c++,fortran"; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
+    elif [[ "${compiler_target}" == *freebsd* ]]; then \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=fortran"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
     fi; \
     if [[ "${compiler_target}" == arm*hf ]]; then \
