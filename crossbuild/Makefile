@@ -24,7 +24,7 @@ patches:
 TMPDIR=/tmp
 
 define build_dockerfile
-# Running just `make build-crossbuild-x64` will build that image
+# Running just `make build-crossshard-x86_64-linux-gnu-x64` will build that image
 build-$(1): build/$(1)/Dockerfile
 	docker build -t $(call crossbuild_tag_name,$(1)) "build/$(1)"
 
@@ -69,7 +69,6 @@ endef
 TARGETS = $(patsubst crossshard-%-x64.Dockerfile,%,$(wildcard crossshard-*-x64.Dockerfile))
 BUILD_TARGETS = $(patsubst %,build-crossshard-%-x64,$(TARGETS))
 $(foreach f,$(BUILD_TARGETS),$(eval $(f): crossbase-x64.Dockerfile))
-build-crossbuild-x64: $(BUILD_TARGETS)
 
 # Generate build- rules for each dockerfile in the directory
 $(foreach f,$(HFS),$(eval $(call build_dockerfile,$(f))))
@@ -119,6 +118,7 @@ $(TMPDIR)/rootfs-$(1): $(TMPDIR)/rootfs-$(1).tar
 		echo "Cleaning up base image..."; \
 		rm -f $$@/dev/null; \
 		touch $$@/dev/null; \
+		touch $$@/dev/urandom; \
 		touch $$@/dev/ptmx; \
 		rm -rf $$@/usr/share/terminfo; \
 		echo "nameserver 8.8.8.8"  > $$@/etc/resolv.conf; \
