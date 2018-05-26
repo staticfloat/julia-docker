@@ -45,10 +45,8 @@ RUN echo "alias ll='ls -la'" >> /root/.bashrc
 # We need to override the ld conf to search /usr/local before /usr
 RUN echo "/usr/local/lib64:/usr/local/lib:/lib:/usr/local/lib:/usr/lib" > /etc/ld-musl-x86_64.path
 
-# Create /overlay_workdir so that we know we can always mount an overlay there
-RUN mkdir /overlay_workdir
-
-
+# Create /overlay_workdir so that we know we can always mount an overlay there.  Same with /meta
+RUN mkdir /overlay_workdir /meta
 
 
 ## Create "builder" stage that just contains a bunch of stuff we need to build
@@ -59,9 +57,8 @@ RUN apk add gcc g++ clang fuse freetype tiff mesa linux-headers gettext-dev
 
 # Build the sandbox toward the end, so that if we need to iterate on this we don't disturb the
 # shards (which are built off of the `shard_builder` above. 
-FROM base as sandbox_builder
-RUN apk add gcc g++ linux-headers
-ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/master/deps/sandbox.c /sandbox.c
+FROM shard_builder as sandbox_builder
+ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/8d79fc78f2541e13c8bdc88ed66a8e5b933b36cb/deps/sandbox.c /sandbox.c
 RUN gcc -static -std=c99 -o /sandbox /sandbox.c; rm -f /sandbox.c
 
 ## Create "crossbuild" stage that contains "sandbox" and is slightly cleaned up
