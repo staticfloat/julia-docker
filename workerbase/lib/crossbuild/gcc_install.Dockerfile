@@ -18,6 +18,7 @@ RUN source /build.sh; \
     elif [[ "${compiler_target}" == *freebsd* ]]; then \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-languages=fortran"; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-sysroot=$(get_sysroot)"; \
+        GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-default-pie"; \
     fi; \
     if [[ "${compiler_target}" == arm*hf ]]; then \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --with-float=hard --with-arch=armv7-a --with-fpu=vfpv3-d16"; \
@@ -28,13 +29,6 @@ RUN source /build.sh; \
         GCC_CONF_ARGS="${GCC_CONF_ARGS} --disable-symvers"; \
         export libat_cv_have_ifunc=no; \
     fi; \
-    if [[ "${compiler_target}" == *freebsd* ]]; then \
-        export CC=clang; \
-        export CXX=clang++; \
-    else \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-host-shared"; \
-        GCC_CONF_ARGS="${GCC_CONF_ARGS} --enable-threads=posix"; \
-    fi; \
     /src/gcc-${gcc_version}/configure \
         --prefix=/opt/${compiler_target} \
         --target=${compiler_target} \
@@ -42,6 +36,8 @@ RUN source /build.sh; \
         --build=${MACHTYPE} \
         --disable-multilib \
         --disable-werror \
+        --enable-host-shared \
+        --enable-threads=posix \
         ${GCC_CONF_ARGS}
 
 RUN if [[ "${compiler_target}" == *freebsd* ]]; then \

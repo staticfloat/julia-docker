@@ -21,6 +21,7 @@ patches:
 	ln -sf ../workerbase/patches patches
 
 # Temporary folder for generated output
+SHELL=/bin/bash
 TMPDIR=/tmp
 
 define build_dockerfile

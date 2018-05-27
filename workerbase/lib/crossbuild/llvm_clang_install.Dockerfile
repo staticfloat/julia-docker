@@ -3,7 +3,8 @@ WORKDIR /src/llvm-${llvm_ver}_build
 RUN source /build.sh; \
     cmake -G "Unix Makefiles" \
         -DLLVM_TARGETS_TO_BUILD:STRING=host \
-        -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc) \
+        -DLLVM_PARALLEL_COMPILE_JOBS=$(($(nproc)+1)) \
+        -DLLVM_PARALLEL_LINK_JOBS=$(($(nproc)+1)) \
         -DLLVM_BINDINGS_LIST="" \
         -DLLVM_DEFAULT_TARGET_TRIPLE=$(target_to_clang_target ${compiler_target}) \
         -DDEFAULT_SYSROOT="$(get_sysroot)" \
@@ -20,7 +21,7 @@ RUN source /build.sh; \
         -DCOMPILER_RT_BUILD_XRAY=Off \
         "/src/llvm-${llvm_ver}"
 
-RUN make -j$(nproc)
+RUN make -j$(($(nproc)+1))
 RUN make install
 
 # Cleanup
