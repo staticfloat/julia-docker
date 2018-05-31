@@ -34,7 +34,7 @@ RUN mkdir -p /root/.aws
 COPY aws_credentials /root/.aws/credentials
 RUN chmod 0600 /root/.aws/credentials
 RUN mkdir -p /root/.gnupg
-RUN gpg --import /root/julia.gpg
+RUN gpg --batch --import /root/julia.gpg
 COPY try_thrice /root/bin/try_thrice
 
 # Install entrypoint and run it!
