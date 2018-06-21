@@ -23,15 +23,15 @@ RUN ${L32} /src/wine/configure --without-x --without-freetype --enable-win64
 RUN ${L32} make -j$(($(nproc) + 1))
 
 # Next, build wine32
-RUN mkdir /src/wine32_build
-WORKDIR /src/wine32_build
-RUN ${L32} /src/wine/configure --without-x --without-freetype --with-wine64=/src/wine64_build
-RUN ${L32} make -j$(($(nproc) + 1))
+#RUN mkdir /src/wine32_build
+#WORKDIR /src/wine32_build
+#RUN ${L32} /src/wine/configure --without-x --without-freetype --with-wine64=/src/wine64_build
+#RUN ${L32} make -j$(($(nproc) + 1))
 
 # Now install wine32, and THEN wine64... le sigh...
-USER root
-WORKDIR /src/wine32_build
-RUN ${L32} make install
+#USER root
+#WORKDIR /src/wine32_build
+#RUN ${L32} make install
 WORKDIR /src/wine64_build
 RUN ${L32} make install
 
