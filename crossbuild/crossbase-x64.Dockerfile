@@ -36,6 +36,7 @@ INCLUDE lib/super_binutils_install
 INCLUDE lib/objconv_install
 INCLUDE lib/ccache_install
 INCLUDE lib/wine_install
+INCLUDE lib/crossbuild/qemu_install
 RUN apk del gcc g++ linux-headers
 
 # We want to be able to do things like "source"
