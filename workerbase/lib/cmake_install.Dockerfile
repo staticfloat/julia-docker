@@ -13,8 +13,8 @@ RUN EXTRA_CURL_FLAGS="-k" download_unpack.sh "${cmake_url}"
 
 # Build the cmake sources!
 WORKDIR /src/cmake-${cmake_version}
-RUN ${L32} ./configure --prefix=/usr/local
-RUN ${L32} make -j4
+RUN ${L32} ./configure --prefix=/usr/local --parallel=$(($(nproc) + 1))
+RUN ${L32} make -j$(($(nproc) +1))
 
 # Install as root
 USER root
