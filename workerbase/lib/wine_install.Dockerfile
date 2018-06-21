@@ -1,7 +1,7 @@
 USER root
 WORKDIR /src
 
-ARG wine_version=3.1
+ARG wine_version=3.10
 
 RUN git clone https://github.com/wine-mirror/wine.git -b wine-${wine_version}
 WORKDIR /src/wine
