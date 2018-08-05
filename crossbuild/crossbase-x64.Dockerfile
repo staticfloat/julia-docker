@@ -57,7 +57,7 @@ RUN apk add clang gcc g++ fuse freetype tiff mesa linux-headers gettext-dev libg
 # Build the sandbox toward the end, so that if we need to iterate on this we don't disturb the
 # shards (which are built off of the `shard_builder` above. 
 FROM shard_builder as sandbox_builder
-ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/5961082e8121238dcb7b312b9ba35903d9d1e055/deps/sandbox.c /sandbox.c
+ADD https://raw.githubusercontent.com/JuliaPackaging/BinaryBuilder.jl/8a5fdcc7c4bad920b924e68c4ffe438ddc35b930/deps/sandbox.c /sandbox.c
 RUN gcc -static -std=c99 -o /sandbox /sandbox.c; rm -f /sandbox.c
 
 ## Create "crossbuild" stage that contains "sandbox" and is slightly cleaned up
