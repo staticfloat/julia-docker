@@ -59,11 +59,11 @@ build/$(1)/Dockerfile: Makefile lib patches $(shell ../dockerdeps $(1).Dockerfil
 	@echo >> "build/$(1)/Dockerfile"
 	@cat "build/$(1)/Dockerfile.tmp" >> "build/$(1)/Dockerfile"
 	@rm -f "build/$(1)/Dockerfile.tmp"
-	@cp lib/*.sh "build/$(1)/"
+	@cp -L lib/*.sh "build/$(1)/"
 	@mkdir -p "build/$(1)/crossbuild"
-	@cp lib/crossbuild/*.sh "build/$(1)/crossbuild/"
-	@cp -R cmake_toolchains/ "build/$(1)/"
-	@cp -R patches/ "build/$(1)/"
+	@cp -L lib/crossbuild/*.sh "build/$(1)/crossbuild/"
+	cp -LR cmake_toolchains "build/$(1)/"
+	cp -LR patches "build/$(1)/"
 endef
 
 # Special dependency rules to ensure that the shards are built in the right orders
