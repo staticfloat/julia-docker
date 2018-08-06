@@ -110,18 +110,16 @@ $(TMPDIR)/rootfs-$(1).tar:
 $(TMPDIR)/rootfs-$(1): $(TMPDIR)/rootfs-$(1).tar
 	@echo "Unpacking $$<..."
 	@rm -rf $$@; mkdir -p $$@
-	@tar xf $$< -C $$@
+	@tar -xf $$< -C $$@ --exclude='dev/null' --exclude='usr/share/terminfo'
 	@if [ -d $$@/opt/$(1)/MacOSX*.sdk ]; then \
 		echo "Removing OSX SDK..."; \
 		rm -rf $$@/opt/$(1)/MacOSX*.sdk; \
 	fi
 	@if [ "$(1)" == "base" ]; then \
 		echo "Cleaning up base image..."; \
-		rm -f $$@/dev/null; \
 		touch $$@/dev/null; \
 		touch $$@/dev/urandom; \
 		touch $$@/dev/ptmx; \
-		rm -rf $$@/usr/share/terminfo; \
 		echo "nameserver 8.8.8.8"  > $$@/etc/resolv.conf; \
 		echo "nameserver 8.8.4.4" >> $$@/etc/resolv.conf; \
 		echo "nameserver 4.4.4.4" >> $$@/etc/resolv.conf; \

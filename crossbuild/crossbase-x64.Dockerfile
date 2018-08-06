@@ -21,7 +21,7 @@ COPY fake_sha512sum.sh /usr/local/bin/sha512sum
 RUN chmod +x /usr/local/bin/*
 
 # Install build tools
-RUN apk add --update curl make patch tar gawk autoconf automake python libtool git bison flex pkgconfig zip unzip gdb xz bash sudo file libintl findutils wget openssl ca-certificates libstdc++ libgcc python
+RUN apk add --update curl make patch tar gawk autoconf automake python libtool git bison flex pkgconfig zip unzip gdb xz bash sudo file libintl findutils wget openssl ca-certificates libstdc++ libgcc python pv
 
 # Also install glibc, to do so we need to first import a packaging key
 RUN curl -q -# -L https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub
