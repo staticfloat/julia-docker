@@ -24,6 +24,7 @@ services:
                 - db_password=${DB_PASSWORD}
                 - GITHUB_OAUTH_CLIENT_ID=${GITHUB_OAUTH_CLIENT_ID}
                 - GITHUB_OAUTH_CLIENT_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
+                - FREEBSDCI_OAUTH_TOKEN=${FREEBSDCI_OAUTH_TOKEN}
         container_name: buildbot
         expose:
             - 8010

@@ -13,7 +13,7 @@ ARG GITHUB_OAUTH_CLIENT_SECRET
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
 RUN pip install --upgrade pip
 RUN pip install psycopg2 buildbot[tls,bundle] urllib3[secure] requests ipython \
-                buildbot_profiler docker awscli
+                buildbot_profiler docker awscli txrequests git+https://github.com/iblis17/buildbot-freebsd.git
 
 # Clone/configure buildbot configuration
 # the ADD command is to rebuild the rest of the image from here on out
@@ -29,6 +29,7 @@ RUN echo "db_user=\"${db_user}\"" >> /buildbot/master/buildbot_secret.py
 RUN echo "db_password=\"${db_password}\"" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "FREEBSDCI_OAUTH_TOKEN='${FREEBSDCI_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 COPY julia.gpg /root/
 RUN mkdir -p /root/.aws
 COPY aws_credentials /root/.aws/credentials
