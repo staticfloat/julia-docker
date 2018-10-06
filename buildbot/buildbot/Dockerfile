@@ -8,6 +8,7 @@ ARG db_user
 ARG db_password
 ARG GITHUB_OAUTH_CLIENT_ID
 ARG GITHUB_OAUTH_CLIENT_SECRET
+ARG FREEBSDCI_OAUTH_TOKEN
 
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
