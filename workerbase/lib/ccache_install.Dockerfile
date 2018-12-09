@@ -9,7 +9,7 @@ RUN download_unpack.sh "${ccache_url}"
 
 WORKDIR /src/ccache-${ccache_version}
 # We need to patch ccache's configure system since it's ancient
-RUN update_configure_scripts
+RUN [[ -z $(which update_configure_scripts 2>/dev/null) ]] || update_configure_scripts
 RUN ${L32} ./configure --prefix=/usr/local
 RUN ${L32} make all -j4
 
