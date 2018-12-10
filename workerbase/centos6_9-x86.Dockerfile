@@ -10,17 +10,4 @@ INCLUDE lib/build_tools
 COPY build_crosscompiler.sh /build.sh
 COPY patches /downloads/patches
 
-# Also install windows cross-compilers
-ENV target="x86_64-w64-mingw32"
-USER buildworker
-INCLUDE lib/win_crosscompiler_install
-ENV target=
-
-# Install Wine
-USER root
-RUN yum install -y libstdc++ flex bison
-USER buildworker
-INCLUDE lib/wine_install
-ENV WINEARCH=win32
-
 INCLUDE lib/omega
