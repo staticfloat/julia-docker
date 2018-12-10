@@ -16,17 +16,10 @@ ARCH_FILTER=$(addprefix %-,$(BUILD_ARCHS))
 # storing those into $(HFS). Many of our rules will be built from these names
 HFS=$(notdir $(basename $(wildcard $(dir $(MAKEFILE_LIST))/workerbase/*.Dockerfile)))
 
-# Build a second list that is filtered by our build architecture and OS, because
-# win can't build for non-win (and vice versa) and x86 can't build for ppc64le.
-ifneq (,$(findstring MINGW,$(BUILD_OS)))
+# Build a second list that is filtered by our build architecture
 define BUILD_FILT
-$(filter win%,$(filter $(ARCH_FILTER),$(1)))
+$(filter $(ARCH_FILTER),$(1))
 endef
-else
-define BUILD_FILT
-$(filter-out win%,$(filter $(ARCH_FILTER),$(1)))
-endef
-endif
 
 # Helper function that adds $(2) as a dependency to rule $(1)
 define add_dep
@@ -50,12 +43,6 @@ ifneq ($(shell docker build --help 2>/dev/null | grep squash),)
 DOCKER_BUILD = docker build --squash
 else
 DOCKER_BUILD = docker build
-endif
-
-
-# If we're on windows, plop a `winpty` onto the front of DOCKER_BUILD
-ifneq (,$(findstring MINGW,$(BUILD_OS)))
-DOCKER_BUILD := winpty $(DOCKER_BUILD)
 endif
 
 print-%:
