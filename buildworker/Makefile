@@ -121,6 +121,7 @@ ccache_volume:
 	@if [ -z "$(shell docker volume ls | grep ccache)" ]; then \
 		echo -n "Creating ccache docker volume..."; \
 		docker volume create --name=ccache; \
+		docker run -ti -v ccache:/ccache alpine /bin/sh -c "chown 1337:1337 /ccache"; \
 	fi
 
 # Call build_dockercompose on each and every bot
