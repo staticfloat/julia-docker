@@ -2,7 +2,7 @@ include ../common.mk
 
 # Make our own HFS off of the files in this directory
 HFS:=$(subst .Dockerfile,,$(wildcard *.Dockerfile))
-BUILD_HFS=$(call BUILD_FILT,$(HFS))
+BUILD_HFS=$(call arch_filt,$(BUILD_ARCHS),$(HFS))
 
 # Build "dockerfiles" target that assembles all Dockerfiles
 $(foreach f,$(HFS),$(eval $(call add_dep,dockerfiles,build/$(f)/Dockerfile)))

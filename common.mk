@@ -4,21 +4,24 @@ BUILD_ARCH=$(shell uname -m)
 
 # Given a BUILD_ARCH, we can determine which architecures we can build images for
 ifeq ($(BUILD_ARCH),x86_64)
-BUILD_ARCHS=x64 x86
+BUILD_ARCHS=x86_64 i686
+else ifeq ($(BUILD_ARCH),i686)
+BUILD_ARCHS=i686
 else ifeq ($(BUILD_ARCH),ppc64le)
 BUILD_ARCHS=ppc64le
 else ifeq ($(BUILD_ARCH),aarch64)
 BUILD_ARCHS=aarch64 armv7l
+else ifeq ($(BUILD_ARCH),armv7l)
+BUILD_ARCHS=armv7l
 endif
-ARCH_FILTER=$(addprefix %-,$(BUILD_ARCHS))
 
 # Begin by listing all the Dockerfiles in the `workerbase/` directory, and
 # storing those into $(HFS). Many of our rules will be built from these names
 HFS=$(notdir $(basename $(wildcard $(dir $(MAKEFILE_LIST))/workerbase/*.Dockerfile)))
 
-# Build a second list that is filtered by our build architecture
-define BUILD_FILT
-$(filter $(ARCH_FILTER),$(1))
+# Filter a list of inputs to select only ones that contain the build archs we're interested in
+define arch_filt
+$(foreach ARCH,$(1),$(foreach w,$(2),$(if $(findstring $(ARCH),$(w)),$(w),)))
 endef
 
 # Helper function that adds $(2) as a dependency to rule $(1)

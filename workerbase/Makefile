@@ -5,7 +5,7 @@ $(foreach f,$(HFS),$(eval $(call add_dep,dockerfiles,build/$(f)/Dockerfile)))
 
 # Build "buildall" target that attempts to build every Dockerfile in the room,
 # but only from the ones that our build architecture can manage.
-BUILD_HFS=$(call BUILD_FILT,$(HFS))
+BUILD_HFS=$(call arch_filt,$(BUILD_ARCH),$(HFS))
 $(foreach f,$(BUILD_HFS),$(eval $(call add_dep,buildall,build-$(f))))
 
 # Build "pushall" target that pushes up the result of "buildall"
