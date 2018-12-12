@@ -5,10 +5,6 @@ WORKDIR /buildworker
 
 # These arguments are passed in from `docker-compose`
 ARG L32
-ARG buildbot_server
-ARG buildbot_port
-ARG buildbot_password
-ARG buildworker_name
 
 # First, install the buildbot-worker package (no need for virtualenv because
 # we're within a Docker container!), and cleanup pip cache once we're done
@@ -21,6 +17,10 @@ RUN chmod +x /buildworker/start_worker.sh
 CMD ["/buildworker/start_worker.sh"]
 
 # Switch back to our buildworker user, and configure the buildbot-worker!
+ARG buildbot_server
+ARG buildbot_port
+ARG buildbot_password
+ARG buildworker_name
 USER buildworker
 RUN $L32 buildbot-worker create-worker --keepalive=100 --umask 022 worker $buildbot_server:$buildbot_port $buildworker_name $buildbot_password
 RUN echo "Elliot Saba <staticfloat@gmail.com>" > worker/info/admin
