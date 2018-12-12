@@ -3,29 +3,19 @@ include ../common.mk
 buildall:
 
 # Build mapping from buildbot name to worker base image
-IMAGE-linux-x86_64-nanosoldier2_1=centos6_9-x64
-IMAGE-linux-x86_64-nanosoldier2_2=centos6_9-x64
-IMAGE-linux-i686-nanosoldier2_1=debian8_9-x86
-IMAGE-linux-i686-nanosoldier2_2=debian8_9-x86
-IMAGE-linux-ppc64le-osu=centos7_3-ppc64le
-IMAGE-linux-aarch64-scaleway_1=centos7_3-aarch64
-IMAGE-linux-aarch64-scaleway_2=centos7_3-aarch64
-IMAGE-linux-armv7l-firefly=debian7_11-armv7l
-
 BOTNAMES=
+
 # Add x86_64 botnames
-BOTNAMES += linux-x86_64-nanosoldier2_1
-BOTNAMES += linux-x86_64-nanosoldier2_2
+BOTNAMES += linux-x86_64-nanosoldier2_1 linux-x86_64-nanosoldier2_2
 # Add i686 botnames
-BOTNAMES += linux-i686-nanosoldier2_1
-BOTNAMES += linux-i686-nanosoldier2_2
+BOTNAMES += linux-i686-nanosoldier2_1 linux-i686-nanosoldier2_2
 # Add ppc64le botnames
-BOTNAMES += linux-ppc64le-osu
+BOTNAMES += linux-ppc64le-osu_1 linux-ppc64le-osu_2
 # Add aarch64 botnames
-BOTNAMES += linux-aarch64-scaleway_1
-BOTNAMES += linux-aarch64-scaleway_2
+BOTNAMES += linux-aarch64-packet_1 linux-aarch64-packet_2 linux-aarch64-packet_3 linux-aarch64-packet_4
+BOTNAMES += linux-aarch64-packet_5 linux-aarch64-packet_6 linux-aarch64-packet_7 linux-aarch64-packet_8
 # Add armv7l botnames
-BOTNAMES += linux-armv7l-firefly
+BOTNAMES += linux-armv7l-firefly linux-armv7l-rock64
 
 # Extract the arch from a botname
 define bot_arch
