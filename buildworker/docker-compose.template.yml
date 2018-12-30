@@ -27,6 +27,7 @@ services:
             - default
             - ipv6_internal
         volumes:
+            - srccache:/srccache
             - ccache:/home/buildworker/.ccache
             - /var/run/docker.sock:/var/run/docker.sock
             - {home}/.docker:/home/buildworker/.docker
