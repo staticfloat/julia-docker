@@ -86,7 +86,7 @@ build/$(1)/docker-compose.yml: docker-compose.template.yml override.env secret.e
 pull-$(1):
 	docker pull $(call worker_tag_name,$(1))
 
-deploy-$(1): build-$(1) ipv6_internal ccache_volume
+deploy-$(1): build-$(1) ipv6_internal ccache_volume srccache_volume
 	@# Build our new worker, take down the old one and bring the new one up
 	@cd build/$(1); \
 	docker-compose build --pull; \
@@ -106,16 +106,22 @@ ipv6_internal:
 		docker network create --internal --ipv6 --subnet "fdeb:feed:face::/48" ipv6_internal; \
 	fi
 
-# Makefile target to make our ccache volume
-ccache_volume:
-	@if [ -z "$(shell docker volume ls | grep ccache)" ]; then \
-		echo -n "Creating ccache docker volume..."; \
-		docker volume create --name=ccache; \
-		docker run -ti -v ccache:/ccache alpine /bin/sh -c "chown 1337:1337 /ccache"; \
-	fi
-
 # Call build_dockercompose on each and every bot
 $(foreach b,$(BOTNAMES),$(eval $(call build_dockercompose,$(b))))
+
+# Makefile target to make our ccache volume
+define init_volume
+$(1)_volume:
+	@if [ -z "$$(shell docker volume ls | grep $(1))" ]; then \
+		echo -n "Creating $(1) docker volume..."; \
+		docker volume create --name=$(1); \
+		docker run -ti -v $(1):/$(1) alpine /bin/sh -c "chown 1337:1337 /$(1)"; \
+	fi
+endef
+
+# Instantiate our volume initialization targets
+$(eval $(call init_volume,ccache))
+$(eval $(call init_volume,srccache))
 
 
 clean:
