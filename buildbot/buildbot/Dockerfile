@@ -9,6 +9,7 @@ ARG db_password
 ARG GITHUB_OAUTH_CLIENT_ID
 ARG GITHUB_OAUTH_CLIENT_SECRET
 ARG FREEBSDCI_OAUTH_TOKEN
+ARG FQDN
 
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
@@ -29,8 +30,10 @@ RUN buildbot create-master master
 # Install secret files (Note, you must have unlocked this repo, as these are all
 # encrypted, and failing to do so will give strange unicode errors!)
 COPY buildbot_secret.py /buildbot/master
-RUN echo "db_user=\"${db_user}\"" >> /buildbot/master/buildbot_secret.py
-RUN echo "db_password=\"${db_password}\"" >> /buildbot/master/buildbot_secret.py
+RUN echo "db_user='${db_user}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "db_password='${db_password}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "FQDN='${FQDN}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "BUILDBOT_BRANCH='${BUILDBOT_BRANCH}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "FREEBSDCI_OAUTH_TOKEN='${FREEBSDCI_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
