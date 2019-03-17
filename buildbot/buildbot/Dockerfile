@@ -8,6 +8,7 @@ ARG db_user
 ARG db_password
 ARG GITHUB_OAUTH_CLIENT_ID
 ARG GITHUB_OAUTH_CLIENT_SECRET
+ARG GITHUB_STATUS_OAUTH_TOKEN
 ARG FREEBSDCI_OAUTH_TOKEN
 ARG FQDN
 
@@ -36,6 +37,7 @@ RUN echo "FQDN='${FQDN}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "BUILDBOT_BRANCH='${BUILDBOT_BRANCH}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "GITHUB_STATUS_OAUTH_TOKEN='${GITHUB_STATUS_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "FREEBSDCI_OAUTH_TOKEN='${FREEBSDCI_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 COPY julia.gpg /root/
 RUN mkdir -p /root/.aws
