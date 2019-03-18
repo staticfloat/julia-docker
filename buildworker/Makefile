@@ -10,7 +10,7 @@ BOTNAMES += linux-x86_64-nanosoldier1_1 linux-x86_64-nanosoldier2_1 linux-x86_64
 # Add i686 botnames
 BOTNAMES += linux-i686-nanosoldier1_1 linux-i686-nanosoldier3_1 linux-i686-nanosoldier3_2
 # Add ppc64le botnames
-BOTNAMES += linux-ppc64le-osu_1 linux-ppc64le-osu_2
+BOTNAMES += linux-ppc64le-osu_1 linux-ppc64le-osu_2 linux-ppc64le-osu_3 linux-ppc64le-osu_4
 # Add aarch64 botnames
 BOTNAMES += linux-aarch64-packet_1 linux-aarch64-packet_2 linux-aarch64-packet_3 linux-aarch64-packet_4
 BOTNAMES += linux-aarch64-packet_5 linux-aarch64-packet_6 linux-aarch64-packet_7 linux-aarch64-packet_8
