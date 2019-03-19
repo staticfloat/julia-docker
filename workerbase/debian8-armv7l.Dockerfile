@@ -1,4 +1,4 @@
-FROM armhf/debian:wheezy
+FROM arm32v7/debian:8
 
 # This enables putting `linux32` before commands like `./configure` and `make`
 ARG L32=linux32

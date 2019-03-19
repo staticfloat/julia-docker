@@ -1,4 +1,7 @@
-FROM armhf/debian:wheezy
+FROM arm32v7/debian:8
+
+# Eliminate troublesome debian-security repos, as they dropped support for Jessie
+#RUN sed -i '/debian-security/d' /etc/apt/sources.list
 
 # This enables putting `linux32` before commands like `./configure` and `make`
 ARG L32=linux32
