@@ -19,9 +19,9 @@ services:
         build:
             context: buildbot
             args:
-                - buildbot_branch=${BUILDBOT_BRANCH}
                 - db_user=${DB_USER}
                 - db_password=${DB_PASSWORD}
+                - BUILDBOT_BRANCH=${BUILDBOT_BRANCH}
                 - GITHUB_OAUTH_CLIENT_ID=${GITHUB_OAUTH_CLIENT_ID}
                 - GITHUB_OAUTH_CLIENT_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
                 - GITHUB_STATUS_OAUTH_TOKEN=${GITHUB_STATUS_OAUTH_TOKEN}
