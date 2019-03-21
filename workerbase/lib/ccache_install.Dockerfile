@@ -9,7 +9,8 @@ RUN download_unpack.sh "${ccache_url}"
 
 WORKDIR /src/ccache-${ccache_version}
 # We need to patch ccache's configure system since it's ancient
-RUN [[ -z $(which update_configure_scripts 2>/dev/null) ]] || update_configure_scripts
+RUN ${L32} curl -L 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess' -o config.guess
+RUN ${L32} curl -L 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub' -o config.sub
 RUN ${L32} ./configure --prefix=/usr/local
 RUN ${L32} make all -j4
 
