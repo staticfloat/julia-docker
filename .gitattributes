@@ -1,4 +1,5 @@
 buildbot/.env.* filter=git-crypt diff=git-crypt
+buildbot/.env.generic !filter !diff
 secret.env filter=git-crypt diff=git-crypt
 buildbot_secret.py filter=git-crypt diff=git-crypt
 julia.gpg filter=git-crypt diff=git-crypt
