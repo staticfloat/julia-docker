@@ -20,7 +20,14 @@ shell:
 down:
 	docker-compose down --remove-orphans
 
+destroy:
+	docker-compose down --remove-orphans -v
+
 logs:
 	docker-compose logs -f --tail=100
+
+run_localhost:
+	docker-compose build --pull && \
+	docker-compose run -p 9899:9899 -p 8010:8010 buildbot
 
 clean: down
