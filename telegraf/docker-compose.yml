@@ -11,4 +11,3 @@ services:
             - PROJECT=${PROJECT}
             - HOST_PROC=/proc2
         network_mode: "host"
-        runtime: nvidia
