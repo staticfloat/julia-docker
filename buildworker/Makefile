@@ -15,7 +15,7 @@ BOTNAMES += linux-ppc64le-osu_1 linux-ppc64le-osu_2 linux-ppc64le-osu_3 linux-pp
 BOTNAMES += linux-aarch64-packet_1 linux-aarch64-packet_2 linux-aarch64-packet_3 linux-aarch64-packet_4
 BOTNAMES += linux-aarch64-packet_5 linux-aarch64-packet_6 linux-aarch64-packet_7 linux-aarch64-packet_8
 # Add armv7l botnames
-BOTNAMES += linux-armv7l-firefly_1 linux-armv7l-firefly_2 linux-armv7l-firefly_3
+BOTNAMES += linux-armv7l-firefly_1 linux-armv7l-firefly_2 linux-armv7l-firefly_3 linux-armv7l-rock64_1
 
 # Extract the arch from a botname
 define bot_arch
