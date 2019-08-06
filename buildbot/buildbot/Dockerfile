@@ -38,13 +38,17 @@ RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/maste
 RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_STATUS_OAUTH_TOKEN='${GITHUB_STATUS_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "FREEBSDCI_OAUTH_TOKEN='${FREEBSDCI_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
-COPY julia.gpg julia.gpg.passphrase /root/
+COPY julia.gpg sign_tarball.sh /root/
+RUN chmod +x /root/sign_tarball.sh
 RUN mkdir -p /root/.aws
 COPY aws_credentials /root/.aws/credentials
 RUN chmod 0600 /root/.aws/credentials
 RUN mkdir -p /root/.gnupg
 RUN gpg --batch --import /root/julia.gpg
 COPY try_thrice /root/bin/try_thrice
+
+# GPG needs a tty, apparently
+ENV GPG_TTY=/dev/pts/0
 
 # Install entrypoint and run it!
 COPY entrypoint.sh /entrypoint.sh
