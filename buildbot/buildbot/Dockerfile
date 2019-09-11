@@ -38,6 +38,7 @@ RUN echo "GITHUB_OAUTH_CLIENT_ID='${GITHUB_OAUTH_CLIENT_ID}'" >> /buildbot/maste
 RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "GITHUB_STATUS_OAUTH_TOKEN='${GITHUB_STATUS_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "FREEBSDCI_OAUTH_TOKEN='${FREEBSDCI_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "MACOS_CODESIGN_IDENTITY='${MACOS_CODESIGN_IDENTITY}'" >> /buildbot/master/buildbot_secret.py
 COPY julia.gpg sign_tarball.sh /root/
 RUN chmod +x /root/sign_tarball.sh
 RUN mkdir -p /root/.aws
