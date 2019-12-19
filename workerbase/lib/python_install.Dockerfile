@@ -1,5 +1,5 @@
 ## Install python
-ARG python_version=2.7.17
+ARG python_version=3.8.1
 ARG python_url=https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz
 ARG pip_url=https://bootstrap.pypa.io/get-pip.py
 WORKDIR /src
@@ -18,8 +18,8 @@ RUN ${L32} make install
 
 # Install pip and install virtualenv (all as root, of course)
 RUN curl -q -# -L "${pip_url}" -o get-pip.py
-RUN python ./get-pip.py
-RUN pip install virtualenv
+RUN python3 ./get-pip.py
+RUN pip3 install virtualenv
 
 # Now cleanup /src
 WORKDIR /src
