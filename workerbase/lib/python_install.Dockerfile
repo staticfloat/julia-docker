@@ -16,6 +16,9 @@ RUN ${L32} make -j4
 USER root
 RUN ${L32} make install
 
+# We also want this usable as `python`
+RUN ln -s python3 /usr/local/bin/python
+
 # Install pip and install virtualenv (all as root, of course)
 RUN curl -q -# -L "${pip_url}" -o get-pip.py
 RUN python3 ./get-pip.py
