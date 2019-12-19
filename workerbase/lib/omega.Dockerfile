@@ -5,7 +5,7 @@ RUN echo "/usr/local/lib64" > /etc/ld.so.conf.new; \
     echo "/usr/local/lib" >> /etc/ld.so.conf.new; \
     cat /etc/ld.so.conf >> /etc/ld.so.conf.new; \
     mv /etc/ld.so.conf.new /etc/ld.so.conf; \
-    ldconfig
+    ldconfig || true # <--- for alpine
 
 # Cleanup downloads and build.sh
 RUN rm -rf /downloads /build.sh

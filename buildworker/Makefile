@@ -7,6 +7,7 @@ BOTNAMES=
 
 # Add x86_64 botnames
 BOTNAMES += linux-x86_64-nanosoldier1_1 linux-x86_64-nanosoldier2_1 linux-x86_64-nanosoldier2_2
+BOTNAMES += musl-x86_64-openstack1
 # Add i686 botnames
 BOTNAMES += linux-i686-nanosoldier1_1 linux-i686-nanosoldier3_1 linux-i686-nanosoldier3_2
 # Add ppc64le botnames

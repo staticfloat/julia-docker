@@ -29,9 +29,10 @@ RUN ln -sf $(find /usr/local/libexec/gcc/ -name liblto_plugin.so) /usr/local/lib
 ENV PATH "/usr/local/bin:$PATH"
 
 # Put our /lib and /lib64 directories into /etc/ld.so.conf.d so that they take precedence
+RUN mkdir -p /etc/ld.so.conf.d
 RUN echo "/usr/local/lib"    > /etc/ld.so.conf.d/0_new_gcc.conf
 RUN echo "/usr/local/lib64" >> /etc/ld.so.conf.d/0_new_gcc.conf
-RUN ldconfig
+RUN ldconfig || true # <--- for alpine
 
 # Add a `cc` symlink to gcc:
 RUN ln -sf /usr/local/bin/gcc /usr/local/bin/cc
