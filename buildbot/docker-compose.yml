@@ -26,6 +26,7 @@ services:
                 - GITHUB_OAUTH_CLIENT_SECRET=${GITHUB_OAUTH_CLIENT_SECRET}
                 - GITHUB_STATUS_OAUTH_TOKEN=${GITHUB_STATUS_OAUTH_TOKEN}
                 - FREEBSDCI_OAUTH_TOKEN=${FREEBSDCI_OAUTH_TOKEN}
+                - MACOS_CODESIGN_IDENTITY=${MACOS_CODESIGN_IDENTITY}
                 - FQDN=${FQDN}
         container_name: buildbot
         expose:

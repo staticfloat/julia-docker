@@ -28,6 +28,7 @@ ARG GITHUB_OAUTH_CLIENT_ID
 ARG GITHUB_OAUTH_CLIENT_SECRET
 ARG GITHUB_STATUS_OAUTH_TOKEN
 ARG FREEBSDCI_OAUTH_TOKEN
+ARG MACOS_CODESIGN_IDENTITY
 ARG FQDN
 COPY buildbot_secret.py /buildbot/master
 RUN echo "db_user='${db_user}'" >> /buildbot/master/buildbot_secret.py
