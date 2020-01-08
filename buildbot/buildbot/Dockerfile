@@ -6,10 +6,10 @@ WORKDIR /buildbot
 # First, grab builddeps and buildbot itself
 RUN apt update && apt install -y git libsqlite3-dev libssl-dev
 RUN pip install --upgrade pip
-RUN pip install psycopg2 requests ipython docker awscli txrequests urllib3[secure] mock buildbot[tls,bundle]
-RUN git clone https://github.com/iblis17/buildbot -b ib/reporter-verbose /tmp/buildbot_build
-RUN pip install /tmp/buildbot_build/master
-RUN rm -rf /tmp/buildbot_build
+RUN pip install psycopg2 requests ipython docker awscli txrequests urllib3[secure] mock buildbot[tls,bundle] buildbot-badges
+#RUN git clone https://github.com/iblis17/buildbot -b ib/reporter-verbose /tmp/buildbot_build
+#RUN pip install /tmp/buildbot_build/master
+#RUN rm -rf /tmp/buildbot_build
 RUN pip install buildbot_profiler git+https://github.com/iblis17/buildbot-freebsd.git
 
 # Clone/configure buildbot configuration
