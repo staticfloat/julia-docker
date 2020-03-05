@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Combine this with the following in your /usr/local/etc/telegraf.conf:
+#
+# [[inputs.exec]]
+#   commands = [
+#     "/usr/local/bin/telegraf_sysctl_probe kern.ipc.pipekva,kern.ipc.piperesizefail,kern.ipc.pipeallocfail",
+#   ]
+#
+#   timeout = "1s"
+#   data_format = "influx"
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 sysctl1,sysctl2,..." >&2
+    exit 1;
+fi
+
+VALUES=""
+for p in $(echo $1 | tr ',' ' '); do
+    VALUES="${VALUES} ${p}=$(sysctl ${p} | cut -d' ' -f2-)"
+done
+
+echo sysctl $(echo ${VALUES} | tr ' ' ',')
