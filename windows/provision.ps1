@@ -82,6 +82,7 @@ if defined SSH_CLIENT (
     :: check if we've got a terminal hooked up; if not, don't run bash.exe
     C:\cygwin\bin\bash.exe -c "if [ -t 1 ]; then exit 1; fi"
     if errorlevel 1 (
+        set SSH_CLIENT=
         C:\cygwin\bin\bash.exe --login
         exit
     )
