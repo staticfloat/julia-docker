@@ -103,7 +103,6 @@ Install-OpenSSH -version "v8.1.0.0p1-Beta" -listenPort 22
 
 
 # Set hostname, this is used to determine which versions of cygwin to install, etc...
-Write-Output "Introspecting Hostname..."
 $instanceId = (Invoke-RestMethod -Method Get -Uri http://169.254.169.254/latest/meta-data/instance-id)
 $instanceTags = Get-EC2Tag -Filter @{ Name="resource-id"; Values=$instanceId }
 $hostname = $instanceTags.Where({$_.Key -eq "Name"}).Value
@@ -175,7 +174,7 @@ function Install-Julia {
     Invoke-WebRequest -Uri "$juliaUrl" -OutFile "$installer" -ErrorAction Stop
 
     # Run the actual install
-    Start-Process -Wait -FilePath "$installer" -ArgumentList "/VERYSILENT /DIR='$installdir'"
+    Start-Process -Wait -FilePath "$installer" -ArgumentList "/VERYSILENT /DIR=`"$installdir`""
 
     # Create shortcut for Julia
     Start-Process -Wait -FilePath "C:\cygwin\bin\bash.exe"  -ArgumentList "-c ln -s \`"`$(cygpath `"$installdir`")/bin/julia.exe\`" /usr/local/bin/julia"
