@@ -1,4 +1,3 @@
-<powershell>
 Set-ExecutionPolicy Unrestricted
 
 # GitHub became TLS 1.2 only on Feb 22, 2018
@@ -431,5 +430,3 @@ if ($LASTEXITCODE -ne 0) {
 
 # Restart to ensure public key authentication works and SSH comes up
 Restart-Computer -Force
-</powershell>
-<runAsLocalSystem>true</runAsLocalSystem>
