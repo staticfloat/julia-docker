@@ -175,7 +175,7 @@ function Install-Julia {
     Invoke-WebRequest -Uri "$juliaUrl" -OutFile "$installer" -ErrorAction Stop
 
     # Run the actual install
-    Start-Process -Wait -FilePath "$installer" -ArgumentList "/S /D=$installdir"
+    Start-Process -Wait -FilePath "$installer" -ArgumentList "/VERYSILENT /DIR=$installdir"
 
     # Create shortcut for Julia
     Start-Process -Wait -FilePath "C:\cygwin\bin\bash.exe"  -ArgumentList "-c ln -s \`"`$(cygpath `"$installdir`")/bin/julia.exe\`" /usr/local/bin/julia"
