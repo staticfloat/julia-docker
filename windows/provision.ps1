@@ -5,18 +5,10 @@ Set-ExecutionPolicy Unrestricted
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-Function Unzip
-{
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string] $ZipFile,
-        [Parameter(Mandatory=$true, Position=1)]
-        [string] $OutPath
-    )
-
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFile, $outPath)
+function Unzip($ZipFile, $OutPath) {
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($ZipFile, $OutPath)
 }
+
 
 # Install NSSM
 function Install-NSSM {
@@ -32,6 +24,8 @@ function Install-NSSM {
 }
 Install-NSSM
 
+
+# Install Sysinternals
 function Install-Sysinternals {
     Write-Output "Installing Sysinternals suite..."
     $url = "https://download.sysinternals.com/files/SysinternalsSuite.zip"
@@ -42,6 +36,9 @@ function Install-Sysinternals {
 }
 Install-Sysinternals
 
+
+# Install OpenSSH (parameterized on version and listen port, because we need to
+# run two different versions on two different ports, for now)
 function Install-OpenSSH($version, $listenPort) {
     $url = "https://github.com/PowerShell/Win32-OpenSSH/releases/download/$version/OpenSSH-Win64.zip"
 
@@ -106,13 +103,14 @@ Install-OpenSSH -version "v7.7.2.0p1-Beta" -listenPort 2222
 Install-OpenSSH -version "v8.1.0.0p1-Beta" -listenPort 22
 
 
-# Set hostname
+# Set hostname, this is used to determine which versions of cygwin to install, etc...
 Write-Output "Introspecting Hostname..."
 $instanceId = (Invoke-RestMethod -Method Get -Uri http://169.254.169.254/latest/meta-data/instance-id)
 $instanceTags = Get-EC2Tag -Filter @{ Name="resource-id"; Values=$instanceId }
 $hostname = $instanceTags.Where({$_.Key -eq "Name"}).Value
 Rename-Computer -NewName $hostname
 
+# Install Cygwin (and add itself to PATH)
 function Install-Cygwin {
     Write-Output "Installing Cygwin..."
     $CygDir="c:\cygwin"
@@ -140,6 +138,7 @@ function Install-Cygwin {
 }
 Install-Cygwin
 
+
 # Install Python (and add itself to PATH)
 function Install-Python {
     param ( $version="3.8.2" )
@@ -156,9 +155,10 @@ function Install-Python {
 }
 Install-Python
 
+
 # Install Julia
 function Install-Julia {
-    param ( $version="1.3.1" )
+    param ( $version="1.4.0" )
     Write-Output "Installing Julia..."
 
     if($hostname.StartsWith("win32")) {
@@ -179,9 +179,10 @@ function Install-Julia {
     Start-Process -Wait -FilePath "$installer" -ArgumentList "/S /D=$installdir"
 
     # Create shortcut for Julia
-    Start-Process -Wait -FilePath "C:\cygwin\bin\bash.exe"  -ArgumentList "-c ln -s \`"$installdir/bin/julia.exe\`" /usr/local/bin/julia"
+    Start-Process -Wait -FilePath "C:\cygwin\bin\bash.exe"  -ArgumentList "-c ln -s \`"`$(cygpath `"$installdir`")/bin/julia.exe\`" /usr/local/bin/julia"
 }
 Install-Julia
+
 
 # Download WireGuard, first, obtaining the wireguard keys from S3
 $wgKeysPath = Join-Path $env:TEMP "wireguard.json"
@@ -195,9 +196,8 @@ function Install-Wireguard {
     Invoke-WebRequest -Uri "$wgUrl" -OutFile "$wgInstallFile" -ErrorAction Stop
     Start-Process -Wait -FilePath "$wgInstallFile" -ArgumentList "/quiet"
 
-    # Deploy to a file and read it in, but only if we actually had an entry in `wgKeys`
+    # Only install tunnel service if we find our hostname
     if($wgKeys.PSObject.Properties.Name -contains $hostname) {
-        # Pull out public and secret key, if we can
         $wgaddr, $wgseckey = $wgKeys.$hostname
 
         $wgConfigFile = @"
@@ -214,12 +214,17 @@ PersistentKeepalive = 45
 
         Set-Content -Path $wgInstallDir\wg0.conf -NoNewline -Encoding ASCII -Value $wgConfigFile
         & "$wgInstallDir\wireguard.exe" /installtunnelservice "$wgInstallDir\wg0.conf"
+
+        # Auto-restart wireguard every 8 hours, to help with DNS changes:
+        $A = New-ScheduledTaskAction -Execute "C:\cygwin\bin\bash.exe" -Argument "-c 'net stop 'WireGuardTunnel\`$wg0; net start 'WireGuardTunnel\`$wg0'"
+        $T = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 8)
+        Register-ScheduledTask -Action $A -Trigger $T -TaskName "rewg" -Description "Wireguard tunnel auto-restarter"
     }
 }
 Install-Wireguard
 
 
-# Download Telegraf
+# Install Telegraf
 function Install-Telegraf {
     Write-Output "Installing Telegraf..."
     $telegrafUrl = "https://dl.influxdata.com/telegraf/releases/telegraf-1.12.4_windows_amd64.zip"
@@ -228,8 +233,6 @@ function Install-Telegraf {
 
     $telegrafInstallDir = Join-Path $env:ProgramFiles 'Telegraf'
     Unzip -ZipFile $telegrafZip -OutPath "$env:TEMP" -ErrorAction Stop
-
-    # Move into Program Files
     Move-Item -Path (Join-Path $env:TEMP 'telegraf') `
         -Destination $telegrafInstallDir -ErrorAction Stop
 
@@ -282,7 +285,8 @@ Get-Disk | Where-Object PartitionStyle -eq "RAW" | `
            Initialize-Disk -PartitionStyle GPT -PassThru | `
            New-Volume -FileSystem NTFS -DriveLetter D -FriendlyName 'DATA'
 
-# Download buildbot
+
+# Install buildbot
 function Install-Buildbot {
     Write-Output "Installing Buildbot..."
     if($hostname.StartsWith("win32")) {
@@ -312,7 +316,8 @@ function Install-Buildbot {
 }
 Install-Buildbot
 
-# Download Mono
+
+# Install Mono for its codesigning utilities
 function Install-Mono() {
     Write-Output "Installing Mono..."
     $url = "https://download.mono-project.com/archive/6.4.0/windows-installer/mono-6.4.0.198-x64-0.msi"
@@ -323,7 +328,7 @@ function Install-Mono() {
 Install-Mono
 
 
-# Download Firefox
+# Install Firefox, because builtin IE is such a pain
 function Install-Firefox {
     Write-Output "Installing Firefox..."
     $url = "https://download.mozilla.org/?product=firefox-latest&os=win64&lang=en-US"
@@ -334,15 +339,22 @@ function Install-Firefox {
 Install-Firefox
 
 
-# Set our password to a known value
+# Set password to the contents of a file we get off of a private S3 bucket
 $passwordFile = Join-Path $env:TEMP 'password.txt'
 Read-S3Object -BucketName julialangsecure -Key SSH/julia-windows-password.txt -File "$passwordFile"
 $password = Get-Content -Path "$passwordFile" -Encoding ASCII
 Set-LocalUser -Name "Administrator" -Password  (ConvertTo-SecureString -AsPlainText "$password" -Force) 
 
+
 # Download `autodump.jl` to D:
 $url = "https://raw.githubusercontent.com/JuliaCI/julia-buildbot/master/commands/autodump.jl"
 Invoke-WebRequest -Uri "$url" -OutFile "D:\autodump.jl" -ErrorAction Stop
+
+
+# Disable windows defender
+Set-MpPreference -DisableRealtimeMonitoring $true
+New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender" -Name DisableAntiSpyware -Value 1 -PropertyType DWORD -Force
+
 
 # Startup OpenSSH/codesigning as SYSTEM
 $SYSTEMScript = @'
@@ -403,7 +415,7 @@ KEY="$signHome/julia-win-key.pvk"
 echo "`${PASSWORD}" | "`${SIGNCODE}" -spc "`${CERT}" -v "`${KEY}" -a sha1 -$ commercial -n "Julia" -t "http://timestamp.verisign.com/scripts/timstamp.dll" -tr 10 "`$1"
 "@
 
-# Download our codesigning tools
+# Download codesigning tools
 Set-Content -NoNewline -Path "$signHome\sign.sh" -Encoding ASCII -Value $codesignScript
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win-key.pvk -File "$signHome\julia-win-key.pvk"
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win-cert.spc -File "$signHome\julia-win-cert.spc"
