@@ -1,5 +1,6 @@
 up:
-	docker-compose up --remove-orphans --build -d
+	docker-compose build --pull
+	docker-compose up --remove-orphans -d
 
 down:
 	docker-compose down
