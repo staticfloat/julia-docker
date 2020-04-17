@@ -3,7 +3,7 @@ USER root
 RUN ${L32} apt-get update
 
 # Tools that make it easy to get stuff done within the docker image
-ARG NICE_TOOLS="vim curl gdb procps sudo time"
+ARG NICE_TOOLS="vim curl gdb procps sudo time openssh-client"
 
 # Tools to bootstrap our compiler chain that we will remove afterward
 ARG TEMPORARY_DEPS="gcc g++"

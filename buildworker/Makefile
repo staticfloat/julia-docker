@@ -6,7 +6,7 @@ buildall:
 BOTNAMES=
 
 # Add x86_64 botnames
-BOTNAMES += linux-x86_64-nanosoldier1_1 linux-x86_64-nanosoldier2_1 linux-x86_64-nanosoldier2_2
+BOTNAMES += linux-x86_64-nanosoldier1_1 linux-x86_64-nanosoldier2_1 linux-x86_64-nanosoldier2_2 linux-x86_64-nanosoldier4_1 linux-x86_64-nanosoldier4_2
 BOTNAMES += musl-x86_64-openstack1
 # Add i686 botnames
 BOTNAMES += linux-i686-nanosoldier1_1 linux-i686-nanosoldier3_1 linux-i686-nanosoldier3_2
@@ -58,6 +58,7 @@ build/$(1)/tabularasa/Dockerfile: Dockerfile.template start_worker.sh dockerdeps
 	@echo "FROM $(call tabularasa_tag_name,$(call bot_image,$(1)))" >> "build/$(1)/tabularasa/Dockerfile"
 	@cat Dockerfile.template >> "build/$(1)/tabularasa/Dockerfile"
 	@cp ./start_worker.sh "build/$(1)/tabularasa/start_worker.sh"
+	@cp ./rr_profile.json "build/$(1)/tabularasa/rr_profile.json"
 
 build/$(1)/worker/Dockerfile: Dockerfile.template start_worker.sh dockerdeps-$(1)
 	@echo $(1)/worker
