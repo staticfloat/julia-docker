@@ -156,7 +156,7 @@ Install-Python
 
 # Install Julia
 function Install-Julia {
-    param ( $version="1.4.0" )
+    param ( $version="1.4.2" )
     Write-Output "Installing Julia..."
 
     if($hostname.StartsWith("win32")) {
@@ -177,7 +177,7 @@ function Install-Julia {
     Start-Process -Wait -FilePath "$installer" -ArgumentList "/VERYSILENT /DIR=`"$installdir`""
 
     # Create shortcut for Julia
-    Start-Process -Wait -FilePath "C:\cygwin\bin\bash.exe"  -ArgumentList "-c ln -s \`"`$(cygpath `"$installdir`")/bin/julia.exe\`" /usr/local/bin/julia"
+    Start-Process -Wait -FilePath "C:\cygwin\bin\bash.exe" -ArgumentList "-c 'ln -s `"$(cygpath `"$installdir`")/bin/julia.exe`" /usr/bin/julia'" 
 }
 Install-Julia
 
