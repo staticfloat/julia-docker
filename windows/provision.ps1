@@ -311,6 +311,8 @@ function Install-Buildbot {
     nssm install "workertest" "$worker_exe" "start --nodaemon ."
     nssm set "workerbuild" AppDirectory "D:\buildbot\worker"
     nssm set "workertest" AppDirectory "D:\buildbot\worker-tabularasa"
+    nssm set "workerbuild" AppPriority BELOW_NORMAL_PRIORITY_CLASS
+    nssm set "workertest" AppPriority BELOW_NORMAL_PRIORITY_CLASS
 }
 Install-Buildbot
 
