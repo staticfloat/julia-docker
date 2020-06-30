@@ -295,7 +295,7 @@ function Install-Buildbot {
     $workerIdx = $hostname.SubString($hostname.Length - 1)
 
     # Install special version of Twisted that is precompiled for windows and python 3.8
-    &python -m pip install https://download.lfd.uci.edu/pythonlibs/s2jqpv5t/Twisted-19.10.0-cp38-cp38-win_amd64.whl
+    &python -m pip install  https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/Twisted-20.3.0-cp38-cp38-win_amd64.whl
     # Now that we've got Twisted, the rest of buildbot should be a cinch
     &python -m pip install pywin32 buildbot-worker
 
