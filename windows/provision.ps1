@@ -90,6 +90,12 @@ if defined SSH_CLIENT (
     $acl.AddAccessRule($newRule)
     Set-Acl -Path $bashLaunchScript -AclObject $acl
 
+    $psProfileScript = "C:\Windows\system32\WindowsPowerShell\v1.0\profile.ps1"
+    $ps = @"
+Remove-Item env:SSH_CLIENT
+"@
+    $ps | Out-File -Encoding ASCII $psProfileScript
+
     New-ItemProperty -Path "HKLM:Software\Microsoft\Command Processor" -Name AutoRun -ErrorAction Stop `
                      -Value "$bashLaunchScript" -PropertyType STRING -Force
 }
