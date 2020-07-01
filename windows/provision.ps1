@@ -216,7 +216,7 @@ PersistentKeepalive = 45
         # Auto-restart wireguard every 8 hours, to help with DNS changes:
         $A = New-ScheduledTaskAction -Execute "C:\cygwin\bin\bash.exe" -Argument "-c 'net stop 'WireGuardTunnel\`$wg0; net start 'WireGuardTunnel\`$wg0'"
         $T = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 8)
-        Register-ScheduledTask -Action $A -Trigger $T -TaskName "rewg" -Description "Wireguard tunnel auto-restarter"
+        Register-ScheduledTask -Action $A -Trigger $T -TaskName "rewg" -User "$hostname\Administrator" -Description "Wireguard tunnel auto-restarter"
     }
 }
 Install-Wireguard
