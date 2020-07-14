@@ -25,3 +25,6 @@ echo "Julia tabularasa $(hostname -s) buildworker" > worker-tabularasa/info/host
 
 startup_script --name buildbot --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker"
 startup_script --name buildbot-tabularasa --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker-tabularasa"
+
+sudo launchctl load -w /Library/LaunchDaemons/buildbot.plist
+sudo launchctl load -w /Library/LaunchDaemons/buildbot-tabularasa.plist
