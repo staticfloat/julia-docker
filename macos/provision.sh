@@ -5,12 +5,17 @@ if [[ -z "${BUILDBOT_PASSWORD}" ]]; then
     exit 1
 fi
 
-brew install tmux bash
+brew install tmux bash ccache reattach-to-user-namespace gcc@7
 
+# We want `gfortran` to mean `gfortran-7`
+ln -s $(which gfortran-7) /usr/local/bin/gfortran
+
+# Install buildbot-worker
 pip3 install --user buildbot-worker
 export PATH=$PATH:$(echo ~/Library/Python/*/bin)
 mkdir ~/buildbot
 
+# Install buildbot worker directories
 ARCH="x86_64"
 if [[ $(uname -m) == "arm64" ]]; then
     ARCH="aarch64"
@@ -23,8 +28,10 @@ echo "Elliot Saba <staticfloat@gmail.com>" > worker-tabularasa/info/admin
 echo "Julia $(hostname -s) buildworker" > worker/info/host
 echo "Julia tabularasa $(hostname -s) buildworker" > worker-tabularasa/info/host
 
+# Add startup scripts for them all
 startup_script --name buildbot --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker"
 startup_script --name buildbot-tabularasa --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker-tabularasa"
 
+# Start the services right meow :3
 sudo launchctl load -w /Library/LaunchDaemons/buildbot.plist
 sudo launchctl load -w /Library/LaunchDaemons/buildbot-tabularasa.plist
