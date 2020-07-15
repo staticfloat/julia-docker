@@ -35,3 +35,7 @@ startup_script --name buildbot-tabularasa --exe $(which buildbot-worker) --chdir
 # Start the services right meow :3
 sudo launchctl load -w /Library/LaunchDaemons/buildbot.plist
 sudo launchctl load -w /Library/LaunchDaemons/buildbot-tabularasa.plist
+
+echo "Okay done!  Next steps:"
+echo " * Turn on auto-login, to avoid pbcopy/pbpaste errors"
+echo " * Copy over xcode.keychain and unlock_keychain.sh"
