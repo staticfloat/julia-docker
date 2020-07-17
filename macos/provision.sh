@@ -29,8 +29,8 @@ echo "Julia $(hostname -s) buildworker" > worker/info/host
 echo "Julia tabularasa $(hostname -s) buildworker" > worker-tabularasa/info/host
 
 # Add startup scripts for them all
-startup_script --name buildbot --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker"
-startup_script --name buildbot-tabularasa --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker-tabularasa"
+startup_script --name buildbot --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker" --env "HOME=${HOME}"
+startup_script --name buildbot-tabularasa --exe $(which buildbot-worker) --chdir ~/buildbot --args "restart --nodaemon worker-tabularasa" --env "HOME=${HOME}"
 
 # Start the services right meow :3
 sudo launchctl load -w /Library/LaunchDaemons/buildbot.plist
