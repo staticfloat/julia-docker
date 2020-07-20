@@ -39,3 +39,4 @@ sudo launchctl load -w /Library/LaunchDaemons/buildbot-tabularasa.plist
 echo "Okay done!  Next steps:"
 echo " * Turn on auto-login, to avoid pbcopy/pbpaste errors"
 echo " * Copy over xcode.keychain and unlock_keychain.sh"
+echo " * Add <key>SessionCreate</key> <true/> to plist files"
