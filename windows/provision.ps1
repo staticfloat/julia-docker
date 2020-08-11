@@ -219,8 +219,16 @@ PersistentKeepalive = 45
         Set-Content -Path $wgInstallDir\wg0.conf -NoNewline -Encoding ASCII -Value $wgConfigFile
         & "$wgInstallDir\wireguard.exe" /installtunnelservice "$wgInstallDir\wg0.conf"
 
+        $rewgScriptFile = @"
+#!/bin/bash
+
+net stop WireGuardTunnel\$wg0
+net start WireGuardTunnel\$wg0
+"@
+        Set-Content -Path $wgInstallDir\rewg.sh -NoNewline -Encoding ASCII -Value $rewgScriptFile
+
         # Auto-restart wireguard every 8 hours, to help with DNS changes:
-        $A = New-ScheduledTaskAction -Execute "C:\cygwin\bin\bash.exe" -Argument "-c 'net stop 'WireGuardTunnel\`$wg0; net start 'WireGuardTunnel\`$wg0'"
+        $A = New-ScheduledTaskAction -Execute "C:\cygwin\bin\bash.exe" -Argument "$wgInstallDir\rewg.sh"
         $T = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 8)
         Register-ScheduledTask -Action $A -Trigger $T -TaskName "rewg" -User "$hostname\Administrator" -Description "Wireguard tunnel auto-restarter"
     }
