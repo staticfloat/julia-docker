@@ -417,22 +417,16 @@ Subsystem       sftp    sftp-server.exe
 Set-Content -NoNewline -Path C:\ProgramData\ssh\sshd_config -Value $sshdConfigContent
 
 # Download codesigning keys and generate codesigning script
-$signHome="C:\cygwin\home\SYSTEM\"
+$signHome = "C:\cygwin\home\SYSTEM\"
+$sdkHome = Resolve-Path "C:\Program Files (x86)/Windows Kits/10/bin/10.*/x64/" | Select -ExpandProperty Path
 & mkdir $signHome
-$codesignScript = @"
-#!/bin/bash
-# Death to closed-source tools.  Use signcode from Mono:
-PASSWORD="Juli@343"
-SIGNCODE="/cygdrive/c/Program Files/Mono/bin/signcode"
-CERT="$signHome/julia-win-cert.spc"
-KEY="$signHome/julia-win-key.pvk"
-echo "`${PASSWORD}" | "`${SIGNCODE}" -spc "`${CERT}" -v "`${KEY}" -a sha1 -$ commercial -n "Julia" -t "http://timestamp.verisign.com/scripts/timstamp.dll" -tr 10 "`$1"
-"@
 
 # Download codesigning tools
 Set-Content -NoNewline -Path "$signHome\sign.sh" -Encoding ASCII -Value $codesignScript
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win-key.pvk -File "$signHome\julia-win-key.pvk"
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win-cert.spc -File "$signHome\julia-win-cert.spc"
+Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win.pfx -File "$signHome\julia-win.pfx"
+Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/wsdk-sign.sh -File "$signHome/sign.sh"
 '@
 $SYSTEMScriptPath = Join-Path $env:TEMP 'setup_SYSTEM.ps1'
 $SYSTEMScript | Out-File $SYSTEMScriptPath
