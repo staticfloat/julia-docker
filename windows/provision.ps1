@@ -422,11 +422,11 @@ $sdkHome = Resolve-Path "C:\Program Files (x86)/Windows Kits/10/bin/10.*/x64/" |
 & mkdir $signHome
 
 # Download codesigning tools
-Set-Content -NoNewline -Path "$signHome\sign.sh" -Encoding ASCII -Value $codesignScript
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win-key.pvk -File "$signHome\julia-win-key.pvk"
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win-cert.spc -File "$signHome\julia-win-cert.spc"
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/julia-win.pfx -File "$signHome\julia-win.pfx"
 Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/wsdk-sign.sh -File "$signHome/sign.sh"
+Read-S3Object -BucketName julialangsecure -Key CodeSigning/windows/wsdk-sign.ps1 -File "$signHome/sign.ps1"
 '@
 $SYSTEMScriptPath = Join-Path $env:TEMP 'setup_SYSTEM.ps1'
 $SYSTEMScript | Out-File $SYSTEMScriptPath
