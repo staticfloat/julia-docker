@@ -219,12 +219,12 @@ PersistentKeepalive = 45
         Set-Content -Path $wgInstallDir\wg0.conf -NoNewline -Encoding ASCII -Value $wgConfigFile
         & "$wgInstallDir\wireguard.exe" /installtunnelservice "$wgInstallDir\wg0.conf"
 
-        $rewgScriptFile = @"
+        $rewgScriptFile = @'
 #!/bin/bash
 
 net stop WireGuardTunnel\$wg0
 net start WireGuardTunnel\$wg0
-"@
+'@
         Set-Content -Path $wgInstallDir\rewg.sh -NoNewline -Encoding ASCII -Value $rewgScriptFile
 
         # Auto-restart wireguard every 8 hours, to help with DNS changes:
