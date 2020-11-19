@@ -22,7 +22,7 @@ services:
                 - L32={linux32}
         ulimits:
             # Severely limit the number of processes so that we avoid issues around zombie julia processes piling up
-            nproc:  100
+            nproc:  1000
             nofile: 10000
         networks:
             - default
