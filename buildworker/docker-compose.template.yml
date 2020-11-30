@@ -20,10 +20,7 @@ services:
                 # our make-shift make templating chops
                 - buildworker_name={service_name}
                 - L32={linux32}
-        ulimits:
-            # Severely limit the number of processes so that we avoid issues around zombie julia processes piling up
-            nproc:  1000
-            nofile: 10000
+        pids_limit: 1000
         networks:
             - default
             - ipv6_internal
@@ -49,9 +46,7 @@ services:
             - seccomp=./tabularasa/rr_profile.json
         cap_add:
             - SYS_PTRACE
-        ulimits:
-            nproc:  10000
-            nofile: 10000
+        pids_limit: 1000
         networks:
             - default
             - ipv6_internal
