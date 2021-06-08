@@ -27,6 +27,7 @@ services:
                 - GITHUB_STATUS_OAUTH_TOKEN=${GITHUB_STATUS_OAUTH_TOKEN}
                 - FREEBSDCI_OAUTH_TOKEN=${FREEBSDCI_OAUTH_TOKEN}
                 - MACOS_CODESIGN_IDENTITY=${MACOS_CODESIGN_IDENTITY}
+                - SLACK_FAILURE_REPORT_SLUG=${SLACK_FAILURE_REPORT_SLUG}
                 - FQDN=${FQDN}
         container_name: buildbot
         expose:

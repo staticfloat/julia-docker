@@ -27,6 +27,7 @@ ARG db_password
 ARG GITHUB_OAUTH_CLIENT_ID
 ARG GITHUB_OAUTH_CLIENT_SECRET
 ARG GITHUB_STATUS_OAUTH_TOKEN
+ARG SLACK_FAILURE_REPORT_SLUG
 ARG FREEBSDCI_OAUTH_TOKEN
 ARG MACOS_CODESIGN_IDENTITY
 ARG FQDN
@@ -40,6 +41,8 @@ RUN echo "GITHUB_OAUTH_CLIENT_SECRET='${GITHUB_OAUTH_CLIENT_SECRET}'" >> /buildb
 RUN echo "GITHUB_STATUS_OAUTH_TOKEN='${GITHUB_STATUS_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "FREEBSDCI_OAUTH_TOKEN='${FREEBSDCI_OAUTH_TOKEN}'" >> /buildbot/master/buildbot_secret.py
 RUN echo "MACOS_CODESIGN_IDENTITY='${MACOS_CODESIGN_IDENTITY}'" >> /buildbot/master/buildbot_secret.py
+RUN echo "SLACK_FAILURE_REPORT_SLUG='${SLACK_FAILURE_REPORT_SLUG}'" >> /buildbot/master/buildbot_secret.py
+
 COPY julia.gpg sign_tarball.sh /root/
 RUN chmod +x /root/sign_tarball.sh
 RUN mkdir -p /root/.aws
