@@ -50,6 +50,15 @@ services:
         networks:
             - default
             - ipv6_internal
+        # By specifying manual `dns` entries, we disable using Docker's
+        # builtin DNS resolution algorithms, which apparently have problems
+        # with doing `getnameinfo("0.1.1.1")`, resulting in `EAI_AGAIN`
+        # when it should really return a resolution failure.
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 8.8.4.4
+            - 4.4.4.4
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
 networks:
